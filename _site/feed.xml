@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-07-29T11:32:29-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-07-29T17:39:38-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;¿Que es format string?&lt;/li&gt;
   &lt;li&gt;Calling conventions&lt;/li&gt;
@@ -153,7 +153,144 @@
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="formatStr" /><category term="radare2" /><summary type="html">Aprenderas a como realizar un ataque format string</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="formatStr" /><category term="radare2" /><summary type="html">Aprenderas a como realizar un ataque format string</summary></entry><entry><title type="html">picoCTF - Hurry up! Wait!</title><link href="http://localhost:4000/picoCTF-hurryUp/" rel="alternate" type="text/html" title="picoCTF - Hurry up! Wait!" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/picoCTF-hurryUp</id><content type="html" xml:base="http://localhost:4000/picoCTF-hurryUp/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Sacando informacion del binario.&lt;/li&gt;
+  &lt;li&gt;Debugging al binario con radare2.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;sacando-informacion-del-binario&quot;&gt;Sacando informacion del binario&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/file.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;svchost.exe&lt;/code&gt;, con ese nombre uno pensaria que es un binario .exe para ser ejecutado en Windows, pero no, usando el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file svchost.exe&lt;/code&gt;, podemos ver algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;svchost.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=dea7ec3bad6aeab52804d2a614b132f4af2a1025, stripped
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Donde dice que es un binario ELF de 64 bits y tambien vemos que el binario esta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stripped&lt;/code&gt;, un binario que esta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stripped&lt;/code&gt; es por que se eliminaron los simbolos de depuracion (debugging symbols) y por consecuencia hace que sea mas dificil hacerle reversing, tambien obtuvimos su hash SHA1 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dea7ec3bad6aeab52804d2a614b132f4af2a1025&lt;/code&gt;, ahora si pasaremos al debugging.&lt;/p&gt;
+
+&lt;h2 id=&quot;debugging-al-binario-con-radare2&quot;&gt;Debugging al binario con radare2.&lt;/h2&gt;
+
+&lt;p&gt;Para comenzar con el debugging ingresamos el siguiente comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;radare2 ./svchost.exe&lt;/code&gt;, posterior mente analizamos el binario con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aaa&lt;/code&gt;, nos movemos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s main&lt;/code&gt; y por ultimo mostramos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf&lt;/code&gt; y nos muestra todo esto&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;La primera cosa interasantes la vemos en esta linea:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;lea rax, str._ada_main      ; 0x2ad8 ; &quot;_ada_main&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;La cual vemos una funcion con el nombre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_ada_main&lt;/code&gt;, asi que haciendo una busqueda rapida en google por el nombre de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ada&lt;/code&gt;, me mostro que es un lenguaje de programacion, asi que el binario esta escrito en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ada&lt;/code&gt;, seguimos viendo el codigo y llegamos a esta parte:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Primeramente con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;call&lt;/code&gt; se hace el llamado a una funcion llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sym.imp.__gnat_initialize&lt;/code&gt;, sin embargo eso no es de nuestro interes ya que seguramente es una funcion incorporada en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ada&lt;/code&gt;, abajo de esa tenemos una funcion llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcn.00001d7c&lt;/code&gt; y mostrando su contenido con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf @ fcn.00001d7c&lt;/code&gt; y vemos esto&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y tampoco nos interesa ya que es una funcion de inicializacion, pasaremos a ver la funcion que sigue la cual es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcn.0000298a&lt;/code&gt; de igual manera mostramos su contenido con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf @ fcn.0000298a&lt;/code&gt; y vemos esto&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aqui si ya nos interesa, podemos ver que primeramente se hace el llamado de una funcion llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sym.imp.ada__calendar__delays__delay_for&lt;/code&gt; la cual es para poner un delay en el programa, esa funcion esta recibiendo un parametro asi que vamos a imprimir su contenido y vemos esto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Podemos ver en las partes comentadas del codigo que el argumento que recibe es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v\x1b&lt;/code&gt;, investigando un poco esto es igual a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1000000000000000&lt;/code&gt;, es absurdamente demasiado tiempo asi que si ejecutamos el programa se quedara en el delay hasta que podamos ver algo.&lt;/p&gt;
+
+&lt;p&gt;Ahora podemos seguir viendo las demas funciones, y la que sigue es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcn.00002616&lt;/code&gt;, mostraremos su contenido con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf @ fcn.00002616&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aqui si ya vemos lo mero bueno asi empezare analizando desde aqui:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;¿Por que es tan importante esta parte&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Primeramente podemos ver en un comentario la siguiente cadena &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pqrstuvwxyzCTF_{}&lt;/code&gt;, con ver el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CTF_{}&lt;/code&gt; ya me doy una idea de que es una parte de la flag, sin embargo lo mas interesante esta en estas instrucciones:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;lea rax, [0x00002cd8]
+lea rdx, [0x00002cb8]
+mov rcx, rax
+mov rbx, rdx
+mov rax, rdx
+mov rdi, rcx
+mov rsi, rax
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Primero: con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lea rdx, [0x00002cd8]&lt;/code&gt; mueve la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x00002cd8&lt;/code&gt; a rax, que seguramente esa direccion sea la de una variable y el contenido de esa direccion es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pqrstuvwxyzCTF_{}&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Segundo: Otra vez con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lea rdx, [0x00002cb8]&lt;/code&gt; mueve la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x00002cb8&lt;/code&gt; a rdx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Tercero: mueve el contenido de rax a rcx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Cuarto: mueve el contenido de rdx a rbx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Quinto: mueve el contenido de rdx a rax&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Sexto: mueve el contenido de rcx a rdi&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Septimo: mueve el contenido de rax a rsi&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Y esto lo que esa haciendo es tomar el primer caracter de la cadena &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pqrstuvwxyzCTF_{}&lt;/code&gt; y meterlo en la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sym.imp.ada__text_io__put__4&lt;/code&gt; que se llama en la parte de abajo.&lt;/p&gt;
+
+&lt;p&gt;Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a anlizar la siguiente funcion que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcn.000024aa&lt;/code&gt; de igual manera mostramos su contenido&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Vemos exactamente lo mismo solo que la cadena a la cual se le esta tomando el primer caracter ahora es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ijklmnopqrstuvwxyzCTF_{}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Y bueno, para no hacerlo mas largo lo que estan haciendo todas estas funciones:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;fcn.00002616
+fcn.000024aa
+fcn.00002372
+fcn.000025e2
+fcn.00002852
+fcn.00002886
+fcn.000028ba
+fcn.00002922
+fcn.000023a6
+fcn.00002136
+fcn.00002206
+fcn.0000230a
+fcn.00002206
+fcn.0000257a
+fcn.000028ee
+fcn.0000240e
+fcn.000026e6
+fcn.00002782
+fcn.000028ee
+fcn.000022a2
+fcn.0000226e
+fcn.000023da
+fcn.00002206
+fcn.0000230a
+fcn.0000233e
+fcn.00002136
+fcn.00002956
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Es guardar el primer caracter de la flag en la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sym.imp.ada__text_io__put__4&lt;/code&gt;, 
+Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta (la flag es diferente para cada usuario):&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;picoCTF{d15a5m_ftw_afebc2e}&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;¿Que es ret2libc?.&lt;/li&gt;
   &lt;li&gt;¿Que es No Executable (NX)?.&lt;/li&gt;
@@ -162,7 +299,7 @@
   &lt;li&gt;Explicando el payload que usaremos.&lt;/li&gt;
   &lt;li&gt;Desbordando el buffer y calculando el offset del RIP.&lt;/li&gt;
   &lt;li&gt;Consiguiendo la direccion de libc.&lt;/li&gt;
-  &lt;li&gt;Consiguiendo los offset de RET, POP RDI RET, /bin/sh y system().&lt;/li&gt;
+  &lt;li&gt;Consiguiendo los offset de ret, pop rdi ret, /bin/sh y system().&lt;/li&gt;
   &lt;li&gt;Creando nuestro exploit y ejecutandolo.&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -265,7 +402,7 @@ Cuando se sobreescribe el &lt;code class=&quot;language-plaintext highlighter-ro
 |   funcion1   |
 |--------------|
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Ahora sobreescribimos el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; por la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;, entonces &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; se mueve a la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi; ret&lt;/code&gt;, lo que pasaria seria algo com esto &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret rip rsp&lt;/code&gt; y nuestro layout queda asi&lt;/p&gt;
+&lt;p&gt;Ahora sobreescribimos el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; por la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;, entonces &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; se mueve a la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi; ret&lt;/code&gt;, lo que pasaria seria algo com esto &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret rip rsp&lt;/code&gt; y nuestro layout queda asi&lt;/p&gt;
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|--------------|                            gadget
 |     junk     |                         |---------|  

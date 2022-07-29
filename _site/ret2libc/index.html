@@ -228,6 +228,12 @@
       
 
       
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
 
       
 
@@ -302,7 +308,7 @@
   <li>Explicando el payload que usaremos.</li>
   <li>Desbordando el buffer y calculando el offset del RIP.</li>
   <li>Consiguiendo la direccion de libc.</li>
-  <li>Consiguiendo los offset de RET, POP RDI RET, /bin/sh y system().</li>
+  <li>Consiguiendo los offset de ret, pop rdi ret, /bin/sh y system().</li>
   <li>Creando nuestro exploit y ejecutandolo.</li>
 </ul>
 
@@ -405,7 +411,7 @@ Cuando se sobreescribe el <code class="language-plaintext highlighter-rouge">RET
 |   funcion1   |
 |--------------|
 </code></pre></div></div>
-<p>Ahora sobreescribimos el <code class="language-plaintext highlighter-rouge">RIP</code> por la direccion <code class="language-plaintext highlighter-rouge">ret</code>, entonces <code class="language-plaintext highlighter-rouge">RSP</code> se mueve a la direccion de <code class="language-plaintext highlighter-rouge">pop rdi; ret</code>, lo que pasaria seria algo com esto <code class="language-plaintext highlighter-rouge">ret rip rsp</code> y nuestro layout queda asi</p>
+<p>Ahora sobreescribimos el <code class="language-plaintext highlighter-rouge">RIP</code> por la direccion de <code class="language-plaintext highlighter-rouge">ret</code>, entonces <code class="language-plaintext highlighter-rouge">RSP</code> se mueve a la direccion de <code class="language-plaintext highlighter-rouge">pop rdi; ret</code>, lo que pasaria seria algo com esto <code class="language-plaintext highlighter-rouge">ret rip rsp</code> y nuestro layout queda asi</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|--------------|                            gadget
 |     junk     |                         |---------|  
@@ -658,7 +664,7 @@ Cuando se sobreescribe el <code class="language-plaintext highlighter-rouge">RET
       
   <nav class="pagination">
     
-      <a href="/format-string/" class="pagination--pager" title="Format string
+      <a href="/picoCTF-hurryUp/" class="pagination--pager" title="picoCTF - Hurry up! Wait!
 ">Previous</a>
     
     

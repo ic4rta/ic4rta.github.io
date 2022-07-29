@@ -1,0 +1,550 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>picoCTF - Hurry up! Wait! - c4rta</title>
+<meta name="description" content="Resolveremos un pequeño ejercicio de reversing de picoCTF">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="picoCTF - Hurry up! Wait!">
+<meta property="og:url" content="http://localhost:4000/picoCTF-hurryUp/">
+
+
+  <meta property="og:description" content="Resolveremos un pequeño ejercicio de reversing de picoCTF">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-07-29T00:00:00-05:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/picoCTF-hurryUp/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">picoCTF - Hurry up! Wait!</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTF player<br>Apasionado a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="picoCTF - Hurry up! Wait!">
+    <meta itemprop="description" content="Resolveremos un pequeño ejercicio de reversing de picoCTF">
+    <meta itemprop="datePublished" content="July 29, 2022">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">picoCTF - Hurry up! Wait!
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
+          
+          
+        </p>
+        <h2 id="contenido">Contenido</h2>
+
+<ul>
+  <li>Sacando informacion del binario.</li>
+  <li>Debugging al binario con radare2.</li>
+</ul>
+
+<h2 id="sacando-informacion-del-binario">Sacando informacion del binario</h2>
+
+<p><img src="/assets/images/picoCTF-hurry/file.png" alt="" /></p>
+
+<p>Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre <code class="language-plaintext highlighter-rouge">svchost.exe</code>, con ese nombre uno pensaria que es un binario .exe para ser ejecutado en Windows, pero no, usando el comando <code class="language-plaintext highlighter-rouge">file svchost.exe</code>, podemos ver algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>svchost.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=dea7ec3bad6aeab52804d2a614b132f4af2a1025, stripped
+</code></pre></div></div>
+<p>Donde dice que es un binario ELF de 64 bits y tambien vemos que el binario esta <code class="language-plaintext highlighter-rouge">stripped</code>, un binario que esta <code class="language-plaintext highlighter-rouge">stripped</code> es por que se eliminaron los simbolos de depuracion (debugging symbols) y por consecuencia hace que sea mas dificil hacerle reversing, tambien obtuvimos su hash SHA1 <code class="language-plaintext highlighter-rouge">dea7ec3bad6aeab52804d2a614b132f4af2a1025</code>, ahora si pasaremos al debugging.</p>
+
+<h2 id="debugging-al-binario-con-radare2">Debugging al binario con radare2.</h2>
+
+<p>Para comenzar con el debugging ingresamos el siguiente comando <code class="language-plaintext highlighter-rouge">radare2 ./svchost.exe</code>, posterior mente analizamos el binario con el comando <code class="language-plaintext highlighter-rouge">aaa</code>, nos movemos el main con <code class="language-plaintext highlighter-rouge">s main</code> y por ultimo mostramos el main con <code class="language-plaintext highlighter-rouge">pdf</code> y nos muestra todo esto</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare1.png" alt="" /></p>
+
+<p>La primera cosa interasantes la vemos en esta linea:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lea rax, str._ada_main      ; 0x2ad8 ; "_ada_main"
+</code></pre></div></div>
+<p>La cual vemos una funcion con el nombre <code class="language-plaintext highlighter-rouge">_ada_main</code>, asi que haciendo una busqueda rapida en google por el nombre de <code class="language-plaintext highlighter-rouge">Ada</code>, me mostro que es un lenguaje de programacion, asi que el binario esta escrito en <code class="language-plaintext highlighter-rouge">Ada</code>, seguimos viendo el codigo y llegamos a esta parte:</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare2.png" alt="" /></p>
+
+<p>Primeramente con <code class="language-plaintext highlighter-rouge">call</code> se hace el llamado a una funcion llamada <code class="language-plaintext highlighter-rouge">sym.imp.__gnat_initialize</code>, sin embargo eso no es de nuestro interes ya que seguramente es una funcion incorporada en <code class="language-plaintext highlighter-rouge">Ada</code>, abajo de esa tenemos una funcion llamada <code class="language-plaintext highlighter-rouge">fcn.00001d7c</code> y mostrando su contenido con <code class="language-plaintext highlighter-rouge">pdf @ fcn.00001d7c</code> y vemos esto</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare3.png" alt="" /></p>
+
+<p>Y tampoco nos interesa ya que es una funcion de inicializacion, pasaremos a ver la funcion que sigue la cual es <code class="language-plaintext highlighter-rouge">fcn.0000298a</code> de igual manera mostramos su contenido con <code class="language-plaintext highlighter-rouge">pdf @ fcn.0000298a</code> y vemos esto</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare4.png" alt="" /></p>
+
+<p>Aqui si ya nos interesa, podemos ver que primeramente se hace el llamado de una funcion llamada <code class="language-plaintext highlighter-rouge">sym.imp.ada__calendar__delays__delay_for</code> la cual es para poner un delay en el programa, esa funcion esta recibiendo un parametro asi que vamos a imprimir su contenido y vemos esto:</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare5.png" alt="" /></p>
+
+<p>Podemos ver en las partes comentadas del codigo que el argumento que recibe es <code class="language-plaintext highlighter-rouge">v\x1b</code>, investigando un poco esto es igual a <code class="language-plaintext highlighter-rouge">1000000000000000</code>, es absurdamente demasiado tiempo asi que si ejecutamos el programa se quedara en el delay hasta que podamos ver algo.</p>
+
+<p>Ahora podemos seguir viendo las demas funciones, y la que sigue es <code class="language-plaintext highlighter-rouge">fcn.00002616</code>, mostraremos su contenido con <code class="language-plaintext highlighter-rouge">pdf @ fcn.00002616</code></p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare6.png" alt="" /></p>
+
+<p>Aqui si ya vemos lo mero bueno asi empezare analizando desde aqui:</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare7.png" alt="" /></p>
+
+<p><strong>¿Por que es tan importante esta parte</strong></p>
+
+<p>Primeramente podemos ver en un comentario la siguiente cadena <code class="language-plaintext highlighter-rouge">pqrstuvwxyzCTF_{}</code>, con ver el <code class="language-plaintext highlighter-rouge">CTF_{}</code> ya me doy una idea de que es una parte de la flag, sin embargo lo mas interesante esta en estas instrucciones:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lea rax, [0x00002cd8]
+lea rdx, [0x00002cb8]
+mov rcx, rax
+mov rbx, rdx
+mov rax, rdx
+mov rdi, rcx
+mov rsi, rax
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Primero: con <code class="language-plaintext highlighter-rouge">lea rdx, [0x00002cd8]</code> mueve la direccion <code class="language-plaintext highlighter-rouge">0x00002cd8</code> a rax, que seguramente esa direccion sea la de una variable y el contenido de esa direccion es <code class="language-plaintext highlighter-rouge">pqrstuvwxyzCTF_{}</code></p>
+  </li>
+  <li>
+    <p>Segundo: Otra vez con <code class="language-plaintext highlighter-rouge">lea rdx, [0x00002cb8]</code> mueve la direccion <code class="language-plaintext highlighter-rouge">0x00002cb8</code> a rdx</p>
+  </li>
+  <li>
+    <p>Tercero: mueve el contenido de rax a rcx</p>
+  </li>
+  <li>
+    <p>Cuarto: mueve el contenido de rdx a rbx</p>
+  </li>
+  <li>
+    <p>Quinto: mueve el contenido de rdx a rax</p>
+  </li>
+  <li>
+    <p>Sexto: mueve el contenido de rcx a rdi</p>
+  </li>
+  <li>
+    <p>Septimo: mueve el contenido de rax a rsi</p>
+  </li>
+</ul>
+
+<p>Y esto lo que esa haciendo es tomar el primer caracter de la cadena <code class="language-plaintext highlighter-rouge">pqrstuvwxyzCTF_{}</code> y meterlo en la funcion <code class="language-plaintext highlighter-rouge">sym.imp.ada__text_io__put__4</code> que se llama en la parte de abajo.</p>
+
+<p>Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a anlizar la siguiente funcion que es <code class="language-plaintext highlighter-rouge">fcn.000024aa</code> de igual manera mostramos su contenido</p>
+
+<p><img src="/assets/images/picoCTF-hurry/radare8.png" alt="" /></p>
+
+<p>Vemos exactamente lo mismo solo que la cadena a la cual se le esta tomando el primer caracter ahora es <code class="language-plaintext highlighter-rouge">ijklmnopqrstuvwxyzCTF_{}</code>.</p>
+
+<p>Y bueno, para no hacerlo mas largo lo que estan haciendo todas estas funciones:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fcn.00002616
+fcn.000024aa
+fcn.00002372
+fcn.000025e2
+fcn.00002852
+fcn.00002886
+fcn.000028ba
+fcn.00002922
+fcn.000023a6
+fcn.00002136
+fcn.00002206
+fcn.0000230a
+fcn.00002206
+fcn.0000257a
+fcn.000028ee
+fcn.0000240e
+fcn.000026e6
+fcn.00002782
+fcn.000028ee
+fcn.000022a2
+fcn.0000226e
+fcn.000023da
+fcn.00002206
+fcn.0000230a
+fcn.0000233e
+fcn.00002136
+fcn.00002956
+</code></pre></div></div>
+
+<p>Es guardar el primer caracter de la flag en la funcion <code class="language-plaintext highlighter-rouge">sym.imp.ada__text_io__put__4</code>, 
+Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta (la flag es diferente para cada usuario):</p>
+
+<p><code class="language-plaintext highlighter-rouge">picoCTF{d15a5m_ftw_afebc2e}</code></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/images/picoCTF-hurry/waifu.jpg" alt="" /></p>
+
+<font size="1"> ijaesuperramadre Kamiya esta bien guapa</font>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#radare2" class="page__taxonomy-item" rel="tag">radare2</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#reversing" class="page__taxonomy-item" rel="tag">Reversing</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022</time></p>
+        
+      </footer>
+
+      
+
+      
+  <nav class="pagination">
+    
+      <a href="/format-string/" class="pagination--pager" title="Format string
+">Previous</a>
+    
+    
+      <a href="/ret2libc/" class="pagination--pager" title="ret2libc bypass NX
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>
