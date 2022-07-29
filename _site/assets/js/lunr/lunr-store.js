@@ -8,4 +8,9 @@ var store = [{
         "excerpt":"Contenido ¿Que es format string? Calling conventions Lekeando valores de la memoria Resolviendo un pequeño ejercicio Visualizandolo en radare2 ¿Que es format string? Vulnerabilidad la cual ocurre cuando los inputs de los usuarios son ejecutados y procesados como comandos por una funcion vulnerable, esto permite que se puedan lekear valores...","categories": ["Explotacion binaria"],
         "tags": ["formatStr","radare2"],
         "url": "http://localhost:4000/format-string/",
+        "teaser":null},{
+        "title": "ret2libc bypass NX",
+        "excerpt":"Contenido ¿Que es ret2libc?. ¿Que es No Executable (NX)?. Un poco de Return Oriented Programming (ROP). Analizando nuestro binario. Explicando el payload que usaremos. Desbordando el buffer y calculando el offset del RIP. Consiguiendo la direccion de libc. Consiguiendo los offset de RET, POP RDI RET, /bin/sh y system(). Creando...","categories": ["Explotacion binaria"],
+        "tags": ["ret2libc","gdb","bof"],
+        "url": "http://localhost:4000/ret2libc/",
         "teaser":null}]
