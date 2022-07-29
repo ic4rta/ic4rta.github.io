@@ -1,0 +1,11 @@
+main:
+  - title: "Home"
+    url: /
+ # - title: "Posts"
+ # url: /year-archive/
+  - title: "Categorias"
+    url: /categorias/
+  - title: "Tags"
+    url: /tags/
+  - title: "About"
+    url: /about/
