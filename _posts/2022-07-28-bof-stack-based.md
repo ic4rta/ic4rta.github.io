@@ -295,7 +295,7 @@ Para ver si nuestra shellcode esta en la memoria mostraremos 100 bytes del rsp m
 
 ```x/100wx $rsp-200```
 
-Esto no debe de mostar algo como esto, donde la parte que esta seleccionada es nuestra shellcode, tambien ahi mimso podemos ver los 76 NOPs del junk, los 20 del padding y los 8 del RIP
+Esto no debe de mostar algo como esto, donde la parte que esta seleccionada es nuestra shellcode, tambien ahi mismo podemos ver los 76 NOPs del junk, los 20 del padding y los 8 del RIP
 
 ![](/assets/images/bof-stack-based/shellcode.png)
 
