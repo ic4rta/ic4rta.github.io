@@ -180,7 +180,7 @@ y a su vez los van sobreescribiendo
 
 ## Calculando el offset y tomando el control del RIP
 
-Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreesribir.
+Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreescribir.
 
 Para esto usaremos una utilidad de metasploit que se llama ```pattern_create``` que nos permite generar una serie de caracteres para poder calcular los offset, el comando queda de la siguiente manera:
 
