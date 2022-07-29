@@ -32,7 +32,7 @@ Donde dice que es un binario ELF de 64 bits y tambien vemos que el binario esta 
 
 ## Debugging al binario con radare2.
 
-Para comenzar con el debugging ingresamos el siguiente comando ```radare2 ./svchost.exe```, posterior mente analizamos el binario con el comando ```aaa```, nos movemos el main con ```s main``` y por ultimo mostramos el main con ```pdf``` y nos muestra todo esto
+Para comenzar con el debugging ingresamos el siguiente comando ```radare2 ./svchost.exe```, posteriormente analizamos el binario con el comando ```aaa```, nos movemos el main con ```s main``` y por ultimo mostramos el main con ```pdf``` y nos muestra todo esto
 
 ![](/assets/images/picoCTF-hurry/radare1.png)
 
