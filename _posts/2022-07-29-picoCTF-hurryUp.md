@@ -8,6 +8,7 @@ header:
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
+  - picoCTF
   - Reversing
 tags:  
     - radare2
