@@ -254,7 +254,7 @@ Lo que nos permiten los NOPs es deslizar el programa hacia un destino, se interp
 
 El primer paso que haremos es ubicar nuestra shellcode en la memoria y lo haremos de la siguiente forma
 
-Hay que recodar que tenemos un buffer de 100 que se esta declarando asi ```char buf[100]```
+Hay que recordar que tenemos un buffer de 100 que se esta declarando asi ```char buf[100]```
 
 En estos 100 bytes tenemos que lograr ubicar nuestra shellcode de 24 bytes, asi que para eso restaremos 100 - 24 bytes de la shellcode y nos da 76, este 76 sera el junk que llenaremos de NOPs para llenar el buffer de ```100```, los otros 24 bytes restantes son de la shellcode, hasta ahora nuestro payload va asi:
 
