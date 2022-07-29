@@ -13,7 +13,7 @@ categories:
   #- infosec
 tags:  
     - bof
-    - pwndbg
+    - gdb
 ---
 
 ## Contenido
