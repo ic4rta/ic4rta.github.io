@@ -305,7 +305,7 @@
 
 <h2 id="que-es-buffer-overflow">¿Que es buffer overflow?</h2>
 
-<p>El buffer es un espacio en la memoria en el cual se almacenan datos de manera temporal mientras se transfieren de una ubicacion a otra. El buffer overflow ocurre cuando se supera el espacio que se le fue asignado al buffer, como resultado de esto el programa intenta escribir los datos en el buffer pero lo unico que ocasiona es que se sobreescriban otros registros de la memora</p>
+<p>El buffer es un espacio en la memoria en el cual se almacenan datos de manera temporal mientras se transfieren de una ubicacion a otra. El buffer overflow ocurre cuando se supera el espacio que se le fue asignado al buffer, como resultado de esto el programa intenta escribir los datos en el buffer pero lo unico que ocasiona es que se sobreescriban otros registros de la memoria</p>
 
 <p><img src="/assets/images/bof-stack-based/buffer-overflow.png.webp" alt="" /></p>
 
@@ -480,7 +480,7 @@ y a su vez los van sobreescribiendo
 
 <h2 id="calculando-el-offset-y-tomando-el-control-del-rip">Calculando el offset y tomando el control del RIP</h2>
 
-<p>Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreesribir.</p>
+<p>Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreescribir.</p>
 
 <p>Para esto usaremos una utilidad de metasploit que se llama <code class="language-plaintext highlighter-rouge">pattern_create</code> que nos permite generar una serie de caracteres para poder calcular los offset, el comando queda de la siguiente manera:</p>
 
@@ -548,7 +548,7 @@ y a su vez los van sobreescribiendo
 
 <p>El primer paso que haremos es ubicar nuestra shellcode en la memoria y lo haremos de la siguiente forma</p>
 
-<p>Hay que recodar que tenemos un buffer de 100 que se esta declarando asi <code class="language-plaintext highlighter-rouge">char buf[100]</code></p>
+<p>Hay que recordar que tenemos un buffer de 100 que se esta declarando asi <code class="language-plaintext highlighter-rouge">char buf[100]</code></p>
 
 <p>En estos 100 bytes tenemos que lograr ubicar nuestra shellcode de 24 bytes, asi que para eso restaremos 100 - 24 bytes de la shellcode y nos da 76, este 76 sera el junk que llenaremos de NOPs para llenar el buffer de <code class="language-plaintext highlighter-rouge">100</code>, los otros 24 bytes restantes son de la shellcode, hasta ahora nuestro payload va asi:</p>
 
@@ -585,7 +585,7 @@ y a su vez los van sobreescribiendo
 
 <p><code class="language-plaintext highlighter-rouge">x/100wx $rsp-200</code></p>
 
-<p>Esto no debe de mostar algo como esto, donde la parte que esta seleccionada es nuestra shellcode, tambien ahi mimso podemos ver los 76 NOPs del junk, los 20 del padding y los 8 del RIP</p>
+<p>Esto nos debe de mostar algo como esto, donde la parte que esta seleccionada es nuestra shellcode, tambien ahi mismo podemos ver los 76 NOPs del junk, los 20 del padding y los 8 del RIP</p>
 
 <p><img src="/assets/images/bof-stack-based/shellcode.png" alt="" /></p>
 
@@ -593,7 +593,7 @@ y a su vez los van sobreescribiendo
 
 <p><img src="/assets/images/bof-stack-based/ret-shellcode.png" alt="" /></p>
 
-<p>El comando para a ejecutar en gdb queda de la siguiente forma:</p>
+<p>El comando para ejecutar en gdb queda de la siguiente forma:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r $(python2 -c "print '\x90'*76+'\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05'+'\x90'*20+'\xe0\xdc\xff\xff\xff\x7f\x00\x00'")
 </code></pre></div></div>
@@ -629,7 +629,7 @@ y a su vez los van sobreescribiendo
     
       
       
-      <a href="/tags/#pwndbg" class="page__taxonomy-item" rel="tag">pwndbg</a>
+      <a href="/tags/#gdb" class="page__taxonomy-item" rel="tag">gdb</a>
     
     </span>
   </p>
@@ -664,6 +664,16 @@ y a su vez los van sobreescribiendo
       
 
       
+  <nav class="pagination">
+    
+      <a href="#" class="pagination--pager disabled">Previous</a>
+    
+    
+      <a href="/format-string/" class="pagination--pager" title="Format string
+">Next</a>
+    
+  </nav>
+
     </div>
 
     
