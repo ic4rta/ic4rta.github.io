@@ -95,7 +95,7 @@ mov rsi, rax
 
 Y esto lo que esa haciendo es tomar el primer caracter de la cadena ```pqrstuvwxyzCTF_{}``` y meterlo en la funcion ```sym.imp.ada__text_io__put__4``` que se llama en la parte de abajo.
 
-Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a anlizar la siguiente funcion que es ```fcn.000024aa``` de igual manera mostramos su contenido
+Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a analizar la siguiente funcion que es ```fcn.000024aa``` de igual manera mostramos su contenido
 
 ![](/assets/images/picoCTF-hurry/radare8.png)
 
