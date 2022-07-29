@@ -36,7 +36,7 @@ Para comenzar con el debugging ingresamos el siguiente comando ```radare2 ./svch
 
 ![](/assets/images/picoCTF-hurry/radare1.png)
 
-La primera cosa interasantes la vemos en esta linea:
+La primera cosa interasante la vemos en esta linea:
 ```
 lea rax, str._ada_main      ; 0x2ad8 ; "_ada_main"
 ```
