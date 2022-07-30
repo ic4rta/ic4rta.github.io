@@ -85,7 +85,7 @@ Podemos visualizar algo como esto, donde se ve que tenemos dos entradas de PLT y
 
 ***A tomar en cuenta:***
 
-* En caso de que haya una entrada para ```gets``` y ```puts```, ambas funcioes saltaran a la direccion que esta almecenada all
+* En caso de que haya una entrada para ```gets``` y ```puts```, ambas funcioes saltaran a la direccion que esta almecenada alli
 
 * Las direcciones en memoria de las funciones de libc, como ```gets``` y ```puts``` estan almacenadas en GOT
 
