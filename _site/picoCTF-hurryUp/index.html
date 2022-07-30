@@ -318,11 +318,11 @@
 
 <h2 id="debugging-al-binario-con-radare2">Debugging al binario con radare2.</h2>
 
-<p>Para comenzar con el debugging ingresamos el siguiente comando <code class="language-plaintext highlighter-rouge">radare2 ./svchost.exe</code>, posterior mente analizamos el binario con el comando <code class="language-plaintext highlighter-rouge">aaa</code>, nos movemos el main con <code class="language-plaintext highlighter-rouge">s main</code> y por ultimo mostramos el main con <code class="language-plaintext highlighter-rouge">pdf</code> y nos muestra todo esto</p>
+<p>Para comenzar con el debugging ingresamos el siguiente comando <code class="language-plaintext highlighter-rouge">radare2 ./svchost.exe</code>, posteriormente analizamos el binario con el comando <code class="language-plaintext highlighter-rouge">aaa</code>, nos movemos el main con <code class="language-plaintext highlighter-rouge">s main</code> y por ultimo mostramos el main con <code class="language-plaintext highlighter-rouge">pdf</code> y nos muestra todo esto</p>
 
 <p><img src="/assets/images/picoCTF-hurry/radare1.png" alt="" /></p>
 
-<p>La primera cosa interasantes la vemos en esta linea:</p>
+<p>La primera cosa interasante la vemos en esta linea:</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lea rax, str._ada_main      ; 0x2ad8 ; "_ada_main"
 </code></pre></div></div>
 <p>La cual vemos una funcion con el nombre <code class="language-plaintext highlighter-rouge">_ada_main</code>, asi que haciendo una busqueda rapida en google por el nombre de <code class="language-plaintext highlighter-rouge">Ada</code>, me mostro que es un lenguaje de programacion, asi que el binario esta escrito en <code class="language-plaintext highlighter-rouge">Ada</code>, seguimos viendo el codigo y llegamos a esta parte:</p>
@@ -390,7 +390,7 @@ mov rsi, rax
 
 <p>Y esto lo que esa haciendo es tomar el primer caracter de la cadena <code class="language-plaintext highlighter-rouge">pqrstuvwxyzCTF_{}</code> y meterlo en la funcion <code class="language-plaintext highlighter-rouge">sym.imp.ada__text_io__put__4</code> que se llama en la parte de abajo.</p>
 
-<p>Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a anlizar la siguiente funcion que es <code class="language-plaintext highlighter-rouge">fcn.000024aa</code> de igual manera mostramos su contenido</p>
+<p>Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a analizar la siguiente funcion que es <code class="language-plaintext highlighter-rouge">fcn.000024aa</code> de igual manera mostramos su contenido</p>
 
 <p><img src="/assets/images/picoCTF-hurry/radare8.png" alt="" /></p>
 
@@ -475,6 +475,10 @@ Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta
   <p class="page__taxonomy">
     <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
     <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#picoctf" class="page__taxonomy-item" rel="tag">picoCTF</a><span class="sep">, </span>
     
       
       

