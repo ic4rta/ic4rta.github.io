@@ -23,4 +23,9 @@ var store = [{
         "excerpt":"Contenido Global Offset Table (GOT) y Procedure Linked Table (PLT) Analisis del binario Calculando el offset del buffer y la direccion de libc Armando nuestro exploit GOT y PLT Para entender esto mejor veremos la estructura de un binario ELF. Ahora pondre otra estructura donde section header table apunta a...","categories": ["Explotacion binaria"],
         "tags": ["got-plt","gdb","formatStr"],
         "url": "http://localhost:4000/got-overwrite/",
+        "teaser":null},{
+        "title": "ImaginaryCTF date2 - GOT overwrite",
+        "excerpt":"Contenido Analizando el binario con Ghidra Ejecutando el exploit Analizando el binario con Ghidra Este ejercicio es muy similar al enterior del post de GOT overwrite solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra Lo primero que...","categories": ["Explotacion binaria"],
+        "tags": ["got-plt","ghidra","formatStr"],
+        "url": "http://localhost:4000/imaginaryCTF-date2/",
         "teaser":null}]

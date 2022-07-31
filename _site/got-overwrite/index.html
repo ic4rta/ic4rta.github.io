@@ -341,11 +341,11 @@
 
 <p>Si se dieron cuenta se menciona la palabra <code class="language-plaintext highlighter-rouge">enlace</code> y esto es por que GOT y PLT se encargan de la gran parte del enlazado dinamico</p>
 
-<p>Imaginemos una situacion donde tomanos el valor de un simbolo, para poder realizar esto tenemos que hacer que el enlazador dinamico busque la direccion en memoria de ese simbolo y reescriba el codigo para solo poder carga una sola direccion, esto es demasiado proceso e incluso aumenta el tamaño del binario, asi que una mejora mucho mas eficiente y eficaz es reservar un espacio en la memoria del binario en la cual se mantendra la direccion de ese simbolo y posteriormente hacer que el enlazador dinamico ponga la direccion alli en lugar de reescribir todo el codigo, esto es gracias a que existe GOT, y GOT se encuenta en una seccion el binario que se llama .got, se puede ver en la primera imagen.</p>
+<p>Imaginemos una situacion donde tomamos el valor de un simbolo, para poder realizar esto tenemos que hacer que el enlazador dinamico busque la direccion en memoria de ese simbolo y reescriba el codigo para solo poder carga una sola direccion, esto es demasiado proceso e incluso aumenta el tamaño del binario, asi que una mejora mucho mas eficiente y eficaz es reservar un espacio en la memoria del binario en la cual se mantendra la direccion de ese simbolo y posteriormente hacer que el enlazador dinamico ponga la direccion alli en lugar de reescribir todo el codigo, esto es gracias a que existe GOT, y GOT se encuenta en una seccion el binario que se llama .got, se puede ver en la primera imagen.</p>
 
 <h3 id="como-trabaja-got-y-plt">¿Como trabaja GOT y PLT?</h3>
 
-<p>GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinamico durante la ejecion del binario, posteriormente obtiene las direcciones absolutas de las funciones solicitadas y GOT se actualiza asi mismo segun lo que fue solicitado, despues toma las solicitudes de las ubicaciones que vienen por parte de PLT, una vez que esto se concluya tenemos el paso final en el cual PLT esta vinculado con la direccion de GOT, entonces ahora el binario puede llamar directamente a esa funcion que fue solicitada desde las librerias. Definitavemente GOT y PLT son los mejores amigos</p>
+<p>GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinamico durante la ejecucion del binario, posteriormente obtiene las direcciones absolutas de las funciones solicitadas y GOT se actualiza asi mismo segun lo que fue solicitado, despues toma las solicitudes de las ubicaciones que vienen por parte de PLT, una vez que esto se concluya tenemos el paso final en el cual PLT esta vinculado con la direccion de GOT, entonces ahora el binario puede llamar directamente a esa funcion que fue solicitada desde las librerias. Definitivamente GOT y PLT son los mejores amigos</p>
 
 <h3 id="un-pequeño-ejemplo">Un pequeño ejemplo</h3>
 
@@ -371,10 +371,13 @@
 <p><strong><em>A tomar en cuenta:</em></strong></p>
 
 <ul>
-  <li>En caso de que haya una entrada para <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code>, ambas funcioes saltaran a la direccion que esta almecenada all</li>
+  <li>
+    <p>En caso de que haya una entrada para <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code>, ambas funciones saltaran a la direccion que esta almacenada alli</p>
+  </li>
+  <li>
+    <p>Las direcciones en memoria de las funciones de libc, como <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code> estan almacenadas en GOT, ya que GOT es una gran tabla de direcciones</p>
+  </li>
 </ul>
-
-<p>*Las direcciones en memoria de las funciones de libc, como <code class="language-plaintext highlighter-rouge">gets</code> y <code class="language-plaintext highlighter-rouge">puts</code> estan almacenadas en GOT</p>
 
 <h3 id="como-nos-podemos-aprovechar-de-esto">¿Como nos podemos aprovechar de esto?</h3>
 
@@ -547,7 +550,8 @@
 ">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/imaginaryCTF-date2/" class="pagination--pager" title="ImaginaryCTF date2 - GOT overwrite
+">Next</a>
     
   </nav>
 

