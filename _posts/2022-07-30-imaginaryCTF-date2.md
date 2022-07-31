@@ -135,7 +135,7 @@ Si lo ejecutamos y listamos el contenido podemos ver la flag
 
 ```
 [+] Opening connection to eth007.me on port 42069: Done
-[*] '/home/kali/Desktop/vuln'
+[*] '/home/omarh/Escritorio/vuln'
     Arch:     amd64-64-little
     RELRO:    Full RELRO
     Stack:    Canary found
