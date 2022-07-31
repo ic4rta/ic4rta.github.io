@@ -146,3 +146,5 @@ no smh you are wrong the date is
 $ ls
 flag.txt
 ```
+Eso ha sido todo, gracias por leer ❤
+
