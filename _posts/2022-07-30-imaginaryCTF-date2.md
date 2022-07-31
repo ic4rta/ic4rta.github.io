@@ -22,7 +22,7 @@ tags:
 
 ## Analizando el binario con Ghidra
 
-Este ejercicio es muy similar al enterior del post de GOT overwrite solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra
+Este ejercicio es muy similar al enterior del post de GOT overwrite y para practicar esta perfecto, solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra
 
 Lo primero que vamos a hacer es meter el binario a Ghidra la cual pueden descargar desde su repo oficial
 
@@ -147,4 +147,8 @@ $ ls
 flag.txt
 ```
 Eso ha sido todo, gracias por leer ❤
+
+![](/assets/images/imaginaryCTF-date2/waifu.jpg)
+
+<font size="1"> como me encula esa dama</font> 
 
