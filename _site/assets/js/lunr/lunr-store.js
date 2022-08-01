@@ -25,7 +25,12 @@ var store = [{
         "url": "http://localhost:4000/got-overwrite/",
         "teaser":null},{
         "title": "ImaginaryCTF date2 - GOT overwrite",
-        "excerpt":"Contenido Analizando el binario con Ghidra Ejecutando el exploit Analizando el binario con Ghidra Este ejercicio es muy similar al enterior del post de GOT overwrite solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra Lo primero que...","categories": ["Explotacion binaria"],
+        "excerpt":"Contenido Analizando el binario con Ghidra Ejecutando el exploit Analizando el binario con Ghidra Este ejercicio es muy similar al enterior del post de GOT overwrite y para practicar esta perfecto, solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo...","categories": ["Explotacion binaria"],
         "tags": ["got-plt","ghidra","formatStr"],
         "url": "http://localhost:4000/imaginaryCTF-date2/",
+        "teaser":null},{
+        "title": "IOF - Integer Overflow/Underflow",
+        "excerpt":"Contenido Integer Overflow y underflow Analizando y explotando el binario Integer Overflow y underflow Primeramente voy a explicar un poco acerca de los tipo de datos en C, pero mas que nada el maximo valor que pueden almacenar. Las variables que solo pueden almacenar valores positivos se llaman unsigned integers,...","categories": ["Explotacion Binaria"],
+        "tags": ["radare2"],
+        "url": "http://localhost:4000/integer-overflow/",
         "teaser":null}]

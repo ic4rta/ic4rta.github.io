@@ -1,0 +1,508 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>IOF - Integer Overflow/Underflow - c4rta</title>
+<meta name="description" content="En este articulo veremos como funciona y como realizar un Integer Overflow">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="IOF - Integer Overflow/Underflow">
+<meta property="og:url" content="http://localhost:4000/integer-overflow/">
+
+
+  <meta property="og:description" content="En este articulo veremos como funciona y como realizar un Integer Overflow">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-08-01T00:00:00-05:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/integer-overflow/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">IOF - Integer Overflow/Underflow</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTF player<br>Aficionado a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="IOF - Integer Overflow/Underflow">
+    <meta itemprop="description" content="En este articulo veremos como funciona y como realizar un Integer Overflow">
+    <meta itemprop="datePublished" content="August 01, 2022">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">IOF - Integer Overflow/Underflow
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-01T00:00:00-05:00">August 01, 2022 </time>&emsp;
+          
+          
+        </p>
+        <h2 id="contenido">Contenido</h2>
+
+<ul>
+  <li>Integer Overflow y underflow</li>
+  <li>Analizando y explotando el binario</li>
+</ul>
+
+<h2 id="integer-overflow-y-underflow">Integer Overflow y underflow</h2>
+
+<p>Primeramente voy a explicar un poco acerca de los tipo de datos en C, pero mas que nada el maximo valor que pueden almacenar.</p>
+
+<p><img src="/assets/images/integer-overflow/integer.jpg" alt="" /></p>
+
+<p>Las variables que solo pueden almacenar valores positivos se llaman <code class="language-plaintext highlighter-rouge">unsigned integers</code>, y las que pueden almacenar valores positivos y negativos se llaman <code class="language-plaintext highlighter-rouge">signed integers</code>.</p>
+
+<p>Es importantes tomar en cuenta el maximo valor que puede almacenar un tipo de dato int ya que cuando se intenta almacenar números negativos, el bit más significativo se usa para indicar el signo (- o +), entonces si el bit más significativo se establece en 0, la variable se vuelve positiva y si el bit mas significativo se establece en 1 se vuelve negativa, para comprender esto mejor usare una calculadora que encontre.</p>
+
+<p><code class="language-plaintext highlighter-rouge">https://www.simonv.fr/TypesConvert/?integers</code></p>
+
+<p>Para este ejercico voy a tomar de ejemplo una variable <code class="language-plaintext highlighter-rouge">signed int</code> de 32 bits que su valor maximo es <code class="language-plaintext highlighter-rouge">2147483647</code>, voy a ingresar ese valor para indicar lo que dije en el parrafo de arriba</p>
+
+<p><img src="/assets/images/integer-overflow/signed1.png" alt="" /></p>
+
+<p>Vemos como tenemos 32 bits (aparece el maximo 31 por que se empieza desde 0), de los cuales 31 estan prendidos, osea que su valor es <code class="language-plaintext highlighter-rouge">1</code>, y el bit mas significativo que es el 32 se establece en <code class="language-plaintext highlighter-rouge">0</code>, ya que ese es el que indica el signo, ahora ingresare <code class="language-plaintext highlighter-rouge">2147483647</code> + <code class="language-plaintext highlighter-rouge">1</code>, osea <code class="language-plaintext highlighter-rouge">2147483648</code></p>
+
+<p><img src="/assets/images/integer-overflow/signed2.png" alt="" /></p>
+
+<p>Podemos ver como 31 bits estan apagados, osea en 0, y el bit mas significativo esta en <code class="language-plaintext highlighter-rouge">1</code> osea que el signo ahora es negativo, y si vemos la descripcion que nos pone la pagina dice que la conversion ocasiono un overflow, o un integer overflow</p>
+
+<p>Entonces podemos decir que un Integer Overflow es cuando se intenta almacenar un valor mayor del maximo soportado ocasionado un Integer Overflow</p>
+
+<h3 id="integer-underflow">Integer Underflow</h3>
+
+<p>Es simplemente lo mismo solo que al reves, osea que un integer underflow se ocasiona cuando se intenta almacenar un valor menor al minimo valor admitido y el resultado se convierte en positivo</p>
+
+<h2 id="analizando-y-explotando-el-binario">Analizando y explotando el binario</h2>
+
+<p>Para este ejemplo tomare un binario de la sala pwn101 de TryHackMe <code class="language-plaintext highlighter-rouge">https://tryhackme.com/room/pwn101</code> el binario es del de pwn105.</p>
+
+<p>Si ejecutamos el binario nos muestra algo como esto</p>
+
+<p><img src="/assets/images/integer-overflow/binario.png" alt="" /></p>
+
+<p>Simplemente se estan recibiendo dos datos de tipo int y hace la suma</p>
+
+<p>Ahora metere el binario a radare2, me voy a la funcion main y pondre el comando <code class="language-plaintext highlighter-rouge">VVV</code> para obtener una vista por bloques</p>
+
+<p>Lo primero que vemos es la declaracion de variables donde hay una que se llama <code class="language-plaintext highlighter-rouge">var_ch</code> que se esta declarando como <code class="language-plaintext highlighter-rouge">signed int</code> como se ve en la imagen de abajo.</p>
+
+<p><img src="/assets/images/integer-overflow/radare1.png" alt="" /></p>
+
+<p>Ahora me movere a la parte donde el programa tome nuestro primer input</p>
+
+<p><img src="/assets/images/integer-overflow/radare2.png" alt="" /></p>
+
+<p>Vemos que el programa guarda nuestro primer input ingresado usando <code class="language-plaintext highlighter-rouge">0x0000216f</code>, y esto es un format string el cual es <code class="language-plaintext highlighter-rouge">%d</code> de igual manera arriba no los indica, de hecho esta en un comentario, entonces el binario toma nuestro input como un <code class="language-plaintext highlighter-rouge">signed int</code>, este input lo guarda en la variable <code class="language-plaintext highlighter-rouge">var_14</code>.</p>
+
+<p>Si bajamos un poco tenemos la otra parte donde se guarda nuestro segundo input que como se puede ver es exactamente lo mismo, simplemente ahora lo guarda en una variable que se llama <code class="language-plaintext highlighter-rouge">var_10</code>.</p>
+
+<p><img src="/assets/images/integer-overflow/radare3.png" alt="" /></p>
+
+<p>Ahora bajaremos a esta parte:</p>
+
+<p><img src="/assets/images/integer-overflow/radare4.png" alt="" /></p>
+
+<p>Lo que hace es hacer una operacion de <code class="language-plaintext highlighter-rouge">add</code> osea una suma, y esta sumando el valor almacenado de nuestro primer input que esta en la variable <code class="language-plaintext highlighter-rouge">var_14h</code> con nuestro segundo input que esta en <code class="language-plaintext highlighter-rouge">var_10h</code> y lo almacena en <code class="language-plaintext highlighter-rouge">var_ch</code>.</p>
+
+<p>Despues tenemos el primer salto condicional que es <code class="language-plaintext highlighter-rouge">js 0x1384</code> en el cual checha si <code class="language-plaintext highlighter-rouge">var_14</code> tiene signo (+ o -), y en caso de que no lo tenga osea que es positivo salta a este bloque:</p>
+
+<p><img src="/assets/images/integer-overflow/radare5.png" alt="" /></p>
+
+<p>En el cual checa si nuestro segundo input que esta en <code class="language-plaintext highlighter-rouge">var_10</code> tiene signo (+ o -), si el resultado de esta operacion en false osea que no se cumplio la condicion y ambos valores son positivos, se salta a este bloque:</p>
+
+<p><img src="/assets/images/integer-overflow/radare6.png" alt="" /></p>
+
+<p>En el cual hace una comparacion entre el resultado de la suma de <code class="language-plaintext highlighter-rouge">var_10</code> y <code class="language-plaintext highlighter-rouge">var_14h</code> que esta almacenada en <code class="language-plaintext highlighter-rouge">var_10h</code> con 0, y si el resultado de la comparacion tiene signos negativos salta a este bloque:</p>
+
+<p><img src="/assets/images/integer-overflow/radare7.png" alt="" /></p>
+
+<p>En al cual basicamente esta ejecutando /bin/sh.</p>
+
+<h3 id="como-obtenemos-la-shell">¿Como obtenemos la shell?</h3>
+
+<p>Si tomamos en cuenta que <code class="language-plaintext highlighter-rouge">cmp</code> realiza la comparacion de esta forma:</p>
+
+<p><code class="language-plaintext highlighter-rouge">CMP destination, source</code></p>
+
+<p>Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea el valor maximo de <code class="language-plaintext highlighter-rouge">signed int</code> ya que <code class="language-plaintext highlighter-rouge">var_ch</code> se esta declarando como <code class="language-plaintext highlighter-rouge">signed int</code>, ademas de que el resultado de la suma de <code class="language-plaintext highlighter-rouge">var_10</code> y <code class="language-plaintext highlighter-rouge">var_14h</code> que se almacena en <code class="language-plaintext highlighter-rouge">var_ch</code> el primer numero que se le pasa es el que tiene almacenado <code class="language-plaintext highlighter-rouge">var_10</code> y nuestro segundo input le pondremos 1 para que el resultado sea negativo y ocasionemos un Integer Overflow</p>
+
+<p>Entonces la resolucion del ejercicio queda asi:</p>
+
+<p><img src="/assets/images/integer-overflow/radare9.png" alt="" /></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/images/integer-overflow/waifu.png" alt="" /></p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#radare2" class="page__taxonomy-item" rel="tag">radare2</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#explotacion-binaria" class="page__taxonomy-item" rel="tag">Explotacion Binaria</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-08-01T00:00:00-05:00">August 01, 2022</time></p>
+        
+      </footer>
+
+      
+
+      
+  <nav class="pagination">
+    
+      <a href="/imaginaryCTF-date2/" class="pagination--pager" title="ImaginaryCTF date2 - GOT overwrite
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>

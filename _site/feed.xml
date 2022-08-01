@@ -1,4 +1,99 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-07-30T21:00:22-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-08-01T18:48:12-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">IOF - Integer Overflow/Underflow</title><link href="http://localhost:4000/integer-overflow/" rel="alternate" type="text/html" title="IOF - Integer Overflow/Underflow" /><published>2022-08-01T00:00:00-05:00</published><updated>2022-08-01T00:00:00-05:00</updated><id>http://localhost:4000/integer-overflow</id><content type="html" xml:base="http://localhost:4000/integer-overflow/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Integer Overflow y underflow&lt;/li&gt;
+  &lt;li&gt;Analizando y explotando el binario&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;integer-overflow-y-underflow&quot;&gt;Integer Overflow y underflow&lt;/h2&gt;
+
+&lt;p&gt;Primeramente voy a explicar un poco acerca de los tipo de datos en C, pero mas que nada el maximo valor que pueden almacenar.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/integer.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Las variables que solo pueden almacenar valores positivos se llaman &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unsigned integers&lt;/code&gt;, y las que pueden almacenar valores positivos y negativos se llaman &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed integers&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Es importantes tomar en cuenta el maximo valor que puede almacenar un tipo de dato int ya que cuando se intenta almacenar números negativos, el bit más significativo se usa para indicar el signo (- o +), entonces si el bit más significativo se establece en 0, la variable se vuelve positiva y si el bit mas significativo se establece en 1 se vuelve negativa, para comprender esto mejor usare una calculadora que encontre.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://www.simonv.fr/TypesConvert/?integers&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Para este ejercico voy a tomar de ejemplo una variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt; de 32 bits que su valor maximo es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2147483647&lt;/code&gt;, voy a ingresar ese valor para indicar lo que dije en el parrafo de arriba&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/signed1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Vemos como tenemos 32 bits (aparece el maximo 31 por que se empieza desde 0), de los cuales 31 estan prendidos, osea que su valor es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1&lt;/code&gt;, y el bit mas significativo que es el 32 se establece en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt;, ya que ese es el que indica el signo, ahora ingresare &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2147483647&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1&lt;/code&gt;, osea &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2147483648&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/signed2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Podemos ver como 31 bits estan apagados, osea en 0, y el bit mas significativo esta en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1&lt;/code&gt; osea que el signo ahora es negativo, y si vemos la descripcion que nos pone la pagina dice que la conversion ocasiono un overflow, o un integer overflow&lt;/p&gt;
+
+&lt;p&gt;Entonces podemos decir que un Integer Overflow es cuando se intenta almacenar un valor mayor del maximo soportado ocasionado un Integer Overflow&lt;/p&gt;
+
+&lt;h3 id=&quot;integer-underflow&quot;&gt;Integer Underflow&lt;/h3&gt;
+
+&lt;p&gt;Es simplemente lo mismo solo que al reves, osea que un integer underflow se ocasiona cuando se intenta almacenar un valor menor al minimo valor admitido y el resultado se convierte en positivo&lt;/p&gt;
+
+&lt;h2 id=&quot;analizando-y-explotando-el-binario&quot;&gt;Analizando y explotando el binario&lt;/h2&gt;
+
+&lt;p&gt;Para este ejemplo tomare un binario de la sala pwn101 de TryHackMe &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://tryhackme.com/room/pwn101&lt;/code&gt; el binario es del de pwn105.&lt;/p&gt;
+
+&lt;p&gt;Si ejecutamos el binario nos muestra algo como esto&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/binario.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Simplemente se estan recibiendo dos datos de tipo int y hace la suma&lt;/p&gt;
+
+&lt;p&gt;Ahora metere el binario a radare2, me voy a la funcion main y pondre el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VVV&lt;/code&gt; para obtener una vista por bloques&lt;/p&gt;
+
+&lt;p&gt;Lo primero que vemos es la declaracion de variables donde hay una que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; que se esta declarando como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt; como se ve en la imagen de abajo.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora me movere a la parte donde el programa tome nuestro primer input&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Vemos que el programa guarda nuestro primer input ingresado usando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0000216f&lt;/code&gt;, y esto es un format string el cual es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%d&lt;/code&gt; de igual manera arriba no los indica, de hecho esta en un comentario, entonces el binario toma nuestro input como un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt;, este input lo guarda en la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Si bajamos un poco tenemos la otra parte donde se guarda nuestro segundo input que como se puede ver es exactamente lo mismo, simplemente ahora lo guarda en una variable que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora bajaremos a esta parte:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo que hace es hacer una operacion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add&lt;/code&gt; osea una suma, y esta sumando el valor almacenado de nuestro primer input que esta en la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; con nuestro segundo input que esta en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10h&lt;/code&gt; y lo almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Despues tenemos el primer salto condicional que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;js 0x1384&lt;/code&gt; en el cual checha si &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14&lt;/code&gt; tiene signo (+ o -), y en caso de que no lo tenga osea que es positivo salta a este bloque:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;En el cual checa si nuestro segundo input que esta en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; tiene signo (+ o -), si el resultado de esta operacion en false osea que no se cumplio la condicion y ambos valores son positivos, se salta a este bloque:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;En el cual hace una comparacion entre el resultado de la suma de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; que esta almacenada en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10h&lt;/code&gt; con 0, y si el resultado de la comparacion tiene signos negativos salta a este bloque:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;En al cual basicamente esta ejecutando /bin/sh.&lt;/p&gt;
+
+&lt;h3 id=&quot;como-obtenemos-la-shell&quot;&gt;¿Como obtenemos la shell?&lt;/h3&gt;
+
+&lt;p&gt;Si tomamos en cuenta que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmp&lt;/code&gt; realiza la comparacion de esta forma:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CMP destination, source&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea el valor maximo de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt; ya que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; se esta declarando como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt;, ademas de que el resultado de la suma de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; que se almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; el primer numero que se le pasa es el que tiene almacenado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y nuestro segundo input le pondremos 1 para que el resultado sea negativo y ocasionemos un Integer Overflow&lt;/p&gt;
+
+&lt;p&gt;Entonces la resolucion del ejercicio queda asi:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare9.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion Binaria" /><category term="radare2" /><summary type="html">En este articulo veremos como funciona y como realizar un Integer Overflow</summary></entry><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;Global Offset Table (GOT) y Procedure Linked Table (PLT)&lt;/li&gt;
   &lt;li&gt;Analisis del binario&lt;/li&gt;
@@ -188,7 +283,7 @@
 
 &lt;h2 id=&quot;analizando-el-binario-con-ghidra&quot;&gt;Analizando el binario con Ghidra&lt;/h2&gt;
 
-&lt;p&gt;Este ejercicio es muy similar al enterior del post de GOT overwrite solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra&lt;/p&gt;
+&lt;p&gt;Este ejercicio es muy similar al enterior del post de GOT overwrite y para practicar esta perfecto, solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo con ghidra&lt;/p&gt;
 
 &lt;p&gt;Lo primero que vamos a hacer es meter el binario a Ghidra la cual pueden descargar desde su repo oficial&lt;/p&gt;
 
@@ -294,7 +389,7 @@ long local_10;
 &lt;p&gt;Si lo ejecutamos y listamos el contenido podemos ver la flag&lt;/p&gt;
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[+] Opening connection to eth007.me on port 42069: Done
-[*] '/home/kali/Desktop/vuln'
+[*] '/home/omarh/Escritorio/vuln'
     Arch:     amd64-64-little
     RELRO:    Full RELRO
     Stack:    Canary found
@@ -304,7 +399,12 @@ long local_10;
 no smh you are wrong the date is 
 $ ls
 flag.txt
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-plt" /><category term="ghidra" /><category term="formatStr" /><summary type="html">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT</summary></entry><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/imaginaryCTF-date2/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;1&quot;&gt; como me encula esa dama&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-plt" /><category term="ghidra" /><category term="formatStr" /><summary type="html">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT</summary></entry><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;¿Que es format string?&lt;/li&gt;
   &lt;li&gt;Calling conventions&lt;/li&gt;
