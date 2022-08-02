@@ -4,5 +4,5 @@ permalink: /about/
 date: 2022-07-25
 ---
 <br><center> Soy Omar Hernandez (aka c4rta)</center>
-<center> Actualmente soy estudiante de universidad que le apasiona la ciberseguridad, me gusta realizar CTFs y el reversing </center>
+<center> Soy aficionado a la ciberseguridad, actualmente soy estudiante de universidad, me gusta la explotacion binaria y el reversing </center>
 
