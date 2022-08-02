@@ -8,7 +8,7 @@ header:
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
-  - Explotacion Binaria
+  - Explotacion binaria
 tags:  
     - radare2
 ---
