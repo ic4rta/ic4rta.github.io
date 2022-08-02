@@ -78,7 +78,7 @@ Ahora bajaremos a esta parte:
 
 ![](/assets/images/integer-overflow/radare4.png)
 
-Lo que hace es hacer una operacion de ```add``` osea una suma, y esta sumando el valor almacenado de nuestro primer input que esta en la variable ```var_14h``` con nuestro segundo input que esta en ```var_10h``` y lo almacena en ```var_ch```.
+Lo primero que hace es mover el valor de ```var_14``` a ```edx``` y el valor de ```var_10``` a ```eax``` despues lo que hace es hacer una operacion de ```add``` osea una suma, y esta sumando el valor almacenado de nuestro primer input que esta en la variable ```var_14h``` y que se paso a ```edx``` con nuestro segundo input que esta en ```var_10h``` y que se paso de ```eax``` y el resultado lo almacena en ```var_ch```.
 
 Despues tenemos el primer salto condicional que es ```js 0x1384``` en el cual checha si ```var_14``` tiene signo (+ o -), y en caso de que no lo tenga osea que es positivo salta a este bloque:
 
@@ -100,7 +100,7 @@ Si tomamos en cuenta que ```cmp``` realiza la comparacion de esta forma:
 
 ```CMP destination, source```
 
-Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea el valor maximo de ```signed int``` ya que ```var_ch``` se esta declarando como ```signed int```, ademas de que el resultado de la suma de ```var_10``` y ```var_14h``` que se almacena en ```var_ch``` el primer numero que se le pasa es el que tiene almacenado ```var_10``` y nuestro segundo input le pondremos 1 para que el resultado sea negativo y ocasionemos un Integer Overflow
+Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea el valor maximo de ```signed int``` ya que ```var_ch``` se esta declarando como ```signed int```, ademas de que el resultado de la suma de ```var_10``` y ```var_14h``` que se almacena en ```var_ch``` el primer numero que se le pasa es el que tiene almacenado ```var_14``` y nuestro segundo input le pondremos 1 para que el resultado sea negativo y ocasionemos un Integer Overflow
 
 Entonces la resolucion del ejercicio queda asi:
 
