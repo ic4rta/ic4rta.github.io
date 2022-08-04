@@ -10,7 +10,7 @@ var store = [{
         "url": "http://localhost:4000/format-string/",
         "teaser":null},{
         "title": "picoCTF - Hurry up! Wait!",
-        "excerpt":"Contenido Sacando informacion del binario. Debugging al binario con radare2. Sacando informacion del binario Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre svchost.exe, con ese nombre uno pensaria que es un binario .exe para ser ejecutado...","categories": ["picoCTF","Reversing"],
+        "excerpt":"Contenido Sacando informacion del binario. Debugging al binario con radare2. Sacando informacion del binario Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre svchost.exe, con ese nombre uno pensaria que es un binario .exe para ser ejecutado...","categories": ["Reversing"],
         "tags": ["radare2"],
         "url": "http://localhost:4000/picoCTF-hurryUp/",
         "teaser":null},{
@@ -30,7 +30,12 @@ var store = [{
         "url": "http://localhost:4000/imaginaryCTF-date2/",
         "teaser":null},{
         "title": "IOF - Integer Overflow/Underflow",
-        "excerpt":"Contenido Integer Overflow y underflow Analizando y explotando el binario Integer Overflow y underflow Primeramente voy a explicar un poco acerca de los tipo de datos en C, pero mas que nada el maximo valor que pueden almacenar. Las variables que solo pueden almacenar valores positivos se llaman unsigned integers,...","categories": ["Explotacion Binaria"],
+        "excerpt":"Contenido Integer Overflow y underflow Analizando y explotando el binario Integer Overflow y underflow Primeramente voy a explicar un poco acerca de los tipo de datos en C, pero mas que nada el maximo valor que pueden almacenar. Las variables que solo pueden almacenar valores positivos se llaman unsigned integers,...","categories": ["Explotacion binaria"],
         "tags": ["radare2"],
         "url": "http://localhost:4000/integer-overflow/",
+        "teaser":null},{
+        "title": "Leak stack canary - bypass",
+        "excerpt":"Contenido Que es el stack canary y como funciona Analizando el binario Lekeando el canary Sacando el offset del canary Ejecutando nuestro exploit Que es el stack canary y como funciona El stack canary es un valor random que se genera en el stack y cambia cada vez que se...","categories": ["Explotacion binaria"],
+        "tags": ["formatStr","radare2"],
+        "url": "http://localhost:4000/leak-stack-canary/",
         "teaser":null}]
