@@ -19,7 +19,7 @@ tags:
 
 
 ## Contenido
-- ASRL
+- ASLR
 - Analizando el binario
 - Calculando el offset el RIP
 - Sacando las direcciones de puts y puts@got
