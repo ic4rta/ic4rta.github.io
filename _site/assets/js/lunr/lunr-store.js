@@ -38,4 +38,9 @@ var store = [{
         "excerpt":"Contenido Que es el stack canary y como funciona Analizando el binario Lekeando el canary Sacando el offset del canary Ejecutando nuestro exploit Que es el stack canary y como funciona El stack canary es un valor random que se genera en el stack y cambia cada vez que se...","categories": ["Explotacion binaria"],
         "tags": ["formatStr","radare2"],
         "url": "http://localhost:4000/leak-stack-canary/",
+        "teaser":null},{
+        "title": "Bypass ASLR/NX",
+        "excerpt":"Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta Contenido ASRL Analizando el binario Calculando el offset el RIP Sacando las direcciones de puts y puts@got Sacando la direccion de pop rdi; ret Sacando los offsets de puts, system y sh usando...","categories": ["Explotacion binaria"],
+        "tags": ["ret2libc","gdb","bof"],
+        "url": "http://localhost:4000/bypass-aslr-nx/",
         "teaser":null}]
