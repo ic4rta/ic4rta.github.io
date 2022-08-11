@@ -228,7 +228,7 @@ p.interactive()
 Y nos debe de mostrar algo como esto:
 
 ```
-python3 exploit.py                                                      6s  01:07:40 
+python3 exploit.py                                                      
 [+] Starting local process './vuln': pid 9984
 [*] Switching to interactive mode
 $ whoami
