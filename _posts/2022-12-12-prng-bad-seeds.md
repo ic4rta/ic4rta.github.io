@@ -117,3 +117,4 @@ Mommy, I thought libc random is unpredictable...
 ```
 Y listo, hemos resuelto el ejercicio y la flag es: ```Mommy, I thought libc random is unpredictable... (Mami, pensé que libc random es impredecible...)``` 
 
+Eso es todo, muchas gracias por leer :heartbeat:
