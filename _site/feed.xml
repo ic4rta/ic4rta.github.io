@@ -1,8 +1,114 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-08-11T13:13:10-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Bypass ASLR/NX</title><link href="http://localhost:4000/bypass-aslr-nx/" rel="alternate" type="text/html" title="Bypass ASLR/NX" /><published>2022-08-11T00:00:00-05:00</published><updated>2022-08-11T00:00:00-05:00</updated><id>http://localhost:4000/bypass-aslr-nx</id><content type="html" xml:base="http://localhost:4000/bypass-aslr-nx/">&lt;font size=&quot;1&quot;&gt;Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta&lt;/font&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-22T16:11:14-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-12T00:00:00-06:00</published><updated>2022-12-12T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
+
+&lt;h2 id=&quot;que-es-una-seed&quot;&gt;¿Que es una seed?&lt;/h2&gt;
+
+&lt;p&gt;Las “seed” o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aletorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.&lt;/p&gt;
+
+&lt;p&gt;Esto va mas alla de hacer un simple programa en C que genere numeros random, las semillas se usan mucho en la ciberseguridad y mas que nada en la criptografia, es importante generar una buena semilla ya que si se obtiene el valor de la semilla se puede romper por completo el proceso de cifrado, parece una tonteria que con conocer un numerito se ocasiona un problema muy grave, si quieres ver ejemplos reales de una vulnerabilidad como esta puedes buscar&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;CVE-2020-7010:
+  La aplicación en la nube en Kubernetes genera contraseñas mediante un generador de números aleatorios débil en función del tiempo de implementación.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;CVE-2019-11495:
+  El servidor usa erlang:now() para sembrar el PRNG, lo que da como resultado un pequeño espacio de búsqueda para posibles semillas aleatorias&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;CVE-2018-12520:
+  El PRNG del producto no está sembrado para la generación de ID de sesión&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;CVE-2016-10180:
+  La generación de PIN del enrutador se basa en la siembra de rand (time(0)).&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Referencia por &lt;a href=&quot;https://cwe.mitre.org/data/definitions/335.html&quot;&gt;MITRE&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;que-es-prng&quot;&gt;¿Que es PRNG?&lt;/h2&gt;
+
+&lt;p&gt;La generacion de numeros pseudoaleatorios (PRNG) es una funcion que genera numeros aleatorios dado tres estados, pongamolos que PRNG actua como una caja negra, que toma un numero (semilla) y produce una secuencia de bits, segun, se dice que esta secuencia es random si pasa una serie de pruebas estadisticas, y entonces se dice que es random, las pruebas puede ser que se mide la frecuencia de bits y secuencia de bits.&lt;/p&gt;
+
+&lt;p&gt;Dije que esta dado tres estados, estos son:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Estado de inicializacion&lt;/strong&gt;: El cual toma la semilla y pone al generador en su estado inicial&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Estado de transicion&lt;/strong&gt;: Transforma el estado del generador tomando en cuenta la semilla&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Estado de salida&lt;/strong&gt;: Transforma el estado actual para producir un numero fijo de bits&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Para que quede mas claro veamos lo siguiente:&lt;/p&gt;
+
+&lt;p&gt;Se obtiene una secuencia de bits pseudoaleatoria el cual es puesta en el generador usando la semilla (primer estado), y poniendo al generador a llamar a la funcion de transicion repetidamente (segundo estado) y por ultimo se produce una salida de bits aleatorios (tercer estado)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/prng/prng.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;explotando-un-prng-bad-seed&quot;&gt;Explotando un PRNG bad seed&lt;/h2&gt;
+
+&lt;p&gt;Usare el ejemplo mas simple que pude encontrar, es de la pagina pwnable.kr y el problema se llama “random”, te puedes contectar usando SSH &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh random@pwnable.kr -p2222&lt;/code&gt; pw:guest&lt;/p&gt;
+
+&lt;p&gt;Este es el codigo del archivo ejecutable:&lt;/p&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rand&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;	&lt;span class=&quot;c1&quot;&gt;// valor random&lt;/span&gt;
+
+	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;scanf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0xdeadbeef&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Good!&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;system&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/bin/cat flag&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Wrong, maybe you should try 2^32 cases.&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y como extra la pista que nos dejan es: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;¡Papi, enséñame a usar valores aleatorios en la programación!&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;El programa es muy simple acepta la entrada de números enteros y lo compara con el valor aleatorio generado por la función rand() y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag&lt;/p&gt;
+
+&lt;p&gt;El programa usa la función rand() para generar un valor aleatorio. La función rand() devuelve un número pseudoaleatorio, rand es inseguro para generar números aleatorios. Los números que genera son predecibles cuando la semilla no es dada para el rand. Entonces  si la semilla se establece en 1, el generador se reinicializa a su valor inicial y produce los mismos valores&lt;/p&gt;
+
+&lt;h3 id=&quot;que-significa-key--random&quot;&gt;¿Que significa “key ^ random”?&lt;/h3&gt;
+
+&lt;p&gt;Esta es la pieza clave del programa, el símbolo ^ es el operador XOR en C. XOR es el equivalente a “o”, que significa “uno o el otro, pero no ambos”, con esto que tenemos hasta ahora se puede podemos generar una ecuacion que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;random ^ 0xdeadbeef = key&lt;/code&gt;, esta ecuacion nos permite resolver &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;key&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;entonces-que-debemos-de-hacer&quot;&gt;¿Entonces que debemos de hacer?&lt;/h3&gt;
+
+&lt;p&gt;Para poder resolverlo debemos de hacer de que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;key ^ random&lt;/code&gt; sea igual a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0xdeadbeef&lt;/code&gt; y para eso debemos de encontrar la manera de predecir el valor generado de la funcion rand() y luego revertir la operacion haciendo XORing el valor de rand() con 0xdeadbeef. Que genial, ¿No? ^-^&lt;/p&gt;
+
+&lt;h2 id=&quot;explotando-el-binario&quot;&gt;Explotando el binario&lt;/h2&gt;
+
+&lt;p&gt;Como primer paso generaremos un numero aleatorio con rand en otro programa&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rand&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Una vez ejecutandolo nos dara este numero &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1804289383&lt;/code&gt; y nuestra ecuacion queda asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1804289383 ^ 0xdeadbeef = key&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Como segundo paso vamos hacer XORing con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0xdeadbeef&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Yo lo hare abriendo el interprete de python e ingresare &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1804289383 ^ 0xdeadbeef&lt;/code&gt;, esto nos dara algo como esto &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3039230856&lt;/code&gt;, y ese valor es el numero que le pasaremos al programa&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;random@pwnable:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./random 
+3039230856
+Good!
+Mommy, I thought libc random is unpredictable...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y listo, hemos resuelto el ejercicio y la flag es: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Mommy, I thought libc random is unpredictable... (Mami, pensé que libc random es impredecible...)&lt;/code&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="bad seed" /><summary type="html">Te mostrare como puedes abusar de la generacion de numeros aleatorios</summary></entry><entry><title type="html">Bypass ASLR/NX</title><link href="http://localhost:4000/bypass-aslr-nx/" rel="alternate" type="text/html" title="Bypass ASLR/NX" /><published>2022-08-11T00:00:00-05:00</published><updated>2022-08-11T00:00:00-05:00</updated><id>http://localhost:4000/bypass-aslr-nx</id><content type="html" xml:base="http://localhost:4000/bypass-aslr-nx/">&lt;font size=&quot;1&quot;&gt;Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta&lt;/font&gt;
 
 &lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
-  &lt;li&gt;ASRL&lt;/li&gt;
+  &lt;li&gt;ASLR&lt;/li&gt;
   &lt;li&gt;Analizando el binario&lt;/li&gt;
   &lt;li&gt;Calculando el offset el RIP&lt;/li&gt;
   &lt;li&gt;Sacando las direcciones de puts y puts@got&lt;/li&gt;
@@ -196,7 +302,7 @@ Dump of assembler code for function puts@plt:
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;Y nos debe de mostrar algo como esto:&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python3 exploit.py                                                      6s  01:07:40 
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python3 exploit.py                                                      
 [+] Starting local process './vuln': pid 9984
 [*] Switching to interactive mode
 $ whoami

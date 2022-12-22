@@ -40,7 +40,12 @@ var store = [{
         "url": "http://localhost:4000/leak-stack-canary/",
         "teaser":null},{
         "title": "Bypass ASLR/NX",
-        "excerpt":"Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta Contenido ASRL Analizando el binario Calculando el offset el RIP Sacando las direcciones de puts y puts@got Sacando la direccion de pop rdi; ret Sacando los offsets de puts, system y sh usando...","categories": ["Explotacion binaria"],
+        "excerpt":"Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta Contenido ASLR Analizando el binario Calculando el offset el RIP Sacando las direcciones de puts y puts@got Sacando la direccion de pop rdi; ret Sacando los offsets de puts, system y sh usando...","categories": ["Explotacion binaria"],
         "tags": ["ret2libc","gdb","bof"],
         "url": "http://localhost:4000/bypass-aslr-nx/",
+        "teaser":null},{
+        "title": "Explotanto un PRNG bad seed",
+        "excerpt":"Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion rand();, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como...","categories": ["Explotacion binaria"],
+        "tags": ["bad seed"],
+        "url": "http://localhost:4000/prng-bad-seeds/",
         "teaser":null}]
