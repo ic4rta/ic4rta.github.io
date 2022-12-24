@@ -40,9 +40,6 @@ Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji,
     - 3.7. Instrucciones de flujo de datos 
     - 3.8. Instrucciones de flujo de control
 
-4. Tu primer reversing :heartbeat:
-    - 4.1. Ejercicio propuesto
-
 Asi que es hora de comenzar la aventura!! ^^
 
 ---
@@ -601,8 +598,18 @@ Este es ejecutado por ```call``` para volver al flujo del programa normal, su us
 - ret solo se usa cuando la llamada a la funcion a terminado de ejecutarse y el return_adress es lo unico presente en el stack frame
 
 
-## 4. Tu primer reversing :heartbeat:
+## ¿Que sigue?
 
-### 4.1. Ejercicio propuesto
+Ahora es momento de que empieces a investigar acerca de como explotar tu primer buffer overflow stack based en linux o tu primer reversing, puedes ver el post que le dedique a eso o puedes buscar por tu cuenta, tambien te recomiendo reforzar los temas con practicas e investigaciones propias
 
-(en construccion)
+## Referencias
+
+- [https://man7.org/linux/man-pages/man5/elf.5.html](https://man7.org/linux/man-pages/man5/elf.5.html)
+- [https://docs.oracle.com/cd/E19620-01/805-4694/6j4enatcr/index.html](https://docs.oracle.com/cd/E19620-01/805-4694/6j4enatcr/index.html)
+- [https://en.wikipedia.org/wiki/Executable_and_Linkable_Format](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
+- [http://blog.k3170makan.com/2018/09/introduction-to-elf-format-elf-header.html](http://blog.k3170makan.com/2018/09/introduction-to-elf-format-elf-header.html)
+- [http://www.c-jump.com/CIS77/ASM/Assembly/lecture.html](http://www.c-jump.com/CIS77/ASM/Assembly/lecture.html)
+- [https://www.intel.com/content/dam/develop/external/us/en/documents/introduction-to-x64-assembly-181178.pdf](https://www.intel.com/content/dam/develop/external/us/en/documents/introduction-to-x64-assembly-181178.pdf)
+- [https://guyinatuxedo.github.io/](https://guyinatuxedo.github.io/)
+- LiveOverflow (Youtube)
+- PinkDraconian (Youtube)

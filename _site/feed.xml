@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-24T16:37:49-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-23T00:00:00-06:00</published><updated>2022-12-23T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-24T17:34:52-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-23T00:00:00-06:00</published><updated>2022-12-23T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;Estructura de un binario ELF
@@ -30,11 +30,6 @@
       &lt;li&gt;3.6. Instrucciones aritméticas y lógicas&lt;/li&gt;
       &lt;li&gt;3.7. Instrucciones de flujo de datos&lt;/li&gt;
       &lt;li&gt;3.8. Instrucciones de flujo de control&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Tu primer reversing :heartbeat:
-    &lt;ul&gt;
-      &lt;li&gt;4.1. Ejercicio propuesto&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
@@ -704,11 +699,23 @@ Este es ejecutado por &lt;code class=&quot;language-plaintext highlighter-rouge&
   &lt;li&gt;ret solo se usa cuando la llamada a la funcion a terminado de ejecutarse y el return_adress es lo unico presente en el stack frame&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;4-tu-primer-reversing-heartbeat&quot;&gt;4. Tu primer reversing :heartbeat:&lt;/h2&gt;
+&lt;h2 id=&quot;que-sigue&quot;&gt;¿Que sigue?&lt;/h2&gt;
 
-&lt;h3 id=&quot;41-ejercicio-propuesto&quot;&gt;4.1. Ejercicio propuesto&lt;/h3&gt;
+&lt;p&gt;Ahora es momento de que empieces a investigar acerca de como explotar tu primer buffer overflow stack based en linux o tu primer reversing, puedes ver el post que le dedique a eso o puedes buscar por tu cuenta, tambien te recomiendo reforzar los temas con practicas e investigaciones propias&lt;/p&gt;
 
-&lt;p&gt;(en construccion)&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><summary type="html">Esta vez te enseñare la parte teorica de lo que considero debes de saber para empezar en el pwn</summary></entry><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-20T00:00:00-06:00</published><updated>2022-12-20T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
+&lt;h2 id=&quot;referencias&quot;&gt;Referencias&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://man7.org/linux/man-pages/man5/elf.5.html&quot;&gt;https://man7.org/linux/man-pages/man5/elf.5.html&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.oracle.com/cd/E19620-01/805-4694/6j4enatcr/index.html&quot;&gt;https://docs.oracle.com/cd/E19620-01/805-4694/6j4enatcr/index.html&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Executable_and_Linkable_Format&quot;&gt;https://en.wikipedia.org/wiki/Executable_and_Linkable_Format&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://blog.k3170makan.com/2018/09/introduction-to-elf-format-elf-header.html&quot;&gt;http://blog.k3170makan.com/2018/09/introduction-to-elf-format-elf-header.html&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.c-jump.com/CIS77/ASM/Assembly/lecture.html&quot;&gt;http://www.c-jump.com/CIS77/ASM/Assembly/lecture.html&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.intel.com/content/dam/develop/external/us/en/documents/introduction-to-x64-assembly-181178.pdf&quot;&gt;https://www.intel.com/content/dam/develop/external/us/en/documents/introduction-to-x64-assembly-181178.pdf&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://guyinatuxedo.github.io/&quot;&gt;https://guyinatuxedo.github.io/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;LiveOverflow (Youtube)&lt;/li&gt;
+  &lt;li&gt;PinkDraconian (Youtube)&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><summary type="html">Esta vez te enseñare la parte teorica de lo que considero debes de saber para empezar en el pwn</summary></entry><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-20T00:00:00-06:00</published><updated>2022-12-20T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
 
 &lt;h2 id=&quot;que-es-una-seed&quot;&gt;¿Que es una seed?&lt;/h2&gt;
 
