@@ -308,7 +308,7 @@
 
 <h2 id="que-es-una-seed">¿Que es una seed?</h2>
 
-<p>Las “seed” o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aletorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.</p>
+<p>Las “seed” o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aleatorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.</p>
 
 <p>Esto va mas alla de hacer un simple programa en C que genere numeros random, las semillas se usan mucho en la ciberseguridad y mas que nada en la criptografia, es importante generar una buena semilla ya que si se obtiene el valor de la semilla se puede romper por completo el proceso de cifrado, parece una tonteria que con conocer un numerito se ocasiona un problema muy grave, si quieres ver ejemplos reales de una vulnerabilidad como esta puedes buscar</p>
 
@@ -380,7 +380,7 @@
 </code></pre></div></div>
 <p>Y como extra la pista que nos dejan es: <code class="language-plaintext highlighter-rouge">¡Papi, enséñame a usar valores aleatorios en la programación!</code></p>
 
-<p>El programa es muy simple acepta la entrada de números enteros y lo compara con el valor aleatorio generado por la función rand() y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag</p>
+<p>El programa es muy simple acepta la entrada de números enteros y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag</p>
 
 <p>El programa usa la función rand() para generar un valor aleatorio. La función rand() devuelve un número pseudoaleatorio, rand es inseguro para generar números aleatorios. Los números que genera son predecibles cuando la semilla no es dada para el rand. Entonces  si la semilla se establece en 1, el generador se reinicializa a su valor inicial y produce los mismos valores</p>
 

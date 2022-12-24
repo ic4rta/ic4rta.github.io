@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-23T20:17:31-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-23T00:00:00-06:00</published><updated>2022-12-23T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-24T16:37:49-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-23T00:00:00-06:00</published><updated>2022-12-23T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;Estructura de un binario ELF
@@ -10,12 +10,14 @@
       &lt;li&gt;1.5. Seccion .data&lt;/li&gt;
       &lt;li&gt;1.6. Seccion .rodata&lt;/li&gt;
       &lt;li&gt;1.7. Seccion .bss&lt;/li&gt;
+      &lt;li&gt;1.8. Ejemplo&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
   &lt;li&gt;Stack de un programa en C
     &lt;ul&gt;
       &lt;li&gt;2.1. Stack&lt;/li&gt;
       &lt;li&gt;2.2. Stack frame&lt;/li&gt;
+      &lt;li&gt;2.3. Ejemplo&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
   &lt;li&gt;Lenguaje ensamblador
@@ -32,8 +34,7 @@
   &lt;/li&gt;
   &lt;li&gt;Tu primer reversing :heartbeat:
     &lt;ul&gt;
-      &lt;li&gt;4.1. HackTheBox: You Cant C Me&lt;/li&gt;
-      &lt;li&gt;4.2. HackTheBox: Baby RE&lt;/li&gt;
+      &lt;li&gt;4.1. Ejercicio propuesto&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
@@ -205,6 +206,37 @@ Cada encabezado de un programa describe un segmento dentro de el, y cada segment
 
 &lt;p&gt;Segun lo que he leido y hasta donde se, BSS se conoce como “Better save space”, y esto es por que en el archivo de objeto, el nombre y tamaño de una variable no se le da memoria real hasta que se usan.&lt;/p&gt;
 
+&lt;h3 id=&quot;18-ejemplo&quot;&gt;1.8 Ejemplo&lt;/h3&gt;
+
+&lt;p&gt;Todo esto visto es la teoria, y los elf header como te los mostre con el comando readelf, es la manera bonita de verlos, realmente no se ven asi, y al menos en el analisis de malware los tendras que ver en hexadecimal, para verlos asi, usaremos el comando:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hexdump -C /usr/bin/whoami | head -n 10&lt;/code&gt;
+Esto mostrara el encabezado elf en hexadecimal, ahora te indicare donde se encuentran los elementos mas relevante del encabezado&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/introduccion/elf_header.png&quot; alt=&quot;&quot; /&gt;
+&lt;img src=&quot;/assets/images/introduccion/elf_struct.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;e_ident: Marca el archivo como un archivo de objeto y proporciona datos independientes de la máquina para decodificar e interpretar el contenido del archivo, ademas es el Magic&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;e_type: Identifica el tipo de archivo de objeto&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;e_machine: Especifica la arquitectura necesaria para un archivo individual&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;e_version: Identifica la versión del archivo&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;e_entry: Dirección virtual en la que se iniciará el programa. Un valor de 0 indica que no hay ningún punto de entrada&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;e_shoff: Desplazamiento del archivo de tabla de encabezado de sección en bytes&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
 &lt;h2 id=&quot;2-stack-de-un-programa-en-c&quot;&gt;2. Stack de un programa en C&lt;/h2&gt;
 
 &lt;h3 id=&quot;21-stack&quot;&gt;2.1 Stack&lt;/h3&gt;
@@ -220,7 +252,7 @@ Cada encabezado de un programa describe un segmento dentro de el, y cada segment
 
 &lt;h3 id=&quot;22-stack-frame&quot;&gt;2.2 Stack frame&lt;/h3&gt;
 
-&lt;p&gt;El stack frame o marco de la pila, es una parte del stack que esta dedicada a una funcion, por ejemplo, tenemos este codigo en C&lt;/p&gt;
+&lt;p&gt;El stack frame o marco de la pila, es una parte del stack que esta dedicada a una funcion, esta almacena los parametros de una funcion, un puntero de retroceso al stack frame anterior y las variables locales, por ejemplo, tenemos este codigo en C&lt;/p&gt;
 
 &lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;func_1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
   &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
@@ -260,7 +292,53 @@ Cada encabezado de un programa describe un segmento dentro de el, y cada segment
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;Si quieres ver mas informacion puedes consultar&lt;/p&gt;
+&lt;h3 id=&quot;23-ejemplo&quot;&gt;2.3 Ejemplo&lt;/h3&gt;
+
+&lt;p&gt;Para que quede un poquito mas claro, tenemos este codigo:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Esto pasandolo por GDB (GNU debugger), queda algo como esto&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Dump of assembler code for function main:
+0x0000000100000f50 &amp;lt;main+0&amp;gt;:    push   %rbp
+0x0000000100000f51 &amp;lt;main+1&amp;gt;:    mov    %rsp,%rbp
+0x0000000100000f54 &amp;lt;main+4&amp;gt;:    mov    $0x0,%eax
+0x0000000100000f59 &amp;lt;main+9&amp;gt;:    movl   $0x0,-0x4(%rbp)
+0x0000000100000f60 &amp;lt;main+16&amp;gt;:   movl   $0x5,-0x8(%rbp)
+0x0000000100000f67 &amp;lt;main+23&amp;gt;:   mov    -0x8(%rbp),%ecx
+0x0000000100000f6a &amp;lt;main+26&amp;gt;:   add    $0x6,%ecx
+0x0000000100000f70 &amp;lt;main+32&amp;gt;:   mov    %ecx,-0xc(%rbp)
+0x0000000100000f73 &amp;lt;main+35&amp;gt;:   pop    %rbp
+0x0000000100000f74 &amp;lt;main+36&amp;gt;:   retq
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;El &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;disassemble&lt;/code&gt;, es comando predeterminado y muestra instrucciones en la sintaxis de AT&amp;amp;T, que es la misma sintaxis utilizada por el ensamblador GNU. Las instrucciones en la sintaxis de AT&amp;amp;T tienen el formato mnemonic orgien, destino. El mnemotécnico es un nombre legible por humanos para la instrucción. El origen y el destino son operandos y pueden ser valores inmediatos, registros, direcciones de memoria o etiquetas. Los valores inmediatos son constantes y están precedidos por un $. Por ejemplo, $0x5 representa el número 5 en hexadecimal. Los nombres de registro van con un %.&lt;/p&gt;
+
+&lt;p&gt;Lo primero que tenemos en el codigo es esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000100000f50 &amp;lt;main+0&amp;gt;:    push   %rbp
+0x0000000100000f51 &amp;lt;main+1&amp;gt;:    mov    %rsp,%rbp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Estas primeras dos lineas de cualquier funcion se llaman prologo o preambulo, lo que hace la primera linea es establecer el %rbp es nuestro stack frame actual y no el de la funcion anterior, asi que se guarda el anterior en el stack y no en el stack frame de esta funcion. En la linea que sigue se copia el valor del puntero de la pila, al puntero base. Y con esto logramos que el %rbp apunte a la base del stack frame de la funcion main.&lt;/p&gt;
+
+&lt;p&gt;Despues tenemos esto:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000100000f54 &amp;lt;main+4&amp;gt;:    mov    $0x0,%eax
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Que como dice la convencion de llamadas de x86, el valor de retorno de una funcion se almacena en %eax, por lo que la intruccion se prepara para devolver 0 al final de la funcion&lt;/p&gt;
+
+&lt;p&gt;Despues tenemos algo como esto:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000100000f59 &amp;lt;main+9&amp;gt;:    movl   $0x0,-0x4(%rbp)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Los parentesis significan que se trata de una direccion de memoria. Aqui, %rbo se llama el registro base, y -0x4 es el desplazamiento. Esto es equivalente a %rbp + -0x4.&lt;/p&gt;
+
+&lt;p&gt;Esto es por que la pila crece hacia abajo y restar 4 de la base del stack frame actual nos lleva el stack frame actual, que es donde se almacenan las variables locales, ya que se puede acceder a las variables locales haciendo referencia del %ebp&lt;/p&gt;
+
+&lt;p&gt;(se que esta es una parte donde que cuesta entender, asi que te dejo unos recursos bastante buenos)&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
@@ -425,11 +503,216 @@ Cada encabezado de un programa describe un segmento dentro de el, y cada segment
 
 &lt;h3 id=&quot;35-tipos-de-datos&quot;&gt;3.5. Tipos de datos&lt;/h3&gt;
 
-&lt;p&gt;(en construccion, lo terminare mañana jeje)&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><summary type="html">Esta vez te enseñare la parte teorica de lo que considero debes de saber para empezar en el pwn</summary></entry><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-20T00:00:00-06:00</published><updated>2022-12-20T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
+&lt;p&gt;En ensamblador trabajaremos con bytes, los tipos de datos como char, int, long int, etc, no estan presentes a nivel de ensamblador. Asi que estos tipos de datos deben de convertirse a codigo ensamblador, esto se hace accediendo al numero especifico de bytes que representa un tipo de dato en particular en C&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Ejemplo 1&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;p&gt;El tamaño de un int es de 4 bytes, y en ensamblador no tenemos eso, si no un flujo de bytes&lt;/p&gt;
+
+&lt;p&gt;Supongamos que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; es una variable entera en C, donde su direccion se carga en rbx&lt;/p&gt;
+
+&lt;p&gt;Entonces si deseamos cargar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; en otro registro (por ejemplo rcx), asi es como se deberia de hacer:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov ecx dword [rbx]&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;mov es la intruccion&lt;/li&gt;
+  &lt;li&gt;ecx es el regitro destino&lt;/li&gt;
+  &lt;li&gt;dword significa &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;palabra doble&lt;/code&gt; y tiene un valor de 4 bytes&lt;/li&gt;
+  &lt;li&gt;La instruccion le dice al ensamblador que considere rbx como un puntero de palabra doble (dword). Osea, imagina que apunta a 4 bytes, entonces, cuando se usa en una instruccion, se cargan 4 bytes apuntados por rbx&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Te dejare unos metodos que son usados para acceder a la memoria&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;byte[REG] : Esto le dice al ensamblador que considere REG como un puntero de byte. Es decir, apunta a un solo byte . Cualquier operación realizada con esto como operando tomará solo 1 byte apuntado directamente por la dirección en REG.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;word[REG] : Esto le dice al ensamblador que considere REG como un puntero de palabra. Es decir, está apuntando a 2 bytes . Cualquier operación realizada con esto como operando tomará 2 bytes señalados por la dirección en REG.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;dword[REG] : 4 bytes&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;qword[REG] : 8 bytes (solo para compus de 64 bits)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;36-instrucciones-aritméticas-y-lógicas&quot;&gt;3.6. Instrucciones aritméticas y lógicas&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;add&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;La intruccion de suma o añadir. La sintaxis general de add es:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;add reg, reg&lt;/li&gt;
+  &lt;li&gt;add mem, reg&lt;/li&gt;
+  &lt;li&gt;add reg, mem&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ejemplo:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;add rax, rbx: agrega el valor de rax a rbx y lo almacena en rax, algo asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax = rax + rbx&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;add dword[rbx], eax: agrega el valor en eax con 4 bytes en la memoria apuntada por rbx. Y el resultado tambien son 4 bytes, almacenados en el puntero de memoria por rbx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;add eax, dword ptr [rbx]: Agrega el valor en eax con 4 bytes de memoria señalados por ebx, el valor se almacena en eax&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;sub&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo mismo que add pero ahora significa restar jajsja&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;imul&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Multiplicacion de enteros, esta puede tener 2/3 operandos&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;imul op1, op2 : op1 y op2 se multiplican y luego se almacenan nuevamente en op1. op1 debe ser un registro.&lt;/li&gt;
+  &lt;li&gt;imul op1, op2, op3 : op2 y op3 se multiplican y luego se almacenan nuevamente en op1. op1 debe ser un registro y op3 debe ser un valor inmediato.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;o, xor&lt;/strong&gt; Estas realizan operaciones bit a bit entre dos operandos, el par de operandos son iguales que para &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;inc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Incrementar en 1&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;inc op1: Va a incrementar en 1 op1, op1 puede ser un registro o una ubicacion de memoria&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;dec&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo mismo que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;inc&lt;/code&gt; pero ahora decrementa en 1&lt;/p&gt;
+
+&lt;h3 id=&quot;37-instrucciones-de-flujo-de-datos&quot;&gt;3.7. Instrucciones de flujo de datos&lt;/h3&gt;
+
+&lt;p&gt;Abarcare 4 intrucciones: mov, lea, push y pop&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;mov&lt;/strong&gt;: Aun que su nombre da a entender que mueve datos, en realidad los copia&lt;/p&gt;
+
+&lt;p&gt;Su sintaxis  es:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;mov rax, rbx: copia datos de rbx (origen) a rax (destino)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Esta instruccion tiene variaciones, que son:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;mov reg, reg&lt;/li&gt;
+  &lt;li&gt;mov reg, memoria&lt;/li&gt;
+  &lt;li&gt;mov memoria, registro&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Se dan cuenta que no pongo de memoria a memoria, esto es ya que solo sucede con la ayuda de un registro&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;reg: puede ser un registro de proposito general&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Memoria&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;En ensamblador solo se accede a la memoria a traves de punteros. Es decir, la direccion de memoria se carga en un registro y luego se accede a el&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Nota&lt;/strong&gt;: para esta intruccion hay que tenemos en cuenta los tipos de datos y su tamaño en bytes&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;lea&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Carga una direccion efectiva y su sintaxis es&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lea rax, rbx&lt;/code&gt;
+Y lo que esta haciendo es cargar la direccion de rbx a rax. Esta intruccion es similar a mov, solo que lea esta diseñada para este proposito&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;push&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Empuja algo a la pila y su sintaxis es&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rbp&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Y nos dice que esta empujando rbp a la pila&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Nota&lt;/strong&gt;:
+En 32 bits, la pila esta alineada a 4 bytes, esto significa que toda la memoria de la pila esta formada por fragmentos de 4 bytes. Y en 64 bits cada fragmento es de 8 bytes&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;pop&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Extrae el valor de la parte superior de la pila y si sintaxis es&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rax&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;En 32 bits puede ser cualquier registro GPR o dword de 32 bits&lt;/p&gt;
+
+&lt;p&gt;En 64 bits puede ser un registro de 64 bits o un espacio de memoria qword&lt;/p&gt;
+
+&lt;h3 id=&quot;38-instrucciones-de-flujo-de-control&quot;&gt;3.8. Instrucciones de flujo de control&lt;/h3&gt;
+
+&lt;p&gt;En un binario en condiciones normales, el RIP/EIP se encarga de controlar el flujo del programa, ya que estos almacenan la direccion de la siguiente instruccion a ejecutar, pero esto se ve interrumpe si hay instrucciones condicionales.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;cmp&lt;/strong&gt;
+Compara dos operandos y si sintaxis es
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmp op1, op2&lt;/code&gt;
+Lo que hace es comprobar op1 con respecto a op2 y establece la bandera adecuada para la situacion&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;jmp&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Esta es la intruccion de salto y tiene dirivados, su sintaxis es:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jmp direccion&lt;/code&gt;
+La direccion puede ser un numero que represente una direccion valida, tambien puede ser una etiqueta&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Saltos condicionales&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;es - Saltar si op1 == op2&lt;/li&gt;
+  &lt;li&gt;jne - Saltar si op1 != op2&lt;/li&gt;
+  &lt;li&gt;jle - Saltar si op1 &amp;lt;= op2&lt;/li&gt;
+  &lt;li&gt;jge - Saltar si op1 &amp;gt;= op2&lt;/li&gt;
+  &lt;li&gt;jg - Saltar si op1 &amp;gt; op2&lt;/li&gt;
+  &lt;li&gt;jl - Saltar si op1 &amp;lt; op2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Todas estas intrucciones verifican las banderas establecidas por &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmp&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;call&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Se usa para llamar a una funcion y su sintaxis es:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;call nombre_de_la_funcion&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esta intruccion es una secuencia de otras dos intrucciones&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;push return_adress
+jmp nombre_de_la_funcion
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;ret&lt;/strong&gt;
+Este es ejecutado por &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;call&lt;/code&gt; para volver al flujo del programa normal, su usa directamente poniendo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;ret solo se usa cuando la llamada a la funcion a terminado de ejecutarse y el return_adress es lo unico presente en el stack frame&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;4-tu-primer-reversing-heartbeat&quot;&gt;4. Tu primer reversing :heartbeat:&lt;/h2&gt;
+
+&lt;h3 id=&quot;41-ejercicio-propuesto&quot;&gt;4.1. Ejercicio propuesto&lt;/h3&gt;
+
+&lt;p&gt;(en construccion)&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><summary type="html">Esta vez te enseñare la parte teorica de lo que considero debes de saber para empezar en el pwn</summary></entry><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-20T00:00:00-06:00</published><updated>2022-12-20T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
 
 &lt;h2 id=&quot;que-es-una-seed&quot;&gt;¿Que es una seed?&lt;/h2&gt;
 
-&lt;p&gt;Las “seed” o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aletorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.&lt;/p&gt;
+&lt;p&gt;Las “seed” o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aleatorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.&lt;/p&gt;
 
 &lt;p&gt;Esto va mas alla de hacer un simple programa en C que genere numeros random, las semillas se usan mucho en la ciberseguridad y mas que nada en la criptografia, es importante generar una buena semilla ya que si se obtiene el valor de la semilla se puede romper por completo el proceso de cifrado, parece una tonteria que con conocer un numerito se ocasiona un problema muy grave, si quieres ver ejemplos reales de una vulnerabilidad como esta puedes buscar&lt;/p&gt;
 
@@ -498,7 +781,7 @@ Cada encabezado de un programa describe un segmento dentro de el, y cada segment
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;Y como extra la pista que nos dejan es: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;¡Papi, enséñame a usar valores aleatorios en la programación!&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;El programa es muy simple acepta la entrada de números enteros y lo compara con el valor aleatorio generado por la función rand() y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag&lt;/p&gt;
+&lt;p&gt;El programa es muy simple acepta la entrada de números enteros y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag&lt;/p&gt;
 
 &lt;p&gt;El programa usa la función rand() para generar un valor aleatorio. La función rand() devuelve un número pseudoaleatorio, rand es inseguro para generar números aleatorios. Los números que genera son predecibles cuando la semilla no es dada para el rand. Entonces  si la semilla se establece en 1, el generador se reinicializa a su valor inicial y produce los mismos valores&lt;/p&gt;
 

@@ -23,10 +23,12 @@ Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji,
     - 1.5. Seccion .data
     - 1.6. Seccion .rodata
     - 1.7. Seccion .bss
+    - 1.8. Ejemplo
 
 2. Stack de un programa en C
     - 2.1. Stack
     - 2.2. Stack frame
+    - 2.3. Ejemplo
 
 3. Lenguaje ensamblador
     - 3.1. Organizacion y arquitectura
@@ -39,8 +41,7 @@ Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji,
     - 3.8. Instrucciones de flujo de control
 
 4. Tu primer reversing :heartbeat:
-    - 4.1. HackTheBox: You Cant C Me
-    - 4.2. HackTheBox: Baby RE
+    - 4.1. Ejercicio propuesto
 
 Asi que es hora de comenzar la aventura!! ^^
 
@@ -194,6 +195,28 @@ Esta contiene todas las variables globales no inicializadas.
 
 Segun lo que he leido y hasta donde se, BSS se conoce como "Better save space", y esto es por que en el archivo de objeto, el nombre y tamaño de una variable no se le da memoria real hasta que se usan.
 
+### 1.8 Ejemplo
+
+Todo esto visto es la teoria, y los elf header como te los mostre con el comando readelf, es la manera bonita de verlos, realmente no se ven asi, y al menos en el analisis de malware los tendras que ver en hexadecimal, para verlos asi, usaremos el comando:
+
+```hexdump -C /usr/bin/whoami | head -n 10```
+Esto mostrara el encabezado elf en hexadecimal, ahora te indicare donde se encuentran los elementos mas relevante del encabezado
+
+![](/assets/images/introduccion/elf_header.png)
+![](/assets/images/introduccion/elf_struct.png)
+
+- e_ident: Marca el archivo como un archivo de objeto y proporciona datos independientes de la máquina para decodificar e interpretar el contenido del archivo, ademas es el Magic
+
+- e_type: Identifica el tipo de archivo de objeto
+
+- e_machine: Especifica la arquitectura necesaria para un archivo individual
+
+- e_version: Identifica la versión del archivo
+
+- e_entry: Dirección virtual en la que se iniciará el programa. Un valor de 0 indica que no hay ningún punto de entrada
+
+- e_shoff: Desplazamiento del archivo de tabla de encabezado de sección en bytes
+
 ## 2. Stack de un programa en C
 
 ### 2.1 Stack
@@ -207,7 +230,7 @@ Los limites de la pila de registran mediante los registros EBP y ESP
 
 ### 2.2 Stack frame
 
-El stack frame o marco de la pila, es una parte del stack que esta dedicada a una funcion, por ejemplo, tenemos este codigo en C
+El stack frame o marco de la pila, es una parte del stack que esta dedicada a una funcion, esta almacena los parametros de una funcion, un puntero de retroceso al stack frame anterior y las variables locales, por ejemplo, tenemos este codigo en C
 
 ```c
 int func_1(int a, int b){
@@ -243,7 +266,59 @@ A tomar en cuenta:
 
 - El EBP apunta a una ubicacion fija dentro del stack frame de la funcion que se este ejecutando actualmente, y este sirve como punto de referencia para acceder a argumentos y variables locales
 
-Si quieres ver mas informacion puedes consultar
+### 2.3 Ejemplo
+
+Para que quede un poquito mas claro, tenemos este codigo:
+
+```c
+int main(){
+    int a = 5;
+    int b = a + 6;
+    return 0;
+}
+```
+Esto pasandolo por GDB (GNU debugger), queda algo como esto
+
+```
+Dump of assembler code for function main:
+0x0000000100000f50 <main+0>:    push   %rbp
+0x0000000100000f51 <main+1>:    mov    %rsp,%rbp
+0x0000000100000f54 <main+4>:    mov    $0x0,%eax
+0x0000000100000f59 <main+9>:    movl   $0x0,-0x4(%rbp)
+0x0000000100000f60 <main+16>:   movl   $0x5,-0x8(%rbp)
+0x0000000100000f67 <main+23>:   mov    -0x8(%rbp),%ecx
+0x0000000100000f6a <main+26>:   add    $0x6,%ecx
+0x0000000100000f70 <main+32>:   mov    %ecx,-0xc(%rbp)
+0x0000000100000f73 <main+35>:   pop    %rbp
+0x0000000100000f74 <main+36>:   retq
+```
+
+El ```disassemble```, es comando predeterminado y muestra instrucciones en la sintaxis de AT&T, que es la misma sintaxis utilizada por el ensamblador GNU. Las instrucciones en la sintaxis de AT&T tienen el formato mnemonic orgien, destino. El mnemotécnico es un nombre legible por humanos para la instrucción. El origen y el destino son operandos y pueden ser valores inmediatos, registros, direcciones de memoria o etiquetas. Los valores inmediatos son constantes y están precedidos por un $. Por ejemplo, $0x5 representa el número 5 en hexadecimal. Los nombres de registro van con un %.
+
+Lo primero que tenemos en el codigo es esto:
+
+```
+0x0000000100000f50 <main+0>:    push   %rbp
+0x0000000100000f51 <main+1>:    mov    %rsp,%rbp
+```
+Estas primeras dos lineas de cualquier funcion se llaman prologo o preambulo, lo que hace la primera linea es establecer el %rbp es nuestro stack frame actual y no el de la funcion anterior, asi que se guarda el anterior en el stack y no en el stack frame de esta funcion. En la linea que sigue se copia el valor del puntero de la pila, al puntero base. Y con esto logramos que el %rbp apunte a la base del stack frame de la funcion main.
+
+
+Despues tenemos esto:
+```
+0x0000000100000f54 <main+4>:    mov    $0x0,%eax
+```
+Que como dice la convencion de llamadas de x86, el valor de retorno de una funcion se almacena en %eax, por lo que la intruccion se prepara para devolver 0 al final de la funcion
+
+Despues tenemos algo como esto:
+```
+0x0000000100000f59 <main+9>:    movl   $0x0,-0x4(%rbp)
+```
+Los parentesis significan que se trata de una direccion de memoria. Aqui, %rbo se llama el registro base, y -0x4 es el desplazamiento. Esto es equivalente a %rbp + -0x4.
+
+Esto es por que la pila crece hacia abajo y restar 4 de la base del stack frame actual nos lleva el stack frame actual, que es donde se almacenan las variables locales, ya que se puede acceder a las variables locales haciendo referencia del %ebp
+
+(se que esta es una parte donde que cuesta entender, asi que te dejo unos recursos bastante buenos)
 
 - [https://courses.engr.illinois.edu/cs225/fa2022/resources/stack-heap/](https://courses.engr.illinois.edu/cs225/fa2022/resources/stack-heap/)
 
@@ -355,4 +430,179 @@ Hay dos sintaxis, AT&T e Intel
 
 ### 3.5. Tipos de datos
 
-(en construccion, lo terminare mañana jeje)
+En ensamblador trabajaremos con bytes, los tipos de datos como char, int, long int, etc, no estan presentes a nivel de ensamblador. Asi que estos tipos de datos deben de convertirse a codigo ensamblador, esto se hace accediendo al numero especifico de bytes que representa un tipo de dato en particular en C
+
+**Ejemplo 1**:
+
+El tamaño de un int es de 4 bytes, y en ensamblador no tenemos eso, si no un flujo de bytes
+
+Supongamos que ```a``` es una variable entera en C, donde su direccion se carga en rbx
+
+Entonces si deseamos cargar ```a``` en otro registro (por ejemplo rcx), asi es como se deberia de hacer:
+
+```mov ecx dword [rbx]```
+  - mov es la intruccion
+  - ecx es el regitro destino
+  - dword significa ```palabra doble``` y tiene un valor de 4 bytes
+  - La instruccion le dice al ensamblador que considere rbx como un puntero de palabra doble (dword). Osea, imagina que apunta a 4 bytes, entonces, cuando se usa en una instruccion, se cargan 4 bytes apuntados por rbx
+
+  
+Te dejare unos metodos que son usados para acceder a la memoria
+
+- byte[REG] : Esto le dice al ensamblador que considere REG como un puntero de byte. Es decir, apunta a un solo byte . Cualquier operación realizada con esto como operando tomará solo 1 byte apuntado directamente por la dirección en REG.
+
+- word[REG] : Esto le dice al ensamblador que considere REG como un puntero de palabra. Es decir, está apuntando a 2 bytes . Cualquier operación realizada con esto como operando tomará 2 bytes señalados por la dirección en REG.
+
+- dword[REG] : 4 bytes
+
+- qword[REG] : 8 bytes (solo para compus de 64 bits)
+
+
+### 3.6. Instrucciones aritméticas y lógicas
+
+**add**
+
+La intruccion de suma o añadir. La sintaxis general de add es:
+
+- add reg, reg
+- add mem, reg
+- add reg, mem
+
+Ejemplo:
+
+- add rax, rbx: agrega el valor de rax a rbx y lo almacena en rax, algo asi ```rax = rax + rbx```
+
+- add dword[rbx], eax: agrega el valor en eax con 4 bytes en la memoria apuntada por rbx. Y el resultado tambien son 4 bytes, almacenados en el puntero de memoria por rbx
+
+- add eax, dword ptr [rbx]: Agrega el valor en eax con 4 bytes de memoria señalados por ebx, el valor se almacena en eax
+
+**sub**
+
+Lo mismo que add pero ahora significa restar jajsja
+
+**imul**
+
+Multiplicacion de enteros, esta puede tener 2/3 operandos
+
+- imul op1, op2 : op1 y op2 se multiplican y luego se almacenan nuevamente en op1. op1 debe ser un registro. 
+- imul op1, op2, op3 : op2 y op3 se multiplican y luego se almacenan nuevamente en op1. op1 debe ser un registro y op3 debe ser un valor inmediato. 
+
+**o, xor** Estas realizan operaciones bit a bit entre dos operandos, el par de operandos son iguales que para ```add```
+
+**inc**
+
+Incrementar en 1
+
+- inc op1: Va a incrementar en 1 op1, op1 puede ser un registro o una ubicacion de memoria
+
+**dec**
+
+Lo mismo que ```inc``` pero ahora decrementa en 1
+
+### 3.7. Instrucciones de flujo de datos
+
+Abarcare 4 intrucciones: mov, lea, push y pop
+
+**mov**: Aun que su nombre da a entender que mueve datos, en realidad los copia
+
+Su sintaxis  es:
+
+- mov rax, rbx: copia datos de rbx (origen) a rax (destino)
+
+Esta instruccion tiene variaciones, que son:
+
+  - mov reg, reg
+  - mov reg, memoria
+  - mov memoria, registro
+
+Se dan cuenta que no pongo de memoria a memoria, esto es ya que solo sucede con la ayuda de un registro
+
+- reg: puede ser un registro de proposito general
+
+- Memoria
+
+  - En ensamblador solo se accede a la memoria a traves de punteros. Es decir, la direccion de memoria se carga en un registro y luego se accede a el
+
+**Nota**: para esta intruccion hay que tenemos en cuenta los tipos de datos y su tamaño en bytes
+
+**lea**
+
+Carga una direccion efectiva y su sintaxis es
+
+```lea rax, rbx```
+Y lo que esta haciendo es cargar la direccion de rbx a rax. Esta intruccion es similar a mov, solo que lea esta diseñada para este proposito 
+
+
+**push**
+
+Empuja algo a la pila y su sintaxis es
+
+```push rbp```
+
+Y nos dice que esta empujando rbp a la pila
+
+**Nota**:
+En 32 bits, la pila esta alineada a 4 bytes, esto significa que toda la memoria de la pila esta formada por fragmentos de 4 bytes. Y en 64 bits cada fragmento es de 8 bytes
+
+**pop**
+
+Extrae el valor de la parte superior de la pila y si sintaxis es
+
+```pop rax```
+
+En 32 bits puede ser cualquier registro GPR o dword de 32 bits
+
+En 64 bits puede ser un registro de 64 bits o un espacio de memoria qword
+
+
+### 3.8. Instrucciones de flujo de control
+
+En un binario en condiciones normales, el RIP/EIP se encarga de controlar el flujo del programa, ya que estos almacenan la direccion de la siguiente instruccion a ejecutar, pero esto se ve interrumpe si hay instrucciones condicionales.
+
+**cmp**
+Compara dos operandos y si sintaxis es 
+```cmp op1, op2```
+Lo que hace es comprobar op1 con respecto a op2 y establece la bandera adecuada para la situacion
+
+**jmp**
+
+Esta es la intruccion de salto y tiene dirivados, su sintaxis es:
+
+```jmp direccion```
+La direccion puede ser un numero que represente una direccion valida, tambien puede ser una etiqueta
+
+**Saltos condicionales**
+
+- es - Saltar si op1 == op2
+- jne - Saltar si op1 != op2
+- jle - Saltar si op1 <= op2
+- jge - Saltar si op1 >= op2
+- jg - Saltar si op1 > op2
+- jl - Saltar si op1 < op2
+
+Todas estas intrucciones verifican las banderas establecidas por ```cmp```
+
+**call**
+
+Se usa para llamar a una funcion y su sintaxis es:
+
+```call nombre_de_la_funcion```
+
+Esta intruccion es una secuencia de otras dos intrucciones
+
+```
+push return_adress
+jmp nombre_de_la_funcion
+```
+
+**ret**
+Este es ejecutado por ```call``` para volver al flujo del programa normal, su usa directamente poniendo ```ret```
+
+- ret solo se usa cuando la llamada a la funcion a terminado de ejecutarse y el return_adress es lo unico presente en el stack frame
+
+
+## 4. Tu primer reversing :heartbeat:
+
+### 4.1. Ejercicio propuesto
+
+(en construccion)
