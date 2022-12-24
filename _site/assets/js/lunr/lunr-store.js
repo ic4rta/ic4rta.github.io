@@ -48,4 +48,9 @@ var store = [{
         "excerpt":"Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion rand();, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como...","categories": ["Explotacion binaria"],
         "tags": ["bad seed"],
         "url": "http://localhost:4000/prng-bad-seeds/",
+        "teaser":null},{
+        "title": "Introduccion a la explotacion binaria",
+        "excerpt":"Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer...","categories": ["Explotacion binaria"],
+        "tags": [],
+        "url": "http://localhost:4000/introduccion-pwn/",
         "teaser":null}]

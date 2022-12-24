@@ -2,7 +2,7 @@
 layout: single
 title: Explotanto un PRNG bad seed
 excerpt: "Te mostrare como puedes abusar de la generacion de numeros aleatorios"
-date: 2022-12-12
+date: 2022-12-20
 classes: wide
 header:
   #teaser: /assets/images/bof-stack-based/main.jpg
@@ -19,7 +19,7 @@ Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso 
 
 ## ¿Que es una seed?
 
-Las "seed" o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aletorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.
+Las "seed" o semilla en español, es un numerito inicial del generador de numeros pseudoaleatorios (PRNG), la cual es completamente determinista, es decir, que la generacion de numeros aleatorios esta determinada por la semilla y eso hace que el generador produzca la misma secuencia de numeros para un valor dado.
 
 Esto va mas alla de hacer un simple programa en C que genere numeros random, las semillas se usan mucho en la ciberseguridad y mas que nada en la criptografia, es importante generar una buena semilla ya que si se obtiene el valor de la semilla se puede romper por completo el proceso de cifrado, parece una tonteria que con conocer un numerito se ocasiona un problema muy grave, si quieres ver ejemplos reales de una vulnerabilidad como esta puedes buscar
 
@@ -80,7 +80,7 @@ int main(){
 ```
 Y como extra la pista que nos dejan es: ```¡Papi, enséñame a usar valores aleatorios en la programación!```
 
-El programa es muy simple acepta la entrada de números enteros y lo compara con el valor aleatorio generado por la función rand() y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag
+El programa es muy simple acepta la entrada de números enteros y lo compara con 0xdeadbeef y, si el valor coincide, debe mostrar la flag
 
 El programa usa la función rand() para generar un valor aleatorio. La función rand() devuelve un número pseudoaleatorio, rand es inseguro para generar números aleatorios. Los números que genera son predecibles cuando la semilla no es dada para el rand. Entonces  si la semilla se establece en 1, el generador se reinicializa a su valor inicial y produce los mismos valores
 
