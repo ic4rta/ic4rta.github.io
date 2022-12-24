@@ -2,7 +2,7 @@
 layout: single
 title: Introduccion a la explotacion binaria
 excerpt: "Esta vez te enseñare la parte teorica de lo que considero debes de saber para empezar en el pwn"
-date: 2022-12-23
+date: 2022-12-21
 classes: wide
 header:
   #teaser: /assets/images/bof-stack-based/main.jpg
