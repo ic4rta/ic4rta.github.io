@@ -53,4 +53,9 @@ var store = [{
         "excerpt":"Creo que debi de hacer este post antes de los demas pero pues se me olvido jiji, asi que ahora te voy a dar una pequeña introduccion sobre algunos temas que considero, son relevantes para iniciar en la explotacion binaria, o mas que nada antes de explotar tu primer buffer...","categories": ["Explotacion binaria"],
         "tags": [],
         "url": "http://localhost:4000/introduccion-pwn/",
+        "teaser":null},{
+        "title": "ROPemporium ret2win - saltando a una funcion con ROP",
+        "excerpt":"Este es el primer desafio de la pagina ROPemporium, dedicada a la explotacion binaria y mas que nada al uso de la tecnica llamada ROP (Return Oriented Programming) Analisis del binario Primeramente podemos empezar a sacar informacion del binario, ya sea con checksec (pwntools) o rabin2 (radare2), el resultado que...","categories": ["Explotacion binaria","ROPemporium"],
+        "tags": ["rop","bof"],
+        "url": "http://localhost:4000/rop-empurium-ret2win/",
         "teaser":null}]
