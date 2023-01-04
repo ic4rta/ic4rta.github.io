@@ -12,8 +12,7 @@ categories:
   - Explotacion binaria
   #- infosec
 tags:  
-    - bof
-    - gdb
+    - bof-stack-based
 ---
 
 ## Contenido

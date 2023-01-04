@@ -13,7 +13,6 @@ categories:
   - ROPemporium
 tags:  
     - rop
-    - bof
 ---
 Este es el primer desafio de la pagina ROPemporium, dedicada a la explotacion binaria y mas que nada al uso de la tecnica llamada ROP (Return Oriented Programming)
 

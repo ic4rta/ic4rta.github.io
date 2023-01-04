@@ -12,7 +12,7 @@ categories:
   - Explotacion binaria
   #- infosec
 tags:  
-    - bad seed
+    - bad-seed
 ---
 
 Puede ser que conozcas acerca de la generacion de numeros aleatorios, y en caso de que hayas programado en C algo que genere numeros aleatorios, talvez hayas usado la funcion ```rand();```, asi que hoy te voy a mostrar como aprovecharte de esa funcion y de lo que se conoce como una "bad seed" :relaxed:

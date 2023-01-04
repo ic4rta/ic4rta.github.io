@@ -10,7 +10,7 @@ header:
 categories:
   - Explotacion binaria
 tags:  
-    - radare2
+    - integer-overflow
 ---
 
 ## Contenido

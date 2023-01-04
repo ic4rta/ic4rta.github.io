@@ -11,8 +11,8 @@ categories:
   - Explotacion binaria
 tags:  
     - ret2libc
-    - gdb
-    - bof
+    - aslr-bypass
+    - bof-stack-based
 ---
 
 <font size="1">Hay muchas mas formas de hacer bypass del ASLR, asi que no se queden solo con esta</font> 

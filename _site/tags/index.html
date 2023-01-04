@@ -286,35 +286,19 @@
   
     
       
+    
+      
         <li>
-          <a href="#bof">
-            <strong>bof</strong> <span class="taxonomy__count">4</span>
+          <a href="#format-string">
+            <strong>format-string</strong> <span class="taxonomy__count">4</span>
           </a>
         </li>
       
     
       
-        <li>
-          <a href="#gdb">
-            <strong>gdb</strong> <span class="taxonomy__count">4</span>
-          </a>
-        </li>
-      
     
       
-        <li>
-          <a href="#formatstr">
-            <strong>formatStr</strong> <span class="taxonomy__count">4</span>
-          </a>
-        </li>
-      
     
-      
-        <li>
-          <a href="#radare2">
-            <strong>radare2</strong> <span class="taxonomy__count">4</span>
-          </a>
-        </li>
       
     
       
@@ -347,10 +331,16 @@
     
       
     
+      
+    
   
     
       
-    
+        <li>
+          <a href="#bof-stack-based">
+            <strong>bof-stack-based</strong> <span class="taxonomy__count">2</span>
+          </a>
+        </li>
       
     
       
@@ -361,6 +351,14 @@
         <li>
           <a href="#ret2libc">
             <strong>ret2libc</strong> <span class="taxonomy__count">2</span>
+          </a>
+        </li>
+      
+    
+      
+        <li>
+          <a href="#rop">
+            <strong>rop</strong> <span class="taxonomy__count">2</span>
           </a>
         </li>
       
@@ -379,6 +377,8 @@
     
       
     
+      
+    
   
     
       
@@ -386,6 +386,12 @@
       
     
       
+        <li>
+          <a href="#radare2">
+            <strong>radare2</strong> <span class="taxonomy__count">1</span>
+          </a>
+        </li>
+      
     
       
     
@@ -395,8 +401,24 @@
     
       
         <li>
-          <a href="#ghidra">
-            <strong>ghidra</strong> <span class="taxonomy__count">1</span>
+          <a href="#integer-overflow">
+            <strong>integer-overflow</strong> <span class="taxonomy__count">1</span>
+          </a>
+        </li>
+      
+    
+      
+        <li>
+          <a href="#canary-bypass">
+            <strong>canary-bypass</strong> <span class="taxonomy__count">1</span>
+          </a>
+        </li>
+      
+    
+      
+        <li>
+          <a href="#aslr-bypass">
+            <strong>aslr-bypass</strong> <span class="taxonomy__count">1</span>
           </a>
         </li>
       
@@ -404,15 +426,7 @@
       
         <li>
           <a href="#bad-seed">
-            <strong>bad seed</strong> <span class="taxonomy__count">1</span>
-          </a>
-        </li>
-      
-    
-      
-        <li>
-          <a href="#rop">
-            <strong>rop</strong> <span class="taxonomy__count">1</span>
+            <strong>bad-seed</strong> <span class="taxonomy__count">1</span>
           </a>
         </li>
       
@@ -423,310 +437,10 @@
 
   
     
-      <section id="bof" class="taxonomy__section">
-        <h2 class="archive__subtitle">bof</h2>
-        <div class="entries-list">
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/rop-empurium-ret2win/" rel="permalink">ROPemporium ret2win - saltando a una funcion con ROP
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2023-01-03T00:00:00-06:00">January 03, 2023 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Resolucion del ejercicio ret2win usando ROP
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#rop" class="page__meta btn" rel="tag">rop</a>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/bypass-aslr-nx/" rel="permalink">Bypass ASLR/NX
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-11T00:00:00-05:00">August 11, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/ret2libc/" rel="permalink">ret2libc bypass NX
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como realizar un ataque con una tecnica llamada ret2libc para hacer bypass del NX
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/bof-stack-based/" rel="permalink">BoF stack-based
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-28T00:00:00-05:00">July 28, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-  </article>
-</div>
-
-          
-        </div>
-        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
-      </section>
-    
   
     
-      <section id="gdb" class="taxonomy__section">
-        <h2 class="archive__subtitle">gdb</h2>
-        <div class="entries-list">
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/bypass-aslr-nx/" rel="permalink">Bypass ASLR/NX
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-11T00:00:00-05:00">August 11, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/got-overwrite/" rel="permalink">GOT overwrite con Format String
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/ret2libc/" rel="permalink">ret2libc bypass NX
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como realizar un ataque con una tecnica llamada ret2libc para hacer bypass del NX
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/bof-stack-based/" rel="permalink">BoF stack-based
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-28T00:00:00-05:00">July 28, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-  </article>
-</div>
-
-          
-        </div>
-        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
-      </section>
-    
-  
-    
-      <section id="formatstr" class="taxonomy__section">
-        <h2 class="archive__subtitle">formatStr</h2>
+      <section id="format-string" class="taxonomy__section">
+        <h2 class="archive__subtitle">format-string</h2>
         <div class="entries-list">
           
             
@@ -755,9 +469,9 @@
 </p>
     <i class="fas fa-tags"></i>
     
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
     
-      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
+      <a href="/tags/#canary-bypass" class="page__meta btn" rel="tag">canary-bypass</a>
     
   </article>
 </div>
@@ -791,9 +505,7 @@
     
       <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
     
-      <a href="/tags/#ghidra" class="page__meta btn" rel="tag">ghidra</a>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
     
   </article>
 </div>
@@ -827,9 +539,7 @@
     
       <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
     
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
     
   </article>
 </div>
@@ -861,9 +571,7 @@
 </p>
     <i class="fas fa-tags"></i>
     
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
-    
-      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
     
   </article>
 </div>
@@ -875,8 +583,48 @@
     
   
     
-      <section id="radare2" class="taxonomy__section">
-        <h2 class="archive__subtitle">radare2</h2>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+    
+      <section id="bof-stack-based" class="taxonomy__section">
+        <h2 class="archive__subtitle">bof-stack-based</h2>
         <div class="entries-list">
           
             
@@ -888,7 +636,7 @@
     
     <h2 class="archive__item-title" itemprop="headline">
       
-        <a href="/leak-stack-canary/" rel="permalink">Leak stack canary - bypass
+        <a href="/bypass-aslr-nx/" rel="permalink">Bypass ASLR/NX
 </a>
         
       
@@ -896,18 +644,20 @@
 
     <p class="page__meta">
       
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-03T00:00:00-05:00">August 03, 2022 </time>&emsp;
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-11T00:00:00-05:00">August 11, 2022 </time>&emsp;
       
       
     </p>
 
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veras como puedes hacer bypass del stack canary lekeandolo usando format strings
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64
 </p>
     <i class="fas fa-tags"></i>
     
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
+      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
     
-      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
+      <a href="/tags/#aslr-bypass" class="page__meta btn" rel="tag">aslr-bypass</a>
+    
+      <a href="/tags/#bof-stack-based" class="page__meta btn" rel="tag">bof-stack-based</a>
     
   </article>
 </div>
@@ -922,7 +672,7 @@
     
     <h2 class="archive__item-title" itemprop="headline">
       
-        <a href="/integer-overflow/" rel="permalink">IOF - Integer Overflow/Underflow
+        <a href="/bof-stack-based/" rel="permalink">BoF stack-based
 </a>
         
       
@@ -930,82 +680,16 @@
 
     <p class="page__meta">
       
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-01T00:00:00-05:00">August 01, 2022 </time>&emsp;
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-28T00:00:00-05:00">July 28, 2022 </time>&emsp;
       
       
     </p>
 
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como funciona y como realizar un Integer Overflow
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Aprenderas a como realizar un simple buffer overflow stack-based en linux de 64 bits
 </p>
     <i class="fas fa-tags"></i>
     
-      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/picoCTF-hurryUp/" rel="permalink">picoCTF - Hurry up! Wait!
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Resolveremos un pequeño ejercicio de reversing de picoCTF
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/format-string/" rel="permalink">Format string
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Aprenderas a como realizar un ataque format string
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
-    
-      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
+      <a href="/tags/#bof-stack-based" class="page__meta btn" rel="tag">bof-stack-based</a>
     
   </article>
 </div>
@@ -1014,42 +698,6 @@
         </div>
         <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
       </section>
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-
-  
-    
-  
     
   
     
@@ -1089,9 +737,9 @@
     
       <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
     
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
+      <a href="/tags/#aslr-bypass" class="page__meta btn" rel="tag">aslr-bypass</a>
     
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
+      <a href="/tags/#bof-stack-based" class="page__meta btn" rel="tag">bof-stack-based</a>
     
   </article>
 </div>
@@ -1125,199 +773,7 @@
     
       <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
     
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
-    
-  </article>
-</div>
-
-          
-        </div>
-        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
-      </section>
-    
-  
-    
-      <section id="got-plt" class="taxonomy__section">
-        <h2 class="archive__subtitle">got-plt</h2>
-        <div class="entries-list">
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/imaginaryCTF-date2/" rel="permalink">ImaginaryCTF date2 - GOT overwrite
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
-    
-      <a href="/tags/#ghidra" class="page__meta btn" rel="tag">ghidra</a>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
-    
-  </article>
-</div>
-
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/got-overwrite/" rel="permalink">GOT overwrite con Format String
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
-    
-      <a href="/tags/#gdb" class="page__meta btn" rel="tag">gdb</a>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
-    
-  </article>
-</div>
-
-          
-        </div>
-        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
-      </section>
-    
-  
-    
-  
-    
-  
-    
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <section id="ghidra" class="taxonomy__section">
-        <h2 class="archive__subtitle">ghidra</h2>
-        <div class="entries-list">
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/imaginaryCTF-date2/" rel="permalink">ImaginaryCTF date2 - GOT overwrite
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
-    
-      <a href="/tags/#ghidra" class="page__meta btn" rel="tag">ghidra</a>
-    
-      <a href="/tags/#formatStr" class="page__meta btn" rel="tag">formatStr</a>
-    
-  </article>
-</div>
-
-          
-        </div>
-        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
-      </section>
-    
-  
-    
-      <section id="bad-seed" class="taxonomy__section">
-        <h2 class="archive__subtitle">bad seed</h2>
-        <div class="entries-list">
-          
-            
-
-
-
-<div class="list__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title" itemprop="headline">
-      
-        <a href="/prng-bad-seeds/" rel="permalink">Explotanto un PRNG bad seed
-</a>
-        
-      
-    </h2>
-
-    <p class="page__meta">
-      
-        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-12-20T00:00:00-06:00">December 20, 2022 </time>&emsp;
-      
-      
-    </p>
-
-    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Te mostrare como puedes abusar de la generacion de numeros aleatorios
-</p>
-    <i class="fas fa-tags"></i>
-    
-      <a href="/tags/#bad seed" class="page__meta btn" rel="tag">bad seed</a>
+      <a href="/tags/#rop" class="page__meta btn" rel="tag">rop</a>
     
   </article>
 </div>
@@ -1361,7 +817,353 @@
     
       <a href="/tags/#rop" class="page__meta btn" rel="tag">rop</a>
     
-      <a href="/tags/#bof" class="page__meta btn" rel="tag">bof</a>
+  </article>
+</div>
+
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/ret2libc/" rel="permalink">ret2libc bypass NX
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como realizar un ataque con una tecnica llamada ret2libc para hacer bypass del NX
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
+    
+      <a href="/tags/#rop" class="page__meta btn" rel="tag">rop</a>
+    
+  </article>
+</div>
+
+          
+        </div>
+        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
+      </section>
+    
+  
+    
+      <section id="got-plt" class="taxonomy__section">
+        <h2 class="archive__subtitle">got-plt</h2>
+        <div class="entries-list">
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/imaginaryCTF-date2/" rel="permalink">ImaginaryCTF date2 - GOT overwrite
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
+    
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
+    
+  </article>
+</div>
+
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/got-overwrite/" rel="permalink">GOT overwrite con Format String
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-30T00:00:00-05:00">July 30, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#got-plt" class="page__meta btn" rel="tag">got-plt</a>
+    
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
+    
+  </article>
+</div>
+
+          
+        </div>
+        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
+      </section>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+      <section id="radare2" class="taxonomy__section">
+        <h2 class="archive__subtitle">radare2</h2>
+        <div class="entries-list">
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/picoCTF-hurryUp/" rel="permalink">picoCTF - Hurry up! Wait!
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-07-29T00:00:00-05:00">July 29, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Resolveremos un pequeño ejercicio de reversing de picoCTF
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#radare2" class="page__meta btn" rel="tag">radare2</a>
+    
+  </article>
+</div>
+
+          
+        </div>
+        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
+      </section>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <section id="integer-overflow" class="taxonomy__section">
+        <h2 class="archive__subtitle">integer-overflow</h2>
+        <div class="entries-list">
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/integer-overflow/" rel="permalink">IOF - Integer Overflow/Underflow
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-01T00:00:00-05:00">August 01, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como funciona y como realizar un Integer Overflow
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#integer-overflow" class="page__meta btn" rel="tag">integer-overflow</a>
+    
+  </article>
+</div>
+
+          
+        </div>
+        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
+      </section>
+    
+  
+    
+      <section id="canary-bypass" class="taxonomy__section">
+        <h2 class="archive__subtitle">canary-bypass</h2>
+        <div class="entries-list">
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/leak-stack-canary/" rel="permalink">Leak stack canary - bypass
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-03T00:00:00-05:00">August 03, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veras como puedes hacer bypass del stack canary lekeandolo usando format strings
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#format-string" class="page__meta btn" rel="tag">format-string</a>
+    
+      <a href="/tags/#canary-bypass" class="page__meta btn" rel="tag">canary-bypass</a>
+    
+  </article>
+</div>
+
+          
+        </div>
+        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
+      </section>
+    
+  
+    
+      <section id="aslr-bypass" class="taxonomy__section">
+        <h2 class="archive__subtitle">aslr-bypass</h2>
+        <div class="entries-list">
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/bypass-aslr-nx/" rel="permalink">Bypass ASLR/NX
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-08-11T00:00:00-05:00">August 11, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#ret2libc" class="page__meta btn" rel="tag">ret2libc</a>
+    
+      <a href="/tags/#aslr-bypass" class="page__meta btn" rel="tag">aslr-bypass</a>
+    
+      <a href="/tags/#bof-stack-based" class="page__meta btn" rel="tag">bof-stack-based</a>
+    
+  </article>
+</div>
+
+          
+        </div>
+        <a href="#page-title" class="back-to-top">Back to Top &uarr;</a>
+      </section>
+    
+  
+    
+      <section id="bad-seed" class="taxonomy__section">
+        <h2 class="archive__subtitle">bad-seed</h2>
+        <div class="entries-list">
+          
+            
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/prng-bad-seeds/" rel="permalink">Explotanto un PRNG bad seed
+</a>
+        
+      
+    </h2>
+
+    <p class="page__meta">
+      
+        <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2022-12-20T00:00:00-06:00">December 20, 2022 </time>&emsp;
+      
+      
+    </p>
+
+    <p class="archive__item-excerpt" itemprop="description"><img src="" alt="" style="float: right;margin-right:10px; margin-left:20px; margin-bottom:10px; height:120px;">Te mostrare como puedes abusar de la generacion de numeros aleatorios
+</p>
+    <i class="fas fa-tags"></i>
+    
+      <a href="/tags/#bad-seed" class="page__meta btn" rel="tag">bad-seed</a>
     
   </article>
 </div>

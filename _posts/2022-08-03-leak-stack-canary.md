@@ -10,8 +10,8 @@ header:
 categories:
   - Explotacion binaria
 tags:  
-    - formatStr
-    - radare2
+    - format-string
+    - canary-bypass
 ---
 
 ## Contenido

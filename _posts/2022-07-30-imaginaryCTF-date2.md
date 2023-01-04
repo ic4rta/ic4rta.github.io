@@ -11,8 +11,7 @@ categories:
   - Explotacion binaria
 tags:  
     - got-plt
-    - ghidra
-    - formatStr
+    - format-string
 ---
 
 ## Contenido 
