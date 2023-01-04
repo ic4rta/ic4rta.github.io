@@ -10,7 +10,7 @@ var store = [{
         "url": "http://localhost:4000/format-string/",
         "teaser":null},{
         "title": "picoCTF - Hurry up! Wait!",
-        "excerpt":"Contenido Sacando informacion del binario. Debugging al binario con radare2. Sacando informacion del binario Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre svchost.exe, con ese nombre uno pensaria que es un binario .exe para ser ejecutado...","categories": ["Reversing"],
+        "excerpt":"Contenido Sacando informacion del binario. Debugging al binario con radare2. Sacando informacion del binario Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre svchost.exe, con ese nombre uno pensaria que es un binario .exe para ser ejecutado...","categories": ["Reversing","picoCTF"],
         "tags": ["radare2"],
         "url": "http://localhost:4000/picoCTF-hurryUp/",
         "teaser":null},{
@@ -21,12 +21,12 @@ var store = [{
         "teaser":null},{
         "title": "GOT overwrite con Format String",
         "excerpt":"Contenido Global Offset Table (GOT) y Procedure Linked Table (PLT) Analisis del binario Calculando el offset del buffer y la direccion de libc Armando nuestro exploit GOT y PLT Para entender esto mejor veremos la estructura de un binario ELF. Ahora pondre otra estructura donde section header table apunta a...","categories": ["Explotacion binaria"],
-        "tags": ["got-plt","format-string"],
+        "tags": ["got-overwrite","format-string"],
         "url": "http://localhost:4000/got-overwrite/",
         "teaser":null},{
         "title": "ImaginaryCTF date2 - GOT overwrite",
         "excerpt":"Contenido Analizando el binario con Ghidra Ejecutando el exploit Analizando el binario con Ghidra Este ejercicio es muy similar al enterior del post de GOT overwrite y para practicar esta perfecto, solo que ahora no podemos ver el codigo fuente del binario, asi que lo que nos toca es analizarlo...","categories": ["Explotacion binaria"],
-        "tags": ["got-plt","format-string"],
+        "tags": ["got-overwrite","format-string"],
         "url": "http://localhost:4000/imaginaryCTF-date2/",
         "teaser":null},{
         "title": "IOF - Integer Overflow/Underflow",

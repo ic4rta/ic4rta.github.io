@@ -10,7 +10,7 @@ header:
 categories:
   - Explotacion binaria
 tags:  
-    - got-plt
+    - got-overwrite
     - format-string
 ---
 
