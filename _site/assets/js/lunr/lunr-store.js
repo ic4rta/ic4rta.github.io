@@ -10,7 +10,7 @@ var store = [{
         "url": "http://localhost:4000/format-string/",
         "teaser":null},{
         "title": "picoCTF - Hurry up! Wait!",
-        "excerpt":"Contenido Sacando informacion del binario. Debugging al binario con radare2. Sacando informacion del binario Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre svchost.exe, con ese nombre uno pensaria que es un binario .exe para ser ejecutado...","categories": ["Reversing","picoCTF"],
+        "excerpt":"Contenido Sacando informacion del binario. Debugging al binario con radare2. Sacando informacion del binario Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre svchost.exe, con ese nombre uno pensaria que es un binario .exe para ser ejecutado...","categories": ["Reversing"],
         "tags": ["radare2"],
         "url": "http://localhost:4000/picoCTF-hurryUp/",
         "teaser":null},{
@@ -55,7 +55,12 @@ var store = [{
         "url": "http://localhost:4000/introduccion-pwn/",
         "teaser":null},{
         "title": "ROPemporium ret2win - saltando a una funcion con ROP",
-        "excerpt":"Este es el primer desafio de la pagina ROPemporium, dedicada a la explotacion binaria y mas que nada al uso de la tecnica llamada ROP (Return Oriented Programming) Analisis del binario Primeramente podemos empezar a sacar informacion del binario, ya sea con checksec (pwntools) o rabin2 (radare2), el resultado que...","categories": ["Explotacion binaria","ROPemporium"],
+        "excerpt":"Este es el primer desafio de la pagina ROPemporium, dedicada a la explotacion binaria y mas que nada al uso de la tecnica llamada ROP (Return Oriented Programming) Analisis del binario Primeramente podemos empezar a sacar informacion del binario, ya sea con checksec (pwntools) o rabin2 (radare2), el resultado que...","categories": ["Explotacion binaria"],
         "tags": ["rop"],
         "url": "http://localhost:4000/rop-empurium-ret2win/",
+        "teaser":null},{
+        "title": "picoCTF web gauntlet - sql injection y evadiendo filtros",
+        "excerpt":"Para este desafio tenemos que hacer bypass de varios filtros usando sql injection, el SGBD es sqlite y el usuario para todos los casos es admin http://jupiter.challenges.picoctf.org:41560/ –&gt; Pagina vulnerable http://jupiter.challenges.picoctf.org:41560/filter.php –&gt; Filtro de cada round Round 1 El primer filtro de debemos de evadir es or, al llenar los...","categories": ["Web"],
+        "tags": ["sqli"],
+        "url": "http://localhost:4000/picoCTF-web-gauntlet/",
         "teaser":null}]

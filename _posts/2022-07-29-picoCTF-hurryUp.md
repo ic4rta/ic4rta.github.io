@@ -9,7 +9,6 @@ header:
   #icon: /assets/images/hackthebox.webp
 categories:
   - Reversing
-  - picoCTF
 tags:  
     - radare2
 ---

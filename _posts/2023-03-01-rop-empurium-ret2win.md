@@ -10,7 +10,6 @@ header:
   #icon: /assets/images/hackthebox.webp
 categories:
   - Explotacion binaria
-  - ROPemporium
 tags:  
     - rop
 ---

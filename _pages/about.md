@@ -8,4 +8,4 @@ date: 2022-07-25
 
 <center> Mis intereses se centran en la explotacion binaria, de kernel y reversing, aun que tambien me encanta el pentesting web y de directorio activo >^.^< </center>
 
-<center>Cree esta pagina para mostrar write-ups de distintos desafios (CTFs), orientados a la explotacion binaria, esto con el fin que compartir mis conocimientos con los demas:D</center>
+<center>Cree esta pagina para mostrar write-ups de distintos desafios (CTFs), orientados a la explotacion binaria, entre otros, esto con el fin que compartir mis conocimientos con los demas:D</center>
