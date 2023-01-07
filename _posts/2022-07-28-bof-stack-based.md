@@ -5,7 +5,7 @@ excerpt: "Aprenderas a como realizar un simple buffer overflow stack-based en li
 date: 2022-07-28
 classes: wide
 header:
-  #teaser: /assets/images/bof-stack-based/main.jpg
+  teaser: /assets/images/bof-stack-based/waifu.png
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -315,5 +315,3 @@ Y listo, ya obtuvimos una shell!!
 ![](/assets/images/bof-stack-based/pwn.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/images/bof-stack-based/waifu.png)

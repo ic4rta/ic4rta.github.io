@@ -5,7 +5,7 @@ excerpt: "Te mostrare como puedes abusar de la generacion de numeros aleatorios"
 date: 2022-12-20
 classes: wide
 header:
-  #teaser: /assets/images/bof-stack-based/main.jpg
+  teaser: /assets/images/prng/waifu.webp
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:

@@ -5,6 +5,7 @@ excerpt: "En este articulo veremos un ejemplo muy simple de como sobreescribir G
 date: 2022-07-30
 classes: wide
 header:
+  teaser: /assets/images/formatString-got/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -193,5 +194,3 @@ Y ahora si ejecutamos el exploit debimos de obtener una shell
 ![](/assets/images/formatString-got/format4.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/images/formatString-got/waifu.jpg)

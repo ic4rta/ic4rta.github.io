@@ -5,6 +5,7 @@ excerpt: "Resolveremos un pequeño ejercicio de reversing de picoCTF"
 date: 2022-07-29
 classes: wide
 header:
+  teaser: /assets/images/picoCTF-hurry/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -140,6 +141,3 @@ Asi que para no hacer esto mas largo, al final la flag que me salio a mi es esta
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/images/picoCTF-hurry/waifu.jpg)
-
-<font size="1"> ijaesuperramadre Kamiya esta bien guapa</font> 

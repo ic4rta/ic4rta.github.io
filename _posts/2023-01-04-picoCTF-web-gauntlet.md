@@ -5,7 +5,7 @@ excerpt: "En este desafio hay que evadir un par de filtros para conseguir la fla
 date: 2023-01-04
 classes: wide
 header:
-  #teaser: /assets/images/bof-stack-based/main.jpg
+  teaser: /assets/images/web-gaunlet/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:

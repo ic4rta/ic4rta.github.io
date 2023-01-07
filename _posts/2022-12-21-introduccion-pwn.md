@@ -5,7 +5,7 @@ excerpt: "Esta vez te enseñare la parte teorica de lo que considero debes de sa
 date: 2022-12-21
 classes: wide
 header:
-  #teaser: /assets/images/bof-stack-based/main.jpg
+  teaser: /assets/images/introduccion/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:

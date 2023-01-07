@@ -5,7 +5,7 @@ excerpt: "Resolucion del ejercicio ret2win usando ROP"
 date: 2023-01-03
 classes: wide
 header:
-  #teaser: /assets/images/bof-stack-based/main.jpg
+  teaser: /assets/images/ret2win/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
