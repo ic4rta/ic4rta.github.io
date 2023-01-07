@@ -5,7 +5,7 @@ excerpt: "Resolucion del ejercicio ret2win usando ROP"
 date: 2023-01-03
 classes: wide
 header:
-  teaser: /assets/images/ret2win/waifu.jpg
+  #teaser: /assets/images/ret2win/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -315,3 +315,7 @@ print(proc.recvall().decode())
 Entonces lo ejecutamos y nos da la flag
 
 ![](/assets/images/ret2win/pwn.png)
+
+Eso ha sido todo, gracias por leer ❤
+
+![](/assets/images/ret2win/waifu.jpg)

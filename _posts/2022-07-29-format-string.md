@@ -5,7 +5,7 @@ excerpt: "Aprenderas a como realizar un ataque format string"
 date: 2022-07-29
 classes: wide
 header:
-  teaser: /assets/images/format-string/waifu.png
+  #teaser: /assets/images/format-string/waifu.png
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -170,5 +170,4 @@ Tambien para completar podemos mostrar el registro ```RSP``` con el comando ```p
 
 Eso ha sido todo, gracias por leer ❤
 
-
-
+![](/assets/images/format-string/waifu.png)

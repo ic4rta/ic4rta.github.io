@@ -5,7 +5,7 @@ excerpt: "En este articulo veremos como funciona y como realizar un Integer Over
 date: 2022-08-01
 classes: wide
 header:
-  teaser: /assets/images/integer-overflow/waifu.png
+  #teaser: /assets/images/integer-overflow/waifu.png
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -110,7 +110,4 @@ Entonces la resolucion del ejercicio queda asi:
 
 Eso ha sido todo, gracias por leer ❤
 
-
-
-
-
+![](/assets/images/integer-overflow/waifu.png)

@@ -5,7 +5,7 @@ excerpt: "En este articulo resolveremos un ejercicio de explotacion binaria de l
 date: 2022-07-30
 classes: wide
 header:
-  teaser: /assets/images/imaginaryCTF-date2/waifu.jpg
+  #teaser: /assets/images/imaginaryCTF-date2/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -148,4 +148,4 @@ flag.txt
 ```
 Eso ha sido todo, gracias por leer ❤
 
-
+![](/assets/images/imaginaryCTF-date2/waifu.jpg)

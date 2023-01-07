@@ -5,7 +5,7 @@ excerpt: "Te mostrare como puedes abusar de la generacion de numeros aleatorios"
 date: 2022-12-20
 classes: wide
 header:
-  teaser: /assets/images/prng/waifu.webp
+  #teaser: /assets/images/prng/waifu.webp
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -117,4 +117,6 @@ Mommy, I thought libc random is unpredictable...
 ```
 Y listo, hemos resuelto el ejercicio y la flag es: ```Mommy, I thought libc random is unpredictable... (Mami, pensé que libc random es impredecible...)``` 
 
-Eso es todo, muchas gracias por leer :heartbeat:
+Eso ha sido todo, gracias por leer ❤
+
+![](/assets/images/prng/waifu.webp)

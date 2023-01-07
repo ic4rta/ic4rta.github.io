@@ -5,7 +5,7 @@ excerpt: "Esta vez te enseñare la parte teorica de lo que considero debes de sa
 date: 2022-12-21
 classes: wide
 header:
-  teaser: /assets/images/introduccion/waifu.jpg
+  #teaser: /assets/images/introduccion/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -613,3 +613,7 @@ Ahora es momento de que empieces a investigar acerca de como explotar tu primer 
 - [https://guyinatuxedo.github.io/](https://guyinatuxedo.github.io/)
 - LiveOverflow (Youtube)
 - PinkDraconian (Youtube)
+
+Eso ha sido todo, gracias por leer ❤
+
+![](/assets/images/introduccion/waifu.jpg)

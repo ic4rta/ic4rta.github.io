@@ -5,7 +5,7 @@ excerpt: "En este desafio hay que evadir un par de filtros para conseguir la fla
 date: 2023-01-04
 classes: wide
 header:
-  teaser: /assets/images/web-gaunlet/waifu.jpg
+  #teaser: /assets/images/web-gaunlet/waifu.jpg
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -99,3 +99,6 @@ usuario: ```adm'||'in'/*```
 
 Y la flag es: ```picoCTF{y0u_m4d3_1t_275cea1159781d5b3ef3f57e70be664a}```
 
+Eso ha sido todo, gracias por leer ❤
+
+![](/assets/images/web-gaunlet/waifu.jpg)

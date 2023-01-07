@@ -5,7 +5,7 @@ excerpt: "En este articulo veremos como hacer bypass del ASLR y NX en Linux x64"
 date: 2022-08-11
 classes: wide
 header:
-  teaser: /assets/images/bypass-aslr/waifu.gif
+  #teaser: /assets/images/bypass-aslr/waifu.gif
   teaser_home_page: true
   #icon: /assets/images/hackthebox.webp
 categories:
@@ -237,3 +237,5 @@ omarh
 ```
 
 Eso ha sido todo, gracias por leer ❤
+
+![](/assets/images/bypass-aslr/waifu.gif)
