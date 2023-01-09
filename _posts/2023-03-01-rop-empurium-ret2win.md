@@ -96,7 +96,7 @@ Aqui es donde empezamos a ver ROP, y como mencione en el titulo vamos a "saltar 
 
 Aqui lo unico interesante que hace es hacer un cat a la flag, y bueno, es posible saltar a una funcion ya que casi todas terminan con la intruccion ```ret``` y esto nos permite crear cadenas ROP (no las usaremos en este ejercicio)
 
-## Contruyendo el payload
+## Construyendo el payload
 
 En mi caso usare pwndbg, asi que metere el programa y con ```cyclic 100``` generare una secuencia de 100 caracteres que le pasare como input, una vez que el programa pete.
 
