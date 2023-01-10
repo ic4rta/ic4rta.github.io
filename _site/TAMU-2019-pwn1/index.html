@@ -340,7 +340,7 @@ Full RELRO      No canary found   NX enabled    PIE enabled     No RPATH   No RU
 
 <p><img src="/assets/images/tamu-pwn1/radare2.png" alt="" /></p>
 
-<p>Lo que hace primero con <code class="language-plaintext highlighter-rouge">add</code> es sumarle 16 bytes al <code class="language-plaintext highlighter-rouge">ESP</code>, esto con el fin para ajustar la posicion del <code class="language-plaintext highlighter-rouge">ESP</code> en el stack. Despues con <code class="language-plaintext highlighter-rouge">text</code>se hace una operacion AND bit a bit entre lo que le metimos como input y lo que tiene <code class="language-plaintext highlighter-rouge">s1</code>, y esto sirve ya que despues tenemos la intruccion <code class="language-plaintext highlighter-rouge">je</code> que significa <code class="language-plaintext highlighter-rouge">salta si es igual</code>, asi que si el input y <code class="language-plaintext highlighter-rouge">si</code> son iguales, la flag <code class="language-plaintext highlighter-rouge">ZF</code> se establece en 1 y salta a la direccion <code class="language-plaintext highlighter-rouge">0x5655582f</code> y si no, la <code class="language-plaintext highlighter-rouge">ZF</code> se establace en 0 y en este caso lo que pasa es que el programa se detiene como se puede ver aqui en esta imaguen que pinte jiji:</p>
+<p>Lo que hace primero con <code class="language-plaintext highlighter-rouge">add</code> es sumarle 16 bytes al <code class="language-plaintext highlighter-rouge">ESP</code>, esto con el fin para ajustar la posicion del <code class="language-plaintext highlighter-rouge">ESP</code> en el stack. Despues con <code class="language-plaintext highlighter-rouge">test</code>se hace una operacion AND bit a bit entre lo que le metimos como input y lo que tiene <code class="language-plaintext highlighter-rouge">s1</code>, y esto sirve ya que despues tenemos la intruccion <code class="language-plaintext highlighter-rouge">je</code> que significa <code class="language-plaintext highlighter-rouge">salta si es igual</code>, asi que si el input y <code class="language-plaintext highlighter-rouge">si</code> son iguales, la flag <code class="language-plaintext highlighter-rouge">ZF</code> se establece en 1 y salta a la direccion <code class="language-plaintext highlighter-rouge">0x5655582f</code> y si no, la <code class="language-plaintext highlighter-rouge">ZF</code> se establace en 0 y en este caso lo que pasa es que el programa se detiene como se puede ver aqui en esta imaguen que pinte jiji:</p>
 
 <p><img src="/assets/images/tamu-pwn1/radare3.gif" alt="" /></p>
 
@@ -474,7 +474,8 @@ flag{g0ttem_b0yz} --&gt; la flag
 ">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/srop/" class="pagination--pager" title="Programación Orientada a Sigreturn (SROP)
+">Next</a>
     
   </nav>
 

