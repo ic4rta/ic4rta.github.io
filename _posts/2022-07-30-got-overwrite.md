@@ -40,7 +40,7 @@ En un binario ELF una seccion de texto necesita saber la direccion virtual absol
 * Una constante de tiempo de enlace
 * La base de carga más una constante de tiempo de enlace.
 
-Si se dieron cuenta se menciona la palabra ```enlace``` y esto es por que GOT y PLT se encargan de la gran parte del enlazado dinamico  
+Si se dieron cuenta se menciona la palabra ```enlace``` y esto es por que GOT y PLT se encargan de la gran parte del enlazado dinamico.
 
 Imaginemos una situacion donde tomamos el valor de un simbolo, para poder realizar esto tenemos que hacer que el enlazador dinamico busque la direccion en memoria de ese simbolo y reescriba el codigo para solo poder carga una sola direccion, esto es demasiado proceso e incluso aumenta el tamaño del binario, asi que una mejora mucho mas eficiente y eficaz es reservar un espacio en la memoria del binario en la cual se mantendra la direccion de ese simbolo y posteriormente hacer que el enlazador dinamico ponga la direccion alli en lugar de reescribir todo el codigo, esto es gracias a que existe GOT, y GOT se encuenta en una seccion el binario que se llama .got, se puede ver en la primera imagen.
 
