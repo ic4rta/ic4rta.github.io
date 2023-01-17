@@ -46,7 +46,7 @@ Imaginemos una situacion donde tomamos el valor de un simbolo, para poder realiz
 
 ### ¿Como trabaja GOT y PLT?
 
-GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinamico durante la ejecucion del binario, posteriormente obtiene las direcciones absolutas de las funciones solicitadas y GOT se actualiza asi mismo segun lo que fue solicitado, despues toma las solicitudes de las ubicaciones que vienen por parte de PLT, una vez que esto se concluya tenemos el paso final en el cual PLT esta vinculado con la direccion de GOT, entonces ahora el binario puede llamar directamente a esa funcion que fue solicitada desde las librerias. Definitivamente GOT y PLT son los mejores amigos 
+GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinamico durante la ejecucion del binario, posteriormente obtiene las direcciones absolutas de las funciones solicitadas y GOT se actualiza asi mismo segun lo que fue solicitado, despues toma las solicitudes de las ubicaciones que vienen por parte de PLT, una vez que esto se concluya tenemos el paso final en el cual PLT esta vinculado con la direccion de GOT, entonces ahora el binario puede llamar directamente a esa funcion que fue solicitada desde las librerias. Definitivamente GOT y PLT son los mejores amigos.
 
 ### Un pequeño ejemplo
 
