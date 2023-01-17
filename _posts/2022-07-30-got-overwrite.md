@@ -50,7 +50,7 @@ GOT trabaja de la siguiente manera, primero GOT se abre como un enlazador dinami
 
 ### Un pequeño ejemplo
 
-El codigo del ejemplo es el siguiente, compilenlo como quieran, ese no es el que se va a explotar, simplemente solo es para ver como se representaria GOT y PLT en debugger 
+El codigo del ejemplo es el siguiente, compilenlo como quieran, ese no es el que se va a explotar, simplemente solo es para ver como se representaria GOT y PLT en debugger:
 
 ```c
 #include <stdio.h>
