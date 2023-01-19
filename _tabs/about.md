@@ -4,9 +4,12 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-<br><center> Soy Omar Hernandez (aka c4rta)</center>
-<center> Soy entusiasta a la ciberseguridad, actualmente soy estudiante de universidad y me gusta resolver CTFs.</center>
+<center> Me llamo Omar y soy entusiasta a la ciberseguridad, actualmente soy estudiante de universidad y me gusta resolver CTFs que me encuentro por ahi :D</center>
 
-<center> Mis intereses se centran en la explotacion binaria, de kernel y reversing, aun que tambien me encanta el pentesting web y de directorio activo >^.^< </center>
+<center> Mis intereses se centran en la explotacion binaria, reversing y forense.</center>
 
-<center>Cree esta pagina para mostrar writeups de distintos desafios (CTFs), orientados a la explotacion binaria, entre otros, esto con el fin de que podamos aprender juntos ❤ </center>
+<center>Atualmente me encuentro aprendiendo acerca de las radiofrecuencias (Analisis forense de RF y el funcionamiento de GNSS-SDR)<center>
+
+<center>Cree esta pagina para publicar posts de CTFs y temas que me parezcan interesantes y curiosos ❤ </center>
+<br>
+<marquee>nya</marquee>
