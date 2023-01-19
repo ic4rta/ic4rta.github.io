@@ -12,4 +12,4 @@ order: 4
 
 <center>Cree esta pagina para publicar posts de CTFs y temas que me parezcan interesantes y curiosos ❤ </center>
 <br>
-<marquee>nya</marquee>
+<marquee>nya~</marquee>
