@@ -8,7 +8,7 @@ order: 4
 
 <center> Mis intereses se centran en la explotacion binaria, reversing y forense.</center>
 
-<center>Atualmente me encuentro aprendiendo acerca de las radiofrecuencias (Analisis forense de RF y el funcionamiento de GNSS-SDR)<center>
+<center>Actualmente me encuentro aprendiendo acerca de las radiofrecuencias (Analisis forense de RF y el funcionamiento de GNSS-SDR), ademas de resolver maquinas en diferentes plataformas<center>
 
 <center>Cree esta pagina para publicar posts de CTFs que me parezcan interesantes y curiosos ❤ </center>
 <br>

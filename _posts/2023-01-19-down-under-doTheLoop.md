@@ -17,7 +17,7 @@ En este ejercicio lo unico importante es el espectrograma. Podemos usar aplicaci
 
 ```sox forensics_do_the_loop_challenge_monorail.wav -n spectrogram```
 
-El parametro ```-n``` nos sirve para indicar que es lo que queremos optener de ese archivo ```wav```, asi que se le pasa ```spectrogram``` para obtener su espectro.
+El parametro ```-n``` nos sirve para indicar que es lo que queremos obtener de ese archivo ```wav```, asi que se le pasa ```spectrogram``` para obtener su espectro.
 
 ## Analisis del espectrograma
 
@@ -35,13 +35,13 @@ Si vemos el espectro del desafio:
 
 ![](/assets/img/commons/dooTheLoop/spectrogram.png)
 
-Verticalmente esta la frecuencia, horizontalmente es el tiempo en segundos (duracion del audio), y la escala que esta hasta la derecha se refiere a los ```decibelios a escala completa```, simplemente es una escala que define los niveles de aplitud en decibelios en un sistema digital.
+Verticalmente esta la frecuencia, horizontalmente es el tiempo en segundos (duracion del audio), y la escala que esta hasta la derecha se refiere a los ```decibelios a escala completa```, simplemente es una escala que define los niveles de amplitud en decibelios en un sistema digital.
 
-Si quires saber a que corresponde cada numero de esa tabla puedes ver [aqui](https://www.fceia.unr.edu.ar/acustica/biblio/niveles.htm)
+Si quieres saber a que corresponde cada numero de esa tabla puedes ver [aqui](https://www.fceia.unr.edu.ar/acustica/biblio/niveles.htm)
 
 ### Forma de onda a espectrograma
 
-Los que trabajan con software de audio, edicion y todo ese pedo, estan acostumbrados a ver la ```forma de onda```, en la cual se representan los cambios de amplitud de una señal a lo largo del tiempo, sin embargo en un espestrograma podemos ver cambios en las frecuencias individuales de una señal, un ejemplo de forma de onda es la de nuestro desafio, simplemente podemos meterlo a software como ```Audacity```y podemos ver esto:
+Los que trabajan con software de audio, edicion y todo ese pedo, estan acostumbrados a ver la ```forma de onda```, en la cual se representan los cambios de amplitud de una señal a lo largo del tiempo, sin embargo en un espectrograma podemos ver cambios en las frecuencias individuales de una señal, un ejemplo de forma de onda es la de nuestro desafio, simplemente podemos meterlo a software como ```Audacity```y podemos ver esto:
 
 ![](/assets/img/commons/dooTheLoop/audacity.png)
 
@@ -51,7 +51,7 @@ En cambio en un espectrograma podemos ver muchas mas cosas que estan "ocultas" a
 
 Cuando las señales son transmitidas en banda base, osea, el receptor recibe la misma señal que anteriormente envió el emisor sin que haya sufrido ningún tipo de manipulación
 
-La modulación es la alteración de una onda senoidal, a la que se le puede decir ```portadora```, en función de las características de otra señal, a la que se le puede decir ```mensaje```, que es la señal que contiene la información a transmitir, en la cual en esta alteracio conseguiremos obtener una nueva señal, esto lo menciono ya que en nuestro desafio hay una pequeña alteracion, la cual es el codigo morse, el cual es un metodo de comunicacion que emplea sonidos o rayos de luz a un alfabeto alfanumerico
+La modulación es la alteración de una onda senoidal, a la que se le puede decir ```portadora```, en función de las características de otra señal, a la que se le puede decir ```mensaje```, que es la señal que contiene la información a transmitir, en la cual en esta alteracion conseguiremos obtener una nueva señal, esto lo menciono ya que en nuestro desafio hay una pequeña alteracion, la cual es el codigo morse, el cual es un metodo de comunicacion que emplea sonidos o rayos de luz a un alfabeto alfanumerico
 
 ## Resolucion del desafio
 
