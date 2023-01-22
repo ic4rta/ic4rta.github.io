@@ -192,7 +192,7 @@ Continuing.
 you have logged in already!
 ```
 
-Y si fue como explotamos un UAF basico aprovechandonos de una sobreescritura de```service``` para usar usar un ```chunk``` liberado anteriormente el cual ahora es llamado ```free chunk```
+Y si fue como explotamos un UAF basico aprovechandonos de una sobreescritura con ```service``` para usar usar un ```chunk``` liberado anteriormente el cual ahora es llamado ```free chunk```
 
 Eso ha sido todo, y tranquilo si no llegaste a entender lo que pasaba, por que ni yo ni nadie entiende estas cosas a la primera, pero con tiempo y diciplina se puede lograr. Realmente no me gustaria que te frustraras por algo asi, tu puedes. Gracias por leer ❤
 
