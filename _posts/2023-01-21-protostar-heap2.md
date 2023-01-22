@@ -114,11 +114,13 @@ if(strncmp(line, "login", 5) == 0) {
       }
 ```
 
-Lo que hace es realizar una verificacion si el ```auth struct``` tiene un valor mayor que 0.
+Lo que hace es realizar una verificacion si el ```auth struct``` tiene un valor igual que 0.
 
 Para resolver el desafio lo que hacer que hacer es pasar la condición de que auth->auth sea un valor que no sea cero, ya que en ninguna parte del código se le asigna un valor a auth->auth.
 
 Asi que para resolver esta desafio tenemos que mostrar: ```you have logged in already!```
+
+Aqui lo que se me ocurre hacer es asignar memoria con ```auth```, luego liberar le memoria con ```reset``` y despues dar un input usando el comando ```service```, lo suficientemente grande para para sobreescribir ```auth->auth```, esto hara que el programa intente acceder a ```auth struct``` pero ahora su memoria se libero y luego se sobreescribio con lo que le metimos con ```service``` y ahora ```auth->auth``` es diferente de 0
 
 ### Visualizandolo en gdb
 
@@ -159,14 +161,14 @@ pwndbg> x /20xb $eax-8
 0x804c008:  0x00    0x00    0x00    0x00    0x0a    0x00    0x00    0x00 
 0x804c010:  0x00    0x00    0x00    0x00    0xf1
 ```
-Aqui ya se puso interesante la cosa, el objeto del heap esta alli (de ```0x11``` a ```0xf1``` el cual es llamado ```top chunk```), pero nuestro input ya no esta, entonces ahora veremos que pasa si creamos un nuevo objeto en el heap usando ```service``` pero pasandole un tamaño mas grande que 16 bytes, esto lo podemos hacer ya que la memoria despues de ```free()``` esta disponible para volverla a asignar:
+Aqui ya se puso interesante la cosa, el objeto del heap esta alli (de ```0x11``` a ```0xf1``` el cual ```0xf1``` es llamado ```top chunk```), pero nuestro input ya no esta, entonces ahora veremos que pasa si creamos un nuevo objeto en el heap usando ```service``` pero pasandole un tamaño mas grande que 16 bytes, esto lo podemos hacer ya que la memoria despues de ```free()``` esta disponible para volverla a asignar:
 
 ```
 [ auth = 0x804c818, service = (nil) ]
 service AAAAAAAAAAAAAAAAAA
 ```
 
-Podemos ver como de asigno en el espacio anterior, osea en ```auth```, esto es ya que tiene la misma direccion: ```0x804c818```, pero eso no es todo, tambien logramos sobreescribir la ubicacion donde estaba ```service``` osea ```auth+0x20```, esto lo podemos ver si mostramos unos cuantos bytes desde ```0x804c818```:
+Podemos ver como se asigno en el espacio anterior, osea en ```auth```, esto es ya que tiene la misma direccion: ```0x804c818```, pero eso no es todo, tambien logramos sobreescribir ```auth->auth``` gracias a ```service``` , esto lo podemos ver si mostramos unos cuantos bytes desde ```0x804c818```:
 
 ```
 pwndbg> x /64xb 0x804c818
@@ -179,7 +181,8 @@ pwndbg> x /64xb 0x804c818
 0x804c848:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
 0x804c850:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
 ```
-Podemos ver como en la direccion ```0x804c828``` que es la de service ahora contiene ```0x61	0x61	0x61```
+Podemos ver como en la direccion ```0x804c828``` que es la de ```auth->auth``` ahora contiene ```0x61	0x61	0x61``` de mas
+
 
 Y ahora aun que el objeto del heap se libero, el puntero a ```auth->auth``` no se anulo, y aun se usa, y dará como resultado un valor diferente de 0, asi que si continuamos la ejecucion vemos como ya obtuvimos la flag:
 
@@ -189,8 +192,8 @@ Continuing.
 you have logged in already!
 ```
 
-Y si fue como explotamos un UAF basico aprovechandonos de una sobreescritura de```service``` para usar usar un ```chunk``` liberado anteriormente el cual es llamado ```free chunk```
+Y si fue como explotamos un UAF basico aprovechandonos de una sobreescritura de```service``` para usar usar un ```chunk``` liberado anteriormente el cual ahora es llamado ```free chunk```
 
-Eso ha sido todo, gracias por leer ❤
+Eso ha sido todo, y tranquilo si no llegaste a entender lo que pasaba, por que ni yo ni nadie entiende estas cosas a la primera, pero con tiempo y diciplina se puede lograr. Realmente no me gustaria que te frustraras por algo asi, tu puedes. Gracias por leer ❤
 
 ![](/assets/img/commons/heap2/waifu.gif)
