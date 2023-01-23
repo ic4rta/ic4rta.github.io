@@ -162,9 +162,9 @@ Cuando se sobrepasa el tamaño del buffer nuestras A empiezan a subir a otros re
 y a su vez los van sobreescribiendo
 ```
 
-## Calculando el offset y tomando el control del RIP
+## Calculando el offset del RIP
 
-Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreescribir.
+Ahora que ya sabemos que podemos sobreescribir el RIP lo que tenemos que hacer ahora es encontrar el offset del RIP, ya que esto no dice desde donde se empieza a sobreescribir, en x64 podemos hacer uso del offset del RSP para sacar el desplazamiento para llegar hasta el RIP.
 
 Para esto usaremos una utilidad de metasploit que se llama ```pattern_create``` que nos permite generar una serie de caracteres para poder calcular los offset, el comando queda de la siguiente manera:
 
@@ -178,31 +178,18 @@ Ahora tenemos que correr el programa de esta forma con toda esta cadena que nos 
 r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9
 ```
 
-Si vemos nuestro RIP ahora tiene el valor de ```0x6541316541306541```, esto son unos caracteres que se tomaron de la cadena que se genero.
+Si vemos nuestro RSP ahora tiene el valor de ```0x6541316541306541```, esto son unos caracteres que se tomaron de la cadena que se genero.
 
-Ahora con otra utilidad de metasploit llamada ```pattern_offset``` encontraremos el offset del RIP y el comando queda de la siguiente manera
+Ahora con otra utilidad de metasploit llamada ```pattern_offset``` encontraremos el offset del RSP y el comando queda de la siguiente manera
 
 ```
 /opt/metasploit/tools/exploit/pattern_offset.rb -q 0x6541316541306541
 ```
 
-Ahi lo tenemos, ahora ya sabemos el offset del RIP
+Ahi lo tenemos, ahora ya sabemos el offset del RIP con ayuda del RSP
 ```
 [*] Exact match at offset 120
 ```
-Entonces si ahora que sabemos el offset el RIP podemos controlar a donde queremos apuntar, para saber que tenemos el control del RIP le diremos que el valor que contenga sean puras B, asi que ejecutaremos el programa de esta forma:
-
-Lo que hara es meterle 120 A y como el offset el RIP es 120, las 8 B son con lo que vamos a sobreescribir el RIP
-
-```
-r $(python2 -c "print 'A'*120 + 'B' * 8")
-```
-
-Y ahi lo tenemos, ahora nuestro RIP tiene el valor ```0x4242424242424242```
-
-![](/assets/img/commons/bof-stack-based/ret-control.png)
-
-Y bueno, ahora que ya podemos controlar el valor del RIP lo que vamos hacer es que el RIP apunte de una direccion arbitraria para para ejecutar una shellcode
 
 ## Ejecutando la shellcode
 

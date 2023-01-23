@@ -85,7 +85,7 @@ Y si mostramos unos cuantos byes del stack, con el comando ```x/30wx $rsp``` vem
 0x7fffffffdad8:	0xf7ffd000	0x00007fff	0x80d1056c	0xc6b374c5
 0x7fffffffdae8:	0xb179056c	0xc6b36486
 ```
-En donde en la direccion ```0x7fffffffda78``` tenemos los valores ```0x61616166	0x61616161```, los cuales son los mismos que tiene el ```RSP```, asi que podemos decir que el ```saved rip``` tiene el valor ```0x6161616161616166``` y el ```RSP``` el valor ```faaaaaaa``` (que es lo mismo que ```0x6161616161616166``` pero en decimal), ademas podemos tambien hacer un ```cyclic -l 0x6161616161616166``` y nos dara un offset de 40 al igual que el ```RSP```. Y como ultimo, en este caso le estamos indicando al programa que regrese a ```0x6161616161616166```, lo cual es incorrecto. Y por toda esta explicacion es la razon por la cual el ```saved rip``` y el ```RSP``` tienen el mismo offset (nunca habia explicado esto y casi siempre uso del saved rip para sacar el offset jeje).
+En donde en la direccion ```0x7fffffffda78``` tenemos los valores ```0x61616166	0x61616161```, los cuales son los mismos que tiene el ```RSP```, asi que podemos decir que el ```saved rip``` tiene el valor ```0x6161616161616166``` y el ```RSP``` el valor ```faaaaaaa``` (que es lo mismo que ```0x6161616161616166``` pero en decimal), ademas podemos tambien hacer un ```cyclic -l 0x6161616161616166``` y nos dara un offset de 40 al igual que el ```RSP```. Y como ultimo, en este caso le estamos indicando al programa que regrese a ```0x6161616161616166```, lo cual es incorrecto. Y por toda esta explicacion es la razon por la cual el ```saved rip``` y el ```RSP``` tienen el mismo offset (nunca habia explicado esto y es bueno saberlo).
 
 ### Direccion de system
 
