@@ -38,7 +38,7 @@ Ahora una vez dentro con el comando ```pattern create 150``` generaremos 150 car
 Program received signal SIGSEGV, Segmentation fault.
 0x0000000000401187 in main ()
 ```
-Ahora si vemos el RSP tiene los valores ```*RSP  0x7fffffffda68 ◂— 'jaaaaaaakaaaaaaalaaaaaaamaaa'``` estos son algunos de los caracteres que le pasamos de la cadena que se genero pero en hex. Ahora con el comando ```patter offset``` le pasaremos 8 bytes de el RSP para saber el offset:
+Ahora si vemos el RSP tiene los valores ```*RSP  0x7fffffffda68 ◂— 'jaaaaaaakaaaaaaalaaaaaaamaaa'``` estos son algunos de los caracteres que le pasamos de la cadena que se genero. Ahora con el comando ```patter offset``` le pasaremos 8 bytes de el RSP para saber el offset:
 
 ```
 gef➤  patter offset jaaaaaaa
