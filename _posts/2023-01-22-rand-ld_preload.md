@@ -20,7 +20,7 @@ Usando bibliotecas estáticas, podemos crear programas independientes. Asi que, 
 
 ### Funcionamiento de LD_PRELOAD
 
-LD_PRELOAD truco se aprovecha la funcionalidad proporcionada por el enlazador dinámico en, UNIX permiten decirle al enlazador que vincule los símbolos proporcionados por un cierta biblioteca compartida antes que otras bibliotecas, todo esto se hace en tiempo de ejecucion 
+LD_PRELOAD trick se aprovecha la funcionalidad proporcionada por el enlazador dinámico en, UNIX permiten decirle al enlazador que vincule los símbolos proporcionados por un cierta biblioteca compartida antes que otras bibliotecas, todo esto se hace en tiempo de ejecucion 
 
 ### Inyeccion de codigo usando LD_PRELOAD
 
