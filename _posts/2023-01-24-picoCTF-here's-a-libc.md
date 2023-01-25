@@ -253,4 +253,6 @@ $ whoami
 here-s-a-libc_0
 ```
 
+Eso ha sido todo, gracias por leer ❤
 
+![](/assets/img/commons/hereLibc/waifu.gif)
