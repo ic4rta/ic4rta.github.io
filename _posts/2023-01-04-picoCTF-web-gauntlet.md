@@ -2,7 +2,7 @@
 title: picoCTF web gauntlet - sql injection y evadiendo filtros
 author: c4rta
 date: 2023-01-04
-categories: [Web, picoCTF]
+categories: [Desafios Web]
 tags: [SQL injection]
 ---
 
