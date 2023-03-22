@@ -2,7 +2,7 @@
 title: picoCTF Here's a libc - ret2libc y bypass ASLR
 author: c4rta
 date: 2023-01-24
-categories: [Explotacion binaria, picoCTF]
+categories: [Explotacion binaria]
 tags: [ret2libc, ROP, aslr bypass]
 ---
 

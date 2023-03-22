@@ -2,7 +2,7 @@
 title: ImaginaryCTF date2 - GOT overwrite
 author: c4rta
 date: 2022-07-30
-categories: [Explotacion binaria, ImaginaryCTF]
+categories: [Explotacion binaria]
 tags: [GOT overwrite, format string]
 ---
 

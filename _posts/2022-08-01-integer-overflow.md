@@ -2,7 +2,7 @@
 title: IOF - Integer Overflow/Underflow
 author: c4rta
 date: 2022-08-01
-categories: [Explotacion binaria, TryHackMe]
+categories: [Explotacion binaria]
 tags: [integer overflow]
 ---
 
