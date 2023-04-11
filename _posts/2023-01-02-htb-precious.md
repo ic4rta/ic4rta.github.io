@@ -188,9 +188,9 @@ gems_file.each do |file_name, file_version|
     end
 end
 ```
-Me doy cuenta que esta intentando cargar un archivo que se llama ```dependencies.yml```, el cual no se le esta indicando la ruta, y ademas esta usando la funcion ```YAML.load()``` la cual es vulnerable a un ataque```YAML deserialization``` el cual deriva de un RCE, para saber como explotarlo nos guiaremos de [aqui](https://gist.github.com/staaldraad/89dffe369e1454eedd3306edc8a7e565#file-ruby_yaml_load_sploit2-yaml)
+Me doy cuenta que esta intentando cargar un archivo que se llama ```dependencies.yml```, el cual no se le esta indicando la ruta, es decir, que lo trata de cargar desde el directorio actual donde se encuentra el usuario, entonces... ¿Por que no crearlo?, y ademas esta usando la funcion ```YAML.load()``` la cual es vulnerable a un ataque```YAML deserialization``` el cual deriva de un RCE, para saber como explotarlo nos guiaremos de [aqui](https://gist.github.com/staaldraad/89dffe369e1454eedd3306edc8a7e565#file-ruby_yaml_load_sploit2-yaml)
 
-Crearemos un archivo yml con el contenido:
+Crearemos un archivo yml con el nombre ```dependencies.yml``` en el directorio actual, con el contenido:
 
 ```yml
 ---
