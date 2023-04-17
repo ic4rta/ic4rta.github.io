@@ -4,12 +4,10 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-<center> Me llamo Omar y soy entusiasta y estudiante autodidacta en la ciberseguridad tanto en red team y blue team. Me gusta participar CTFs que me encuentro por ahi :D</center>
+Que onda, soy Omar y soy entusiasta y estudiante autodidacta en la ciberseguridad tanto en red team y blue team.<br>
 
-<center> Mis intereses se centran en la explotacion binaria, reversing y las radio frecuencias</center>
+Me gusta participar CTFs que me encuentro por ahi, y mis intereses se centran en la explotacion binaria, reversing y las radio frecuencias, aqui publicare posts de CTFs que me parezcan interesantes y curiosos <br>
 
-<center>Actualmente me encuentro aprendiendo acerca de las radiofrecuencias (Analisis forense de RF y el funcionamiento de GNSS-SDR), ademas de resolver maquinas en diferentes plataformas<center>
-
-<center>Cree esta pagina para publicar posts de CTFs que me parezcan interesantes y curiosos ❤ </center>
+La motivacion que tuve para hacer este blog, es poder usarlo para repasar mis conocimientos y ademas de que me gusta compartirlos con los demas, aun que realmente no se cuanta gente lee lo que escribo, mientras haya una persona que le interese o le haya despertado la curiosidad, entonces eso me hara feliz :D ❤[.](https://youtu.be/66Caca7kycI)
 <br>
 <marquee><b>nya~</b></marquee>
