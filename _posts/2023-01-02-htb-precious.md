@@ -214,7 +214,7 @@ Crearemos un archivo yml con el nombre ```dependencies.yml``` en el directorio a
          method_id: :resolve
 ```
 
-Donde le estamos diciendo que ejecute el comando ```chmod +s /bin/bash``` que le asigna permisos SIUD a /bin/bash
+Donde le estamos diciendo que ejecute el comando ```chmod +s /bin/bash``` que le asigna permisos SUID a /bin/bash
 
 Y por ultimo ejecutamos el archivo:
 
