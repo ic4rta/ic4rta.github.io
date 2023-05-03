@@ -32,7 +32,7 @@ Usaremos el bloque ```Signal Source```, el cual nos va a generar una señal fuen
 
 Cuando queramos generar una señal IQ, debemos de elegir un tipo de datos complejo, y esto es por que una señal IQ se compone de dos partes: ```I``` y ```Q``` que significa, en fase y en cuadratura, que se refieren a dos sinusoides que tienen la misma frecuencia y están desfasadas a 90°, en GNU radio cuando usamos un tipo de dato complejo es por que representaremos la parte real e imaginaria de una muestra compleja, en este caso, una señal IQ sinusoidal
 
-Otra cosa importante es la forma de onda, vemos que en nuestro ejemplo esta en ```Cosine``` o ```Seno```, osea, que vamos a generar una ```onda sinusoide compleja```, y se va a generar en su forma mas simple, osea, en funcion del tiempo(t):
+Otra cosa importante es la forma de onda, vemos que en nuestro ejemplo esta en ```Cosine``` o ```Seno```, osea, que vamos a generar una onda de forma ```sinusoide compleja```, y se va a generar en su forma mas simple, osea, en funcion del tiempo(t):
 
 ![](/assets/img/commons/GNUradio-IQ/3.svg)
 
