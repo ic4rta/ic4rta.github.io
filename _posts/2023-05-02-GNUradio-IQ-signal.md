@@ -61,7 +61,7 @@ Este bloque se refiere a la magnitud el espectro en el dominio de frecuencia, en
 
 ![](/assets/img/commons/GNUradio-IQ/8.png)
 
-Podemos ver nuestra preciosa frecuencia con un tamaño FFT de 1024 con un ancho de banda de 32000 Hz
+Podemos ver nuestra preciosa señal en el dominio de frecuencia con un tamaño de 1Khz como le indicamos en el Signal Source, un FFT de 1024, y un ancho de banda de 32000 Hz
 
 ### Time Sink
 
