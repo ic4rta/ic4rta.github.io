@@ -230,7 +230,43 @@ Como no tenemos permisos para listar contenedores ni hacer operaciones con ellos
 
 Encontre que hay una vulnerabilidad adyacente a docker: [https://security.snyk.io/vuln/SNYK-SLES150-DOCKER-2661076](https://security.snyk.io/vuln/SNYK-SLES150-DOCKER-2661076)
 
-El cual se aprovecha de Moby Docker Engine, el directorio ```/var/lib/docker```, contiene subdirectorios con permisos insuficientes, donde basicamente se pueden ejectuar binarios en los contendores cuando tenian permisos setuid para poder moverse a travez del sistema.
+Otra forma de saber que existe una vulnerabilidad es por que linpeas nos muestra dos rutas donde puede que hayan correos:
+
+```
+4721      4 -rw-r--r--   1 root     mail         1809 Oct 18  2021 /var/mail/marcus
+4721      4 -rw-r--r--   1 root     mail         1809 Oct 18  2021 /var/spool/mail/marcus
+```
+
+Al leerlo, vemos que nos dice que existen varias vulnerabilidades:
+
+```
+From: administrator@monitorstwo.htb
+To: all@monitorstwo.htb
+Subject: Security Bulletin - Three Vulnerabilities to be Aware Of
+
+Dear all,
+
+We would like to bring to your attention three vulnerabilities that have been recently discovered and should be addressed as soon as possible.
+
+CVE-2021-33033: This vulnerability affects the Linux kernel before 5.11.14 and is related to the CIPSO and CALIPSO refcounting for the DOI definitions. Attackers can exploit this use-after-free issue to write arbitrary values. Please update your kernel to version 5.11.14 or later to address this vulnerability.
+
+CVE-2020-25706: This cross-site scripting (XSS) vulnerability affects Cacti 1.2.13 and occurs due to improper escaping of error messages during template import previews in the xml_path field. This could allow an attacker to inject malicious code into the webpage, potentially resulting in the theft of sensitive data or session hijacking. Please upgrade to Cacti version 1.2.14 or later to address this vulnerability.
+
+CVE-2021-41091: This vulnerability affects Moby, an open-source project created by Docker for software containerization. Attackers could exploit this vulnerability by traversing directory contents and executing programs on the data directory with insufficiently restricted permissions. The bug has been fixed in Moby (Docker Engine) version 20.10.9, and users should update to this version as soon as possible. Please note that running containers should be stopped and restarted for the permissions to be fixed.
+
+We encourage you to take the necessary steps to address these vulnerabilities promptly to avoid any potential security breaches. If you have any questions or concerns, please do not hesitate to contact our IT department.
+
+Best regards,
+
+Administrator
+CISO
+Monitor Two
+Security Team
+```
+
+Como estamos contra un docker entonces veremos la ultima
+
+La vulnerabilidad se aprovecha de Moby Docker Engine, el directorio ```/var/lib/docker```, contiene subdirectorios con permisos insuficientes, donde basicamente se pueden ejectuar binarios  con permisos SUID en los contendores para poder moverse a travez del sistema.
 
 De hecho si mostramos el espacio del disco con ```df -h``` podemos ver que tenemos varios directorios interesantes que se encuetran desde la ruta ```/var/lib/docker```:
 
