@@ -101,8 +101,8 @@ comments:
   giscus:
     repo: ic4rta/ic4rta.github.io
     repo_id: R_kgDOIyhU8A
-    category: "General"
-    category_id: "DIC_kwDOIyhU8M4CWjkT"
+    category: "Publicaciones"
+    category_id: "DIC_kwDOIyhU8M4CWjpB"
     mapping:          # optional, default to 'pathname'
     input_position: "top"   # optional, default to 'bottom'
     lang: es         # optional, default to the value of `site.lang`
