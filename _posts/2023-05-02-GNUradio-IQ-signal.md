@@ -4,6 +4,7 @@ author: c4rta
 date: 2023-05-02
 categories: [Radiofrecuencias]
 tags: [GNU radio]
+comments: true
 ---
 
 Esto no tiene nada que ver con pentesting, pero mi otro gran amor son las radio comunicaciones, asi que bueno... Hoy te voy a enseñar a como generar tu primera señal IQ, donde vamos a visualizar su dominio de tiempo, dominio de frecuencia, y por ultimo vamos a identificar la señal real e imaginaria.
@@ -87,3 +88,26 @@ Eso ha sido todo, gracias por leer, espero que te haya gustado este tema, por qu
 
 <img src="/assets/img/commons/GNUradio-IQ/waifu.gif" alt="kukuru" width="300" height="400"> 
 
+
+{% if page.comments %}
+<div id="disqus_thread"></div>
+<script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://https-ic4rta-github-io.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+{% endif %}
