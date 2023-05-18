@@ -97,6 +97,7 @@ comments:
   utterances:
     repo: ic4rta/ic4rta.github.io        # <gh-username>/<repo>
     issue_term: "pathname"   # < url | pathname | title | ...>
+    label: "Publicaciones"
   # Giscus options › https://giscus.app
   giscus:
     repo: ic4rta/ic4rta.github.io
