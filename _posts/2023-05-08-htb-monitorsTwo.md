@@ -1,5 +1,5 @@
 ---
-title: HackTheBox MonitorsTwo - Command Injection & Docker Weak Permissions
+title: HackTheBox MonitorsTwo - Unauthenticated RCE & Docker Weak Permissions
 author: c4rta
 date: 2023-05-08
 categories: [Maquinas, HackTheBox]
@@ -65,7 +65,7 @@ Una vez en el sitio web podemos ver el login:
 
 Abajo del apartado de inicio de sesion nos dice que esta usando la version 1.2.22 de Cacti, una busqueda rapida de lo que es Cacti, me arroja que es una aplicacion web dedicada al monitoreo de red, para detectar fallas y supervisar el trafico web.
 
-Como tenemos una version, siempre es bueno buscar para ver si hay vulnerabilidades disponibles, podemos ver que existe la CVE ```CVE-2022-46169``` que es una Command injection, 
+Como tenemos una version, siempre es bueno buscar para ver si hay vulnerabilidades disponibles, podemos ver que existe la CVE ```CVE-2022-46169``` que es una Command injection con la que conseguiremos un RCE. 
 
 Al realizar una busqueda, tenemos que la vulnerabilidad reside en el archivo ```remote_agent.php``` el cual podemos acceder sin autenticacion, pero si intentamos acceder a el desde el URL: ```http://10.10.11.211/remote_agent.php```, nos saldra algo como esto:
 
