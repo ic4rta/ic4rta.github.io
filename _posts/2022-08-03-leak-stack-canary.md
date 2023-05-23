@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Leak stack canary - bypass
 author: c4rta
 date: 2022-08-03
@@ -82,7 +83,7 @@ Primeramente usare radare2 ya que se me hace mas comodo y depues usare gdb con g
 
 Ya se la saben banda, metemos el binario a radare, analizamos con ```aaa```, nos vamos el main con ```s main``` y lo mostramos con ```pdf```, vemos esto
 
-![](/assets/img/commons/leak-stack-canary/radare1.png)
+![](/assets/img/leak-stack-canary/radare1.png)
 
 Aqui realmente no hay nada interesante, mas que nada una llamada a la funcion ```vuln```, asi que ahora nos moveremos para alla con ```s sym.vuln``` y la mostraremos, vemos en la parte de arriba como se estan declarando dos variables de esta forma:
  
@@ -95,20 +96,20 @@ La primera es el canary que se genero automaticamente, este se encuentra en ```r
 Y la otra es format que solo es el format string que recibira el printf.
 Ahora pasare a esta parte:
 
-![](/assets/img/commons/leak-stack-canary/radare2.png)
+![](/assets/img/leak-stack-canary/radare2.png)
 
 * La primera instruccion mueve el valor que se genero del Canary a rax
 * La segunda mueve lo que tiene rax a canary
 
 Bajare un poco mas para mostrar por que es vulnerable ```printf```a format string
 
-![](/assets/img/commons/leak-stack-canary/radare3.png)
+![](/assets/img/leak-stack-canary/radare3.png)
 
 Simplemente cuando se hace el llamado de ```printf``` no se le pasa para que reciba ningun format string, entonces por consiguiente podemos lekear valores de la memoria.
 
 Pasare a mostrar la parte donde se hace la comprobacion del canary
 
-![](/assets/img/commons/leak-stack-canary/radare4.png)
+![](/assets/img/leak-stack-canary/radare4.png)
 
 * Lo primero que tenemos es una operacion de ```mov```, donde mueve el valor que tiene el canary antes de llegar al ret y lo mueve a ```rax```
 
@@ -130,7 +131,7 @@ Antes de lekearlo con format string, mostrare el stack para que ven el valor del
 
 Si continuamos la ejecucion del programa con ```dc``` e ingresamos cualquier input y mostramos el stack con ```pxr @ rsp``` vemos esto:
 
-![](/assets/img/commons/leak-stack-canary/radare5.png)
+![](/assets/img/leak-stack-canary/radare5.png)
 
 Primeramente vemos nuestro input, que en mi caso fue ```%p``` y un poco mas abajo esta el canary, que es el que tengo seleccionado, se que es el canary ya que normalmente los canary terminan con ```00``` y no inician con ```f7``` o ```ff``` y si vemos el canary que me salio a mi que fue ```0x0f36062cc7d73900``` tiene todas las caracteristicas que menciono
 
@@ -145,11 +146,11 @@ Al primer input le pasare todo esto:
 ```
 El resultado de este input me dio esto:
 
-![](/assets/img/commons/leak-stack-canary/canary.png)
+![](/assets/img/leak-stack-canary/canary.png)
 
 Y como se puede ver el valor que tengo seleccionado es el canary, y se que es ese por lo que mencione antes, ahora pasare a mostrar directamente lo que se encuentra en esa posicion para corroborar que si sea el canary
 
-![](/assets/img/commons/leak-stack-canary/canary2.png)
+![](/assets/img/leak-stack-canary/canary2.png)
 
 Como vemos si mostrarmos esa posicion que es la 15 nos muesta el canary, lo ejecute dos veces para ver si realmente era esa.
 
@@ -160,7 +161,7 @@ Asi que el canary se encuentra en la posicion ```15```
 
 Para sacar su offset me ire a gdb y usare gef, una vez ahi mostrare del contenido de la funcion vuln y se ve algo asi:
 
-![](/assets/img/commons/leak-stack-canary/gdb.png)
+![](/assets/img/leak-stack-canary/gdb.png)
 
 No me detendre a explicar ya que es lo mismo que vimos en radare simplemente aqui pondre dos breakpoint aqui
 
@@ -238,8 +239,8 @@ p.interactive()
 
 Y listo
 
-![](/assets/img/commons/leak-stack-canary/pwn.png)
+![](/assets/img/leak-stack-canary/pwn.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/leak-stack-canary/waifu.gif)
+![](/assets/img/leak-stack-canary/waifu.gif)

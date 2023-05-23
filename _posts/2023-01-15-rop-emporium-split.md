@@ -1,4 +1,5 @@
 ---
+layout: post
 title: ROPemporium split - Usando ROP para escribir en RDI
 author: c4rta
 date: 2023-01-15
@@ -24,13 +25,13 @@ Como se puede ver tiene ```NX``` asi que no podemos ejecutar codigo en el stack,
 
 Ahora metere el binario a radare2 para ver lo que esta haciendo en el main:
 
-![](/assets/img/commons/spilt/radare1.png)
+![](/assets/img/spilt/radare1.png)
 
 Aqui lo unico interesante es que se esta llamando a la funcion ```pwnme``` en la direccion ```0x004006d2```. Y lo demas simplemente es el mensajito de bienvenida.
 
 En la funcion ```pwnme``` tenemos esto:
 
-![](/assets/img/commons/spilt/radare2.png)
+![](/assets/img/spilt/radare2.png)
 
 - En color rojo se esta declarando un puntero llamado ```buf``` que esta 0x20 por debajo del ```RBP```
 - En color amarillo se esta creando un buffer de ```0x20``` (32 bytes) el cual se almacena en ```buf```
@@ -38,15 +39,15 @@ En la funcion ```pwnme``` tenemos esto:
 
 Esto no es todo, siempre hay que mostrar todas las funciones en un programa, en radare lo hacemos con ```alf```. Veamos:
 
-![](/assets/img/commons/spilt/radare3.png)
+![](/assets/img/spilt/radare3.png)
 
 Vemos como existe una funcion llamada ```usefulFunction``` la cual nunca se llama en el programa, y si vemos codigo tenemos algo como esto:
 
-![](/assets/img/commons/spilt/radare4.png)
+![](/assets/img/spilt/radare4.png)
 
 Se esta haciendo uso de la funcion ```system``` para llamar a ```/bin/ls```, esto no es lo que queremos, nosotros queremos que llame a ```/bin/cat flag.txt```, y la pregunta es... ¿Como yo se que en el binario se esta llamando a ```/bin/cat flag.txt```?, pues facil, simplemente podemos mostrar los strings con ```rabin2 -z split```:
 
-![](/assets/img/commons/spilt/radare5.png)
+![](/assets/img/spilt/radare5.png)
 
 Podemos ver que en la seccion ```.data``` esta ```/bin/cat flag.txt```, asi que tenemos que sustituirlo por ```/bin/ls```
 
@@ -91,7 +92,7 @@ En donde en la direccion ```0x7fffffffda78``` tenemos los valores ```0x61616166	
 
 Esto es muy facil, para esto, usaremos la direccion de system que se encuentra en la funcion ```usefulFunction```, como se puede ver aca:
 
-![](/assets/img/commons/spilt/radare6.png)
+![](/assets/img/spilt/radare6.png)
 
 La direccion es: ```0x000000000040074b```
 
@@ -140,8 +141,8 @@ De esta manera después de la última instrucción de ```pwnme``` se ejecute (os
 
 Y al ejecutarlo nos da la flag:
 
-![](/assets/img/commons/spilt/exploit.png)
+![](/assets/img/spilt/exploit.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/spilt/waifu.gif)
+![](/assets/img/spilt/waifu.gif)

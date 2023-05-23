@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Hijack de rand() usando LD_PRELOAD trick
 author: c4rta
 date: 2023-01-22
@@ -117,6 +118,6 @@ Y como vendo mencionando, esto sucede por que se crea una nueva declaracion de `
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/heap2/waifu.jpg)
+![](/assets/img/heap2/waifu.jpg)
 
 

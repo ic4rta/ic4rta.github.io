@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Bypass NX usando mprotect() en x64
 author: c4rta
 date: 2023-02-26
@@ -206,4 +207,4 @@ root
 
 Y asi conseguimos ser root, muchas gracias por leer ❤
 
-![](/assets/img/commons/heap2/waifu3.jpg)
+![](/assets/img/heap2/waifu3.jpg)

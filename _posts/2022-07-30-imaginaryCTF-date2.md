@@ -1,4 +1,5 @@
 ---
+layout: post
 title: ImaginaryCTF date2 - GOT overwrite
 author: c4rta
 date: 2022-07-30
@@ -19,7 +20,7 @@ https://github.com/NationalSecurityAgency/ghidra/releases
 ```
 Despues en la seccion llamada ```Symbool tree``` desplegaremos la carpeta de ```functions``` y le damos click en main, como se ve en la imagen
 
-![](/assets/img/commons/imaginaryCTF-date2/ghidra1.png)
+![](/assets/img/imaginaryCTF-date2/ghidra1.png)
 
 Esto nos arrojara del lado derecho de ghidra el codigo que trato de decompilar donde vemos todo esto:
 
@@ -94,7 +95,7 @@ Acortanto mas el codigo para mostrar lo que nos interesa queda el codigo asi:
 ```
 Esto es sencillo de analizar lo que hace el binario es primeramente con ```puts``` mostrar el mensaje de ```What\'s today\'s date?```, despues con ```fgets(buffer,0x100,stdin);``` recibe un input que se guardara en ```buffer``` donde el valor maximo que podemos guardar es ```0x100```, esto pasandolo de hexadecimal a decimal nos da ```256```, despues hay dos ```puts``` que imprimen unas cadenas (nada relevante), y finalmente la funcion ```system``` manda a llamar a lo que tiene ```date_path```, y si en Ghidra le damos doble click sobre ```date_path``` vemos lo siguiente
 
-![](/assets/img/commons/imaginaryCTF-date2/ghidra2.png)
+![](/assets/img/imaginaryCTF-date2/ghidra2.png)
 
 Aqui ya esta potente la cosa, por que se esta mandando a llamar al binario ```date``` desde la funcion ```system``` y se sabe que se esta llamando el binario date ya que la ruta es ```/usr/bin/date```, asi que lo que vamos a hacer es sobreescribir el valor GOT de ```date_path``` por ```/bin/sh``` y como se esta usando la funcion ```system``` nos debe de ejecutar una sh  
 
@@ -102,7 +103,7 @@ Aqui ya esta potente la cosa, por que se esta mandando a llamar al binario ```da
 
 De igual manera que el ejercicio anterior de GOT tenemos de encontrar el offset del buffer a travez de format string, asi que le pasaremos el binario algunas A y algunos format string ```AAAAAAAA %p %p %p %p %p %p %p %p```, cuando lo ejecutemos nos muestra esto
 
-![](/assets/img/commons/imaginaryCTF-date2/vuln1.png)
+![](/assets/img/imaginaryCTF-date2/vuln1.png)
 
 Si empezamos a contar desde ```0x7ffff7dfda63``` hasta donde empiezan nuestras "A" que es donde esta seleccionado en la imagen nos da como resultado 6, asi que ese es el offset el buffer
 
@@ -136,4 +137,4 @@ flag.txt
 ```
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/imaginaryCTF-date2/waifu.jpg)
+![](/assets/img/imaginaryCTF-date2/waifu.jpg)

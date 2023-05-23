@@ -1,4 +1,5 @@
 ---
+layout: post
 title: DownUnderCTF Do The Loop - Analisis del espectrograma
 author: c4rta
 date: 2023-01-19
@@ -33,7 +34,7 @@ Y hablando de colores, los colores de tonalidad azul se refieren a amplitudes ba
 
 Si vemos el espectro del desafio:
 
-![](/assets/img/commons/dooTheLoop/spectrogram.png)
+![](/assets/img/dooTheLoop/spectrogram.png)
 
 Verticalmente esta la frecuencia, horizontalmente es el tiempo en segundos (duracion del audio), y la escala que esta hasta la derecha se refiere a los ```decibelios a escala completa```, simplemente es una escala que define los niveles de amplitud en decibelios en un sistema digital.
 
@@ -43,7 +44,7 @@ Si quieres saber a que corresponde cada numero de esa tabla puedes ver [aqui](ht
 
 Los que trabajan con software de audio, edicion y todo ese pedo, estan acostumbrados a ver la ```forma de onda```, en la cual se representan los cambios de amplitud de una señal a lo largo del tiempo, sin embargo en un espectrograma podemos ver cambios en las frecuencias individuales de una señal, un ejemplo de forma de onda es la de nuestro desafio, simplemente podemos meterlo a software como ```Audacity```y podemos ver esto:
 
-![](/assets/img/commons/dooTheLoop/audacity.png)
+![](/assets/img/dooTheLoop/audacity.png)
 
 En cambio en un espectrograma podemos ver muchas mas cosas que estan "ocultas" a simple vista en la forma de onda.
 
@@ -57,7 +58,7 @@ La modulación es la alteración de una onda senoidal, a la que se le puede deci
 
 El en espectro del desafio hay codigo morse que no es perceptible al escuchar el audio y tampoco al ver la forma de onda:
 
-![](/assets/img/commons/dooTheLoop/codigo.png)
+![](/assets/img/dooTheLoop/codigo.png)
 
 Aqui lo podemos ver mas claramente, asi que con un chingo de paciencia pude sacar el codigo que sale ahi, el cual es:
 
@@ -69,4 +70,4 @@ Y traduciendo esto seria algo como: ```ICOULDLISTENTOTHISONLOOPALLDAY``` la cual
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/dooTheLoop/waifu.gif)
+![](/assets/img/dooTheLoop/waifu.gif)

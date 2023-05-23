@@ -1,4 +1,5 @@
 ---
+layout: post
 title: HackTheBox Busqueda - Arbitrary Code Execution via eval()
 author: c4rta
 date: 2023-04-11
@@ -52,19 +53,19 @@ No nos reporta mucha informacion interesante y aun no tenemos credenciales para 
 
 Si interceptamos la peticion con burp, podemos ver que nuestro input esta pasando por el parametro ```query```
 
-![](/assets/img/commons/busqueda/busqueda2.png)
+![](/assets/img/busqueda/busqueda2.png)
 
 ## Vulnerabilidad en searchor
 
 Si vemos en el footer de la pagina, podemos ver que esta usando ```searchor```
 
-![](/assets/img/commons/busqueda/busqueda3.png)
+![](/assets/img/busqueda/busqueda3.png)
 
 Si le damos click en el nombre, nos mandara a su repo de github, sin embargo la version que sale es la ```2.5.2```, asi que empezaremos a buscar entre las versiones, a ver si encontramos algo interesante.
 
 En la version ```2.4.2``` se arreglo una vulnerabilidad en la busqueda por CLI:
 
-![](/assets/img/commons/busqueda/busqueda4.png)
+![](/assets/img/busqueda/busqueda4.png)
 
 Al ver las notas del parche, basicamente nos dice que se removio el metodo ```eval()``` de la busqueda por CLI, ya que podiamos ejecutar codigo arbitrario:
 
@@ -98,7 +99,7 @@ Ojo: puse el puerto 8086 por que el 8080 y el 80 los tengo ocupados
 
 Y ya llego la reserve shell:
 
-![](/assets/img/commons/busqueda/busqueda5.png)
+![](/assets/img/busqueda/busqueda5.png)
 
 
 ## Flag de user
@@ -177,7 +178,7 @@ f84a6b33fb5a   mysql:8              "docker-entrypoint.s…"   3 months ago   Up
 
 Al ver el contenido del contenedor ```mysql_db```, podemos ver unas credenciales:
 
-![](/assets/img/commons/busqueda/busqueda6.png)
+![](/assets/img/busqueda/busqueda6.png)
 
 En donde la contraseña de gitea es: ```yuiu1hoiu4i5ho1uh``` y el usuario ```administrator```
 
@@ -288,5 +289,5 @@ f46884c23c53cc716ac549803*******
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/busqueda/waifu.gif)
+![](/assets/img/busqueda/waifu.gif)
 

@@ -1,4 +1,5 @@
 ---
+layout: post
 title: ROP emporium callme - Llamando multiples funciones 
 author: c4rta
 date: 2023-04-24
@@ -10,17 +11,17 @@ Para resolver este desafio tenemos que llamar multiples funciones con multiples 
 
 ## Analisis
 
-![](/assets/img/commons/callme/1.png)
+![](/assets/img/callme/1.png)
 
 No tiene canary, PIE, pero tiene NX, asi que no podemos ejecutar codigo en el stack.
 
 Al ver la funcion main, lo unico interesante es el llamado a la funcion ```pwnme```
 
-![](/assets/img/commons/callme/2.png)
+![](/assets/img/callme/2.png)
 
 Una vez en esa funcion, podemos ver la vulnerabilidad:
 
-![](/assets/img/commons/callme/3.png)
+![](/assets/img/callme/3.png)
 
 Vemos que esta intentando escribir ```0x200``` bytes (512 en decimal) de la entrada estandar (stdin), dado un buffer, pero... Te voy a demostrar por que es vulnerable.
 
@@ -34,7 +35,7 @@ El primer argumento ```fd```, se le conoce como ```file decriptor```, que en pal
 
 El segundo argumento es un puntero a un buffer, y este buffer se esta creando aca:
 
-![](/assets/img/commons/callme/4.png)
+![](/assets/img/callme/4.png)
 
 Podemos ver que se esta inicializando un buffer de ```0x20``` bytes (32 en decimal) con el nombre de ```buf```
 
@@ -50,17 +51,17 @@ Esta tratando de escribir ```512``` bytes en ```32```, y como no se esta limitan
 
 Al mostrar todas las funciones en radare, tenemos que existe una funcion que se llama ```usefulFunction```:
 
-![](/assets/img/commons/callme/5.png)
+![](/assets/img/callme/5.png)
 
 Al mostrar el codigo de la funcion:
 
-![](/assets/img/commons/callme/6.png)
+![](/assets/img/callme/6.png)
 
 Nos damos cuenta que esta llamando a las funciones ```callme_three```, ```callme_two``` y ```callme_one```, y se estan llamando con los argumentos ```rdi```, ```rsi``` y ```rdx```.
 
 Como curiosidad, si intentamos mostrar el codigo de una funcion de esas, no vamos a poder, sale algo como esto:
 
-![](/assets/img/commons/callme/7.png)
+![](/assets/img/callme/7.png)
 
 Y eso es por que las funciones ```callme_three```, ```callme_two``` y ```callme_one``` se encuetran en PLT que se esta cargando dinamicamente de ```libcallme.so```, entonces para poder verlas, tenemos que ejecutar el binario, me ire a gdb y pondre un breakpoint en el ```ret``` de la funcion main:
 
@@ -74,7 +75,7 @@ Y ahora si ya podemos ver su codigo, y lo mas relevante es que cuando se hace un
 - 0xcafebabecafebabe
 - 0xd00df00dd00df00d
 
-![](/assets/img/commons/callme/8.png)
+![](/assets/img/callme/8.png)
 
 (en ```callme_three``` y ```callme_two``` es lo mismo)
 
@@ -84,7 +85,7 @@ Asi que ahora sabemos que debemos de llamar a ```callme_three```, ```callme_two`
 
 Para saber el desplazamiento para llegar al RIP, podemos generar una cadena con ```pattern create 100``` y pasaresela al programa, despues podemos hacer ```pattern offset $rbp```:
 
-![](/assets/img/commons/callme/9.png)
+![](/assets/img/callme/9.png)
 
 Y al sumarle 8 bytes, y nos da 40
 
@@ -198,7 +199,7 @@ ROPE{a_placeholder_32byte_flag!}
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/callme/SUSwaifu.gif)
+![](/assets/img/callme/SUSwaifu.gif)
 <div align='center'>
     (soy ese)
 </div>

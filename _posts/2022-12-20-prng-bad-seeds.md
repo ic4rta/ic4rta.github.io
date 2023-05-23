@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Explotanto un PRNG bad seed
 author: c4rta
 date: 2022-12-20
@@ -42,7 +43,7 @@ Para que quede mas claro veamos lo siguiente:
 
 Se obtiene una secuencia de bits pseudoaleatoria el cual es puesta en el generador usando la semilla (primer estado), y poniendo al generador a llamar a la funcion de transicion repetidamente (segundo estado) y por ultimo se produce una salida de bits aleatorios (tercer estado)
 
-![](/assets/img/commons/prng/prng.png)
+![](/assets/img/prng/prng.png)
 
 ## Explotando un PRNG bad seed
 
@@ -110,4 +111,4 @@ Y listo, hemos resuelto el ejercicio y la flag es: ```Mommy, I thought libc rand
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/prng/waifu.webp)
+![](/assets/img/prng/waifu.webp)

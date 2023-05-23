@@ -1,4 +1,5 @@
 ---
+layout: post
 title: HackTheBoo Entity - Type Confusion via Union
 author: c4rta
 date: 2023-04-15
@@ -138,7 +139,7 @@ case 'S':
 
 El programa no muestra la flag:
 
-![](/assets/img/commons/HTB-entity/tc1.png)
+![](/assets/img/HTB-entity/tc1.png)
 
 Y es por esta comprobacion:
 
@@ -162,7 +163,7 @@ Primero que nada, lo que esta haciendo ```cmp    rax,0xcc07c9``` es comparar ```
 
 Al ver el valor de ```rax```:
 
-![](/assets/img/commons/HTB-entity/tc2.png)
+![](/assets/img/HTB-entity/tc2.png)
 
 Nos podemos dar cuenta que lo que se guarda en ```DataStorage``` es un decimal: ```0x3733333137333331```, entonces para explotar esta confusion de tipos, podemos mandarle el numero 13371337 como string de bytes en little endian, por que ya no se estaria comprobando en la funcion ```set_field```, osea asi:
 
@@ -188,9 +189,9 @@ p.interactive()
 
 Y ya tenemos la flag:
 
-![](/assets/img/commons/HTB-entity/tc3.png)
+![](/assets/img/HTB-entity/tc3.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/HTB-entity/waifu.gif)
+![](/assets/img/HTB-entity/waifu.gif)
 

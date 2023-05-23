@@ -1,4 +1,5 @@
 ---
+layout: post
 title: picoCTF web gauntlet - sql injection y evadiendo filtros
 author: c4rta
 date: 2023-01-04
@@ -95,4 +96,4 @@ Y la flag es: ```picoCTF{y0u_m4d3_1t_275cea1159781d5b3ef3f57e70be664a}```
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/web-gaunlet/waifu.jpg)
+![](/assets/img/web-gaunlet/waifu.jpg)

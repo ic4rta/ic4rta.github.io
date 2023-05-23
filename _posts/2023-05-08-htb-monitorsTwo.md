@@ -1,4 +1,5 @@
 ---
+layout: post
 title: HackTheBox MonitorsTwo - Unauthenticated RCE & Docker Weak Permissions
 author: c4rta
 date: 2023-05-08
@@ -57,7 +58,7 @@ No tenemos muchas informacion relevante, mas que en el puerto 80, vemos que por 
 
 Una vez en el sitio web podemos ver el login:
 
-![](/assets/img/commons/monitorsTwo/1.png)
+![](/assets/img/monitorsTwo/1.png)
 
 (Les puedo adelantar que no es necesario hacer fuzzing de directorios ni otras cosas)
 
@@ -69,7 +70,7 @@ Como tenemos una version, siempre es bueno buscar para ver si hay vulnerabilidad
 
 Al realizar una busqueda, tenemos que la vulnerabilidad reside en el archivo ```remote_agent.php``` el cual podemos acceder sin autenticacion, pero si intentamos acceder a el desde el URL: ```http://10.10.11.211/remote_agent.php```, nos saldra algo como esto:
 
-![](/assets/img/commons/monitorsTwo/2.png)
+![](/assets/img/monitorsTwo/2.png)
 
 Leyendo un poco mas de la vulnerabilidad, para que nos deje acceder, dedemos agregar el encabezado ```X-Forwarded-For``` con la direccion de localhost
 
@@ -131,7 +132,7 @@ Si quieren hacer una explotacion manual, apunten a este recurso:
 
 Y ya nos llego la rev shell:
 
-![](/assets/img/commons/monitorsTwo/3.png)
+![](/assets/img/monitorsTwo/3.png)
 
 
 ## Escalada de Docker
@@ -196,7 +197,7 @@ Empezare a ver los datos de la primera tabla:
 
 Aun que se vea extraño, hemos conseguido usuarios y el hash de sus contraseñas
 
-![](/assets/img/commons/monitorsTwo/4.png)
+![](/assets/img/monitorsTwo/4.png)
 
 Les adelando que la unica que podemos crackear sera la de Marcus y esta cifrada con bcrypt, pueden usar John o Hashcat
 
@@ -271,7 +272,7 @@ La vulnerabilidad se aprovecha de Moby Docker Engine, el directorio ```/var/lib/
 
 De hecho si mostramos el espacio del disco con ```df -h``` podemos ver que tenemos varios directorios interesantes que se encuetran desde la ruta ```/var/lib/docker```:
 
-![](/assets/img/commons/monitorsTwo/5.png)
+![](/assets/img/monitorsTwo/5.png)
 
 Para aprovecharnos de esto, desde la sesion que conseguimos con la rev shell (www-data que escalamos a root), le asignaremos permisos SUID a /bin/bash, despues ingresaremos a esta ruta
 
@@ -291,4 +292,4 @@ bash-5.1#
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif)
+![](/assets/img/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif)

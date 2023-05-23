@@ -1,4 +1,5 @@
 ---
+layout: post
 title: HackTheBox Squashed - NFS y X11
 author: c4rta
 date: 2023-04-05
@@ -268,11 +269,11 @@ Una vez teniendo el archivo lo pasaremos a PNG:
 
 Y ya podriamos ver la contraseña de root
 
-![](/assets/img/commons/squashed/root.png)
+![](/assets/img/squashed/root.png)
 
 Ahora solo queda iniciar sesion como root y ver la flag
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/squashed/waifu.gif)
+![](/assets/img/squashed/waifu.gif)
 

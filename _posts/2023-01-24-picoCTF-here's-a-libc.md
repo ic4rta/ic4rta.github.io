@@ -1,4 +1,5 @@
 ---
+layout: post
 title: picoCTF Here's a libc - ret2libc y bypass ASLR
 author: c4rta
 date: 2023-01-24
@@ -255,4 +256,4 @@ here-s-a-libc_0
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/hereLibc/waifu.gif)
+![](/assets/img/hereLibc/waifu.gif)

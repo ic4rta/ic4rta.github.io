@@ -1,4 +1,5 @@
 ---
+layout: post
 title: ROPemporium ret2win - saltando a una funcion con ROP
 author: c4rta
 date: 2023-01-03
@@ -199,23 +200,23 @@ Es un binario de 64 bits, no tiene PIE, canary, pero tiene NX, asi que no podemo
 
 Ahora pasaramos a hacer reversing de nuestro binario, puede usar la herramienta que sea, yo usare IDA y gdb con pwndbg, y me ire directamente a la funcion ```main```
 
-![](/assets/img/commons/ret2win/ida1.png)
+![](/assets/img/ret2win/ida1.png)
 
 Lo unico interesante aqui es que se esta llamando a la funcion ```pwnme``` asi que vamos para alla
 
-![](/assets/img/commons/ret2win/ida2.png)
+![](/assets/img/ret2win/ida2.png)
 
 Por lo que parece, la funcion ```main``` llama a ```pwnme``` y ahi es donde se recibe una entrada del usuario.
 
 Lo primero interesante que vemos es que se esta creando un buffer de ```20h``` o 32 bytes y que se almacena en ```s```
 
-![](/assets/img/commons/ret2win/ida3.png)
+![](/assets/img/ret2win/ida3.png)
 
 Como indica la instruccion ```s               = byte ptr -20h``` y ```lea     rax, [rbp+s]```.
 
 Mas abajo podemos ver la parte en la que se recibe el input al usuario:
 
-![](/assets/img/commons/ret2win/ida4.png)
+![](/assets/img/ret2win/ida4.png)
 
 Podemos ver que ```rax``` se a asignado en ```rbp-s``` y ```s``` como mencione, contiene el buffer de 32 bytes, ademas se hace un ```call``` a la funcion ```_read``` que recibe el input del usuario el cual son 38 bytes como lo indica la intruccion ```mov     edx, 38h```.
 
@@ -232,7 +233,7 @@ Estas cifras pasandolas a decimal quedarian:
 
 Aqui es donde empezamos a ver ROP, y como mencione en el titulo vamos a "saltar a una funcion" y esa funcion se llama ```ret2win```, pero... Como vimos, esa funcion nunca se llama en el programa, para encontrarla, en caso de que estes usando radare2 simplemente ingresa el comando ```alf``` y podras ver todas las funciones que hay en el programa, en mi caso como use IDA, me sale en un apartado a la izquierda. Veamos el codigo de la funcion:
 
-![](/assets/img/commons/ret2win/ida5.png)
+![](/assets/img/ret2win/ida5.png)
 
 Aqui lo unico interesante que hace es hacer un cat a la flag, y bueno, es posible saltar a una funcion ya que casi todas terminan con la intruccion ```ret``` y esto nos permite crear cadenas ROP (no las usaremos en este ejercicio)
 
@@ -277,7 +278,7 @@ Como siempre, en x64 podemos usar sacar el offset del RSP para saber el desplaza
 
 Ahora ya podemos sacar el offset del RSP, como al programa le pasos lo que nos dio ```cyclic 100```, entonces en el RSP debio de salir algo como esto:
 
-![](/assets/img/commons/ret2win/gdb.png)
+![](/assets/img/ret2win/gdb.png)
 
 Vemos como en el RSP tiene el valor de ```faaaaaaa``` asi que ahora con el comando ```cyclic -l faaaaaaa``` podemos saber el offset del RSP, y nos dio 40 (ese es el desplazamiento para llegar al RIP)
 
@@ -311,8 +312,8 @@ print(proc.recvall().decode())
 
 Entonces lo ejecutamos y nos da la flag
 
-![](/assets/img/commons/ret2win/pwn.png)
+![](/assets/img/ret2win/pwn.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/ret2win/waifu.jpg)
+![](/assets/img/ret2win/waifu.jpg)

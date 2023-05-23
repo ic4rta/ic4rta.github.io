@@ -1,9 +1,11 @@
 ---
+layout: post
 title: Ataque format string
 author: c4rta
 date: 2022-07-29
 categories: [Explotacion binaria]
 tags: [format string]
+comments: true
 ---
 
 Aprenderas a como realizar un ataque format string y lekear valores de la memoria
@@ -27,7 +29,7 @@ Las funciones que pueden ser vulnerables a format string son las de la familia `
 
 El format string o cadena de formato en español es al argumento que se le pasa a una de las funciones que pueden ser vulnerables, aca una imagen de cuales son los format string y su tipo
 
-![](/assets/img/commons/format-string/formatString.png)
+![](/assets/img/format-string/formatString.png)
 
 Imagen: [https://www.tutorialspoint.com](https://www.tutorialspoint.com)
 
@@ -59,7 +61,7 @@ gcc ejemplo.c -o ejemplo
 ```
 Para esta primera parte el programa simplemente esta usando la funcion ```printf``` para imprimir la variable ```input``` que contiene la cadena ```Holi:)``` y si ejecutamos el programa debe de salir algo como esto:
 
-![](/assets/img/commons/format-string/pt1.png)
+![](/assets/img/format-string/pt1.png)
 
 Pero que pasara si ahora yo en el ```printf``` le indico mas format string y el codigo del programa queda asi
 
@@ -73,7 +75,7 @@ void main(){
 ```
 Lo compilamos de la misma forma y ejecutamos
 
-![](/assets/img/commons/format-string/pt2.png)
+![](/assets/img/format-string/pt2.png)
 
 **¿De donde salieron esos caracteres?**
 
@@ -104,7 +106,7 @@ En el programa se esta declarando una variable llamada ```secret_num``` con el v
 
 Para la primera ejecucion del programa le pasaremos varios format string y queda asi:
 
-![](/assets/img/commons/format-string/format1.png)
+![](/assets/img/format-string/format1.png)
 
 Vemos como nos muesta varios valores de la memoria en su representacion en hexadecimal, sin embargo aun no vemos nuestro valor secreto pero ahi esta
 
@@ -117,7 +119,7 @@ Lo que pasa es que ahora debemos de empezar a jugar con los format string, si re
 ```
 Nos mostrara algo como esto
 
-![](/assets/img/commons/format-string/format2.png)
+![](/assets/img/format-string/format2.png)
 
 Vemos como la posicion numero 7 que se imprimio tiene esto ```8badf00d00000000```, el cual es nuestro numero secreto, tambien podemos mostrar directamente lo que se encuentre ahi y lo hacemos asi:
 
@@ -126,7 +128,7 @@ Vemos como la posicion numero 7 que se imprimio tiene esto ```8badf00d00000000``
 ```
 Lo que esta haciendo es imprimir lo que encuentre en la posicion numero 7 y nos muestra esto que es el valor secreto que buscamos
 
-![](/assets/img/commons/format-string/format3.png)
+![](/assets/img/format-string/format3.png)
 
 ## Visualizandolo en radare2
 
@@ -136,13 +138,13 @@ Ahora pasaremos a verlo por detras con radare2, dejo al URL de su pagina para qu
 
 Ingresamos este comando para ejecutar el binario ```radare2 ./vuln```, ingresamos ```ood``` para cambiarnos a modo de lectura y escritura, ingresamos ```aaa``` para que redare analice el binario, ingresamos ```s main``` para movernos a la funcion main y por ultimo usamos ```pdf```para desensamblarla y nos muestra algo como esto
 
-![](/assets/img/commons/format-string/radare1.png)
+![](/assets/img/format-string/radare1.png)
 
 Lo que hare es poner un break point en la direccion donde se hace el ```printf``` de nuestro input que es la linea que esta seleccionada, esto es para que cuando se ejecute el binario se detenga en esa parte, y el comando queda asi ```db 0x5555555551fd```, ahora pondre ```dc``` para continuar la ejecucion del binario, vemos como se queda esperando un input, en este caso yo lo puse esto:
 
 ```%lx %lx %lx %lx %lx %lx %lx %lx``` y vemos como nos arroja un mensaje que dice ```hit breakpoint at: 0x5555555551fd```, eso es por que llego a ese break point, ahora pondre ```dr``` para mostrar los registros y ```dc```para continuar con la ejecucion del programa y vemos algo como esto
 
-![](/assets/img/commons/format-string/radare2.png)
+![](/assets/img/format-string/radare2.png)
 
 Esto con el fin de que vean lo que menciono de las calling conventions, vemos como los primeros 6 argumentos se pasan por los registros, y lo que estamos haciendo con los primeros ```%lx %lx %lx %lx %lx %lx %lx %lx``` de nuestro input es mostrar los valores de esos registros empezando por el ```RSI```, de hecho si vemos que lo que nos imprimio fue
 
@@ -153,8 +155,8 @@ Donde los primeros 5 valores despues del ```Hello```son los valores de los regis
 
 Tambien para completar podemos mostrar el registro ```RSP``` con el comando ```pxr @ rsp``` y esto tambien nos debe de mostar nuestro input y el valor secreto que buscamos
 
-![](/assets/img/commons/format-string/radare3.png)
+![](/assets/img/format-string/radare3.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/format-string/waifu.png)
+![](/assets/img/format-string/waifu.png)

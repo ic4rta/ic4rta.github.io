@@ -1,4 +1,5 @@
 ---
+layout: post
 title: protostar heap2 - UAF (Use-After-Free)
 author: c4rta
 date: 2023-01-21
@@ -196,4 +197,4 @@ Y si fue como explotamos un UAF basico aprovechandonos de una sobreescritura con
 
 Eso ha sido todo, y tranquilo si no llegaste a entender lo que pasaba, por que ni yo ni nadie entiende estas cosas a la primera, pero con tiempo y diciplina se puede lograr. Realmente no me gustaria que te frustraras por algo asi, tu puedes. Gracias por leer ❤
 
-![](/assets/img/commons/heap2/waifu.gif)
+![](/assets/img/heap2/waifu.gif)

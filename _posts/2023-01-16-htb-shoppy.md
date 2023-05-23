@@ -1,4 +1,5 @@
 ---
+layout: post
 title: HackTheBox Shoppy - NoSQL injection y Docker
 author: c4rta
 date: 2023-01-16
@@ -62,7 +63,7 @@ El segundo puerto es el 80 (HTTP)
 
 Vemos como esta usando la version 1.23.1 de nginx como servidor web, y lo mas importante es que nos esta redirigiendo a ```http://shoppy.htb```, asi que si ponemos la IP de la maquina en un buscador web, nos sale algo como esto:
 
-![](/assets/img/commons/shoppy/shoppy1.png)
+![](/assets/img/shoppy/shoppy1.png)
 
 Donde nos dice que no puede encontrar este sitio, pero en el URL aparace ```shoppy.htb```, asi que como dije, nos redirige a ese dominio, asi que es evidente que se esta aplicando virtual hosting, entonces lo agregaremos e nuestro ```/etc/hosts``` con el comando:
 
@@ -104,7 +105,7 @@ Vemos como nos encontro los siguientes directorios:
 
 Hay varios con el mismo nombre de ```login``` pero realmente todos ingresan a lo mismo, a esta pestaña de login:
 
-![](/assets/img/commons/shoppy/shoppy2.png)
+![](/assets/img/shoppy/shoppy2.png)
 
 ### Fuzzing de subdominios
 
@@ -122,7 +123,7 @@ El subdominio es: ```mattermost```
 
 El cual es otra pestaña de login:
 
-![](/assets/img/commons/shoppy/shoppy3.png)
+![](/assets/img/shoppy/shoppy3.png)
 
 ## Flag de user
 
@@ -160,17 +161,17 @@ Esto hara nos permitira iniciar con el usuario ```admin```, ya que con ```1==1``
 
 Vemos que una vez dentro tenemos otro input donde podemos buscar usuarios:
 
-![](/assets/img/commons/shoppy/shoppy4.png)
+![](/assets/img/shoppy/shoppy4.png)
 
 Nuevamente nos encontramos con una NoSQL injection, y pasandole el mismo payload anterior pero sin ```admin```, podemos ver que nos muestran mas usuarios: ```'||'1==1```
 
-![](/assets/img/commons/shoppy/shoppy5.png)
+![](/assets/img/shoppy/shoppy5.png)
 
 Y encontro otro usuario llamado ```Josh``` y el hash de su contraseña, asi que ahora queda crackearlo para conseguir su contraseña, en mi caso usare crackstation, y nos arroja que es un hash MD5 y su contraseña: ```remembermethisway```.
 
 Solo queda saber en donde se ponen estas credenciales. Si recordamos tenemos otra pestaña de login (http://mattermost.shoppy.htb), asi que probare meterlas alli, y pues funciono, una vez dentro me puse a chismosear a ver que encontraba y di que en una seccion que se llama ```Deploy Machine``` hay credenciales para el usuario ```jeager```:
 
-![](/assets/img/commons/shoppy/shoppy6.png)
+![](/assets/img/shoppy/shoppy6.png)
 
 Recordemos que tenemos el puerto del SSH abierto, asi que podemos probar si esas credenciales son correctas:
 
@@ -180,7 +181,7 @@ Y la contraseña es: ```Sh0ppyBest@pp!```
 
 Vemos que ingresamos correctamente y tenemos la primera flag:
 
-![](/assets/img/commons/shoppy/shoppy7.png)
+![](/assets/img/shoppy/shoppy7.png)
 
 ## Flag de root
 
@@ -235,8 +236,8 @@ Asi que ingresamos:
 
 Y ahora ya somos root y tenemos la flag:
 
-![](/assets/img/commons/shoppy/root.png)
+![](/assets/img/shoppy/root.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/shoppy/waifu.gif)
+![](/assets/img/shoppy/waifu.gif)

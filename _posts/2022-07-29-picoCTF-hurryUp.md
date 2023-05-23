@@ -1,4 +1,5 @@
 ---
+layout: post
 title: picoCTF - Hurry up! Wait!
 author: c4rta
 date: 2022-07-29
@@ -9,7 +10,7 @@ Resolveremos un pequeño ejercicio de reversing de picoCTF
 
 ## Sacando informacion del binario
 
-![](/assets/img/commons/picoCTF-hurry/file.png)
+![](/assets/img/picoCTF-hurry/file.png)
 
 Lo primero que vemos a la hora de descargar el binario de la pagina de picoCTF es un binario con el nombre ```svchost.exe```, con ese nombre uno pensaria que es un binario .exe para ser ejecutado en Windows, pero no, usando el comando ```file svchost.exe```, podemos ver algo como esto:
 
@@ -22,7 +23,7 @@ Donde dice que es un binario ELF de 64 bits y tambien vemos que el binario esta 
 
 Para comenzar con el debugging ingresamos el siguiente comando ```radare2 ./svchost.exe```, posteriormente analizamos el binario con el comando ```aaa```, nos movemos el main con ```s main``` y por ultimo mostramos el main con ```pdf``` y nos muestra todo esto
 
-![](/assets/img/commons/picoCTF-hurry/radare1.png)
+![](/assets/img/picoCTF-hurry/radare1.png)
 
 La primera cosa interasante la vemos en esta linea:
 ```
@@ -30,29 +31,29 @@ lea rax, str._ada_main      ; 0x2ad8 ; "_ada_main"
 ```
 La cual vemos una funcion con el nombre ```_ada_main```, asi que haciendo una busqueda rapida en google por el nombre de ```Ada```, me mostro que es un lenguaje de programacion, asi que el binario esta escrito en ```Ada```, seguimos viendo el codigo y llegamos a esta parte:
 
-![](/assets/img/commons/picoCTF-hurry/radare2.png)
+![](/assets/img/picoCTF-hurry/radare2.png)
 
 Primeramente con ```call``` se hace el llamado a una funcion llamada ```sym.imp.__gnat_initialize```, sin embargo eso no es de nuestro interes ya que seguramente es una funcion incorporada en ```Ada```, abajo de esa tenemos una funcion llamada ```fcn.00001d7c``` y mostrando su contenido con ```pdf @ fcn.00001d7c``` y vemos esto
 
-![](/assets/img/commons/picoCTF-hurry/radare3.png)
+![](/assets/img/picoCTF-hurry/radare3.png)
 
 Y tampoco nos interesa ya que es una funcion de inicializacion, pasaremos a ver la funcion que sigue la cual es ```fcn.0000298a``` de igual manera mostramos su contenido con ```pdf @ fcn.0000298a``` y vemos esto
 
-![](/assets/img/commons/picoCTF-hurry/radare4.png)
+![](/assets/img/picoCTF-hurry/radare4.png)
 
 Aqui si ya nos interesa, podemos ver que primeramente se hace el llamado de una funcion llamada ```sym.imp.ada__calendar__delays__delay_for``` la cual es para poner un delay en el programa, esa funcion esta recibiendo un parametro asi que vamos a imprimir su contenido y vemos esto:
 
-![](/assets/img/commons/picoCTF-hurry/radare5.png)
+![](/assets/img/picoCTF-hurry/radare5.png)
 
 Podemos ver en las partes comentadas del codigo que el argumento que recibe es ```v\x1b```, investigando un poco esto es igual a ```1000000000000000```, es absurdamente demasiado tiempo asi que si ejecutamos el programa se quedara en el delay hasta que podamos ver algo.
 
 Ahora podemos seguir viendo las demas funciones, y la que sigue es ```fcn.00002616```, mostraremos su contenido con ```pdf @ fcn.00002616```
 
-![](/assets/img/commons/picoCTF-hurry/radare6.png)
+![](/assets/img/picoCTF-hurry/radare6.png)
 
 Aqui si ya vemos lo mero bueno asi empezare analizando desde aqui:
 
-![](/assets/img/commons/picoCTF-hurry/radare7.png)
+![](/assets/img/picoCTF-hurry/radare7.png)
 
 **¿Por que es tan importante esta parte**
 
@@ -86,7 +87,7 @@ Y esto lo que esa haciendo es tomar el primer caracter de la cadena ```pqrstuvwx
 
 Esto es curioso ya que esa ese caracter que mete pertenece a la flag. Pasaremos a analizar la siguiente funcion que es ```fcn.000024aa``` de igual manera mostramos su contenido
 
-![](/assets/img/commons/picoCTF-hurry/radare8.png)
+![](/assets/img/picoCTF-hurry/radare8.png)
 
 Vemos exactamente lo mismo solo que la cadena a la cual se le esta tomando el primer caracter ahora es ```ijklmnopqrstuvwxyzCTF_{}```.
 
@@ -128,4 +129,4 @@ Es guardar el primer caracter de la flag en la funcion ```sym.imp.ada__text_io__
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/picoCTF-hurry/waifu.jpg)
+![](/assets/img/picoCTF-hurry/waifu.jpg)

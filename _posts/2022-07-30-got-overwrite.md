@@ -1,4 +1,5 @@
 ---
+layout: post
 title: GOT overwrite con Format String
 author: c4rta
 date: 2022-07-30
@@ -12,7 +13,7 @@ En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovec
 
 Para entender esto mejor veremos la estructura de un binario ELF.
 
-![](/assets/img/commons/formatString-got/elf.png)
+![](/assets/img/formatString-got/elf.png)
 
 
 Ahora pondre otra estructura donde ```section header table``` apunta a la seccion ```.text``` , ```.radata``` y ```.data``` del binario, si se dan cuenta la estructura de arriba es mas extensa que la de abajo, esto es por que un archivo ELF tiene dos vistas, ```Program header table``` donde muestra los segmentos utilizados en tiempo de ejecución, y la otra es ```section header table``` que enumera el conjunto de secciones, simplemente en la imagen de arriba no se muesta explicitamente ```section header table```, pero ambas estructuras son correctas
@@ -66,7 +67,7 @@ int main(){
 
 Lo que hace este pequeño programa es obtener nuestro input y meterlo en el buffer de 8 bytes usando la funcion ```gets``` para posteriormente imprimirlo con la funcion ```puts```, pasaremos a meter el binario a gdb y a mostrar el main
 
-![](/assets/img/commons/formatString-got/got%26plt.png)
+![](/assets/img/formatString-got/got%26plt.png)
 
 Podemos visualizar algo como esto, donde se ve que tenemos dos entradas de PLT y ahora nuestas funciones de ```gets``` y ```puts``` pasaron a ```gets@plt``` y ```puts@plt``` y esto es por que no se sabe con exactitud donde esta ```gets``` y ```puts```por lo que salta a PLT
 
@@ -141,11 +142,11 @@ Donde la direccion de libc es ```0xf7c00000```
 
 Viendo que se esta imprimiendo la variable buffer de esta forma ```printf(buffer)``` podemos hace uso de format string, de hecho si le pasamos unos cuantos format string lo que hara es buscar valores de la memoria e imprimirlos como vemos en la imagen
 
-![](/assets/img/commons/formatString-got/format1.png)
+![](/assets/img/formatString-got/format1.png)
 
 Para saber el offset el buffer tenemos que pasarle algunas A en conjunto de unos format string, de esta manera ```AAAAAAAA %p %p %p %p %p %p %p``` esto con el fin de ver desde donde se estan inprimiendo nuestras A, esto nos imprime lo siguiente
 
-![](/assets/img/commons/formatString-got/format2.png)
+![](/assets/img/formatString-got/format2.png)
 
 Entonces si empezamos a contar desde ```0x12c``` hasta donde tengo seleccionado en la imagen, nos da 5, entonces el offset del buffer es 5.
 
@@ -178,8 +179,8 @@ El numero 5 es el offset del buffer, lo que estamos haciendo aqui ```elf.got['pr
 
 Y ahora si ejecutamos el exploit debimos de obtener una shell
 
-![](/assets/img/commons/formatString-got/format4.png)
+![](/assets/img/formatString-got/format4.png)
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/commons/formatString-got/waifu.jpg)
+![](/assets/img/formatString-got/waifu.jpg)
