@@ -79,8 +79,10 @@
 .post-list {
     .btn {
         @include font-rem(14);
+        font-weight: bold;
     }
 }
+
 
 // hr break
 hr {
