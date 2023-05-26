@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Bienvenido a mi blog, waifus y writeups donde sea
+title: Bienvenido a mi blog, waifus y pentesting donde sea
 sitemap: false
 cover: true
 ---
