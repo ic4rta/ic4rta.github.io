@@ -114,4 +114,3 @@ Y listo, hemos resuelto el ejercicio y la flag es: ```Mommy, I thought libc rand
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/prng/waifu.webp)

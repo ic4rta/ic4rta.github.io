@@ -296,4 +296,3 @@ bash-5.1#
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif)

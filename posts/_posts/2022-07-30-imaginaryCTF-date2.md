@@ -140,4 +140,3 @@ flag.txt
 ```
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/imaginaryCTF-date2/waifu.jpg)

@@ -243,4 +243,3 @@ Y ahora ya somos root y tenemos la flag:
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/shoppy/waifu.gif)

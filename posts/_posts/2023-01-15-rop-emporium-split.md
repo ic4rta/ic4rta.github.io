@@ -149,4 +149,3 @@ Y al ejecutarlo nos da la flag:
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/spilt/waifu.gif)

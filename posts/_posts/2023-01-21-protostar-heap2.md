@@ -201,4 +201,3 @@ Y si fue como explotamos un UAF basico aprovechandonos de una sobreescritura con
 
 Eso ha sido todo, y tranquilo si no llegaste a entender lo que pasaba, por que ni yo ni nadie entiende estas cosas a la primera, pero con tiempo y diciplina se puede lograr. Realmente no me gustaria que te frustraras por algo asi, tu puedes. Gracias por leer ❤
 
-![](/assets/img/heap2/waifu.gif)

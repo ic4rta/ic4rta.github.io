@@ -188,4 +188,3 @@ Y ahora si ejecutamos el exploit debimos de obtener una shell
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/formatString-got/waifu.jpg)

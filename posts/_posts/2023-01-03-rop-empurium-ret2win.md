@@ -319,4 +319,3 @@ Entonces lo ejecutamos y nos da la flag
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/ret2win/waifu.jpg)

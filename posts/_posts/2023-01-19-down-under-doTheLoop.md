@@ -73,4 +73,3 @@ Y traduciendo esto seria algo como: ```ICOULDLISTENTOTHISONLOOPALLDAY``` la cual
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/dooTheLoop/waifu.gif)

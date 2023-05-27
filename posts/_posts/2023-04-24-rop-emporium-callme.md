@@ -202,8 +202,3 @@ ROPE{a_placeholder_32byte_flag!}
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/callme/SUSwaifu.gif)
-<div align='center'>
-    (soy ese)
-</div>
-

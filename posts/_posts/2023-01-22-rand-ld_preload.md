@@ -121,6 +121,4 @@ Y como vendo mencionando, esto sucede por que se crea una nueva declaracion de `
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/heap2/waifu.jpg)
-
 

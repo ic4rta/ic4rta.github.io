@@ -196,5 +196,4 @@ Y ya tenemos la flag:
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/HTB-entity/waifu.gif)
 

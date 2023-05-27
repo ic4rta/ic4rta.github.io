@@ -100,4 +100,3 @@ Y la flag es: ```picoCTF{y0u_m4d3_1t_275cea1159781d5b3ef3f57e70be664a}```
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/web-gaunlet/waifu.jpg)

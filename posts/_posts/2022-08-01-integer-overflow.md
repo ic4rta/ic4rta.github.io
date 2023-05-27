@@ -101,6 +101,4 @@ Entonces la resolucion del ejercicio queda asi:
 ![](/assets/img/integer-overflow/radare9.png)
 
 
-Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/integer-overflow/waifu.png)

@@ -247,4 +247,3 @@ Y listo
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/leak-stack-canary/waifu.gif)

@@ -292,5 +292,4 @@ f46884c23c53cc716ac549803*******
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/busqueda/waifu.gif)
 

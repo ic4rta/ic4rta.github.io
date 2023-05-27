@@ -273,5 +273,4 @@ Ahora solo queda iniciar sesion como root y ver la flag
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/squashed/waifu.gif)
 

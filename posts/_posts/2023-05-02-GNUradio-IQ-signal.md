@@ -90,5 +90,4 @@ Y por ultimo, nuestro flowgraph quedo asi:
 
 Eso ha sido todo, gracias por leer, espero que te haya gustado este tema, por que seguire subiendo cosillas interesantes que se pueden hacer con GNU radio ❤
 
-<img src="/assets/img/GNUradio-IQ/waifu.gif" alt="kukuru" width="300" height="400"> 
 

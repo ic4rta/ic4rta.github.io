@@ -235,7 +235,6 @@ bash-5.1# cat /root/root.txt
 
 Eso ha sido todo, gracias por leer ❤
 
-![](/assets/img/precious/waifu.gif)
 
 
 

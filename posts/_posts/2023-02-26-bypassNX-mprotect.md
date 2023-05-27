@@ -210,4 +210,3 @@ root
 
 Y asi conseguimos ser root, muchas gracias por leer ❤
 
-![](/assets/img/heap2/waifu3.jpg)
