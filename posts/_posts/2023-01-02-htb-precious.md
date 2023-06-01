@@ -3,7 +3,7 @@ layout: post
 title: HackTheBox Precious - Command injection y YAML deserialization
 author: c4rta
 date: 2023-01-02
-categories: [Maquinas, HackTheBox]
+##categories: [Maquinas, HackTheBox]
 tags: [Command injection, YAML deserialization]
 image: 
   path: /assets/img/precious/waifu.gif

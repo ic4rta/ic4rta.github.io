@@ -3,7 +3,7 @@ layout: post
 title: ROP emporium callme - Llamando multiples funciones 
 author: c4rta
 date: 2023-04-24
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [ROP]
 description: >
     Para resolver este desafio tenemos que llamar multiples funciones con multiples argumentos en el orden correcto

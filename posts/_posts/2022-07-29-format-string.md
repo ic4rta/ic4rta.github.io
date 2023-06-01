@@ -3,7 +3,7 @@ layout: post
 title: Ataque format string
 author: c4rta
 date: 2022-07-29
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [format string]
 comments: true
 description: > 

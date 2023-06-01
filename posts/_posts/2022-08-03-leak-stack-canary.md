@@ -3,7 +3,7 @@ layout: post
 title: Leak stack canary - bypass
 author: c4rta
 date: 2022-08-03
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [format string, canary bypass]
 description: >
     En este articulo veras como puedes hacer bypass del stack canary lekeandolo usando format strings

@@ -3,7 +3,7 @@ layout: post
 title: Un Poco de Pentesting Web - SQL Injections
 author: c4rta
 date: 2023-03-28
-categories: [Un Poco De Web Pentest, SQLi]
+##categories: [Un Poco De Web Pentest, SQLi]
 tags: [SQL injection, Union-Based SQL injection, Blind-Based SQL injection, Error-Based SQL injection, Time-Based SQL injection]
 image: 
   path: /assets/img/UPDWP-SQLi/waifu.webp

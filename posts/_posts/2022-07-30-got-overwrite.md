@@ -3,7 +3,7 @@ layout: post
 title: GOT overwrite con Format String
 author: c4rta
 date: 2022-07-30
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [GOT overwrite, format string]
 description: >
     En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string, sobresrcibiremos la direccion de GOT de printf

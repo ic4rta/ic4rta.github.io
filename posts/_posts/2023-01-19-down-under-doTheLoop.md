@@ -3,7 +3,7 @@ layout: post
 title: DownUnderCTF Do The Loop - Analisis del espectrograma
 author: c4rta
 date: 2023-01-19
-categories: [Forense]
+##categories: [Forense]
 tags: [radio frecuencias, espectrograma]
 description: >
     El unico archivo que se nos provee es un audio .wav, como es un desafio forense y un archivo de audio, lo que les recomiendo es

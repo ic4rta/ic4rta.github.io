@@ -3,7 +3,7 @@ layout: post
 title: ROPemporium split - Usando ROP para escribir en RDI
 author: c4rta
 date: 2023-01-15
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [ROP]
 image: 
   path: /assets/img/spilt/waifu.gif

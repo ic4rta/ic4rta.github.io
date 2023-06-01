@@ -3,7 +3,7 @@ layout: post
 title: HackTheBoo Entity - Type Confusion via Union
 author: c4rta
 date: 2023-04-15
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [type confusion]
 description: >
     Este es un desafio del HackTheBoo del 2022, pero me parecio bastante interesante la vulnerabilidad type confusion, asi que bueno, yo tambien queria resolverlo, aun que sea atrasado 

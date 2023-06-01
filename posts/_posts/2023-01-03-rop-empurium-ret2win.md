@@ -3,7 +3,7 @@ layout: post
 title: ROPemporium ret2win - saltando a una funcion con ROP
 author: c4rta
 date: 2023-01-03
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [ROP]
 description: >
   Resolucion del ejercicio ret2win usando ROP para saltar a una funcion

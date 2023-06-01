@@ -3,7 +3,7 @@ layout: post
 title: ImaginaryCTF date2 - GOT overwrite
 author: c4rta
 date: 2022-07-30
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [GOT overwrite, format string]
 description: >
   En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir la direccion de GOT de printf

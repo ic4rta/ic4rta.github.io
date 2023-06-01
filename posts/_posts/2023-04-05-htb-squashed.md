@@ -3,7 +3,7 @@ layout: post
 title: HackTheBox Squashed - NFS y X11
 author: c4rta
 date: 2023-04-05
-categories: [Maquinas, HackTheBox]
+##categories: [Maquinas, HackTheBox]
 tags: [nfs, X11]
 description: >
     Abusaremos de unos recursos NFS y luego subiremos una reverse shell para la flag de user, para la escalada nos aprovecharemos del archivo .Xauthority via Magic Cookie para tomar una captura de pantalla y conseguir las credenciales de root

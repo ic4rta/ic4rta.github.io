@@ -3,7 +3,7 @@ layout: post
 title: Explotanto un PRNG bad seed
 author: c4rta
 date: 2022-12-20
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [bad seed]
 description: >
  Te mostrare como puedes abusar de la generacion de numeros aleatorios generados por la funcion rand()

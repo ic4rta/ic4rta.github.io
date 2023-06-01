@@ -3,7 +3,7 @@ layout: post
 title: HackTheBox Busqueda - Arbitrary Code Execution via eval()
 author: c4rta
 date: 2023-04-11
-categories: [Maquinas, HackTheBox]
+##categories: [Maquinas, HackTheBox]
 tags: []
 image: 
   path: /assets/img/busqueda/waifu.gif

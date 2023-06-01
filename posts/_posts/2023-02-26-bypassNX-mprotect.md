@@ -3,7 +3,7 @@ layout: post
 title: Bypass NX usando mprotect() en x64
 author: c4rta
 date: 2023-02-26
-categories: [Explotacion binaria]
+##categories: [Explotacion binaria]
 tags: [ROP]
 image: 
   path: /assets/img/heap2/waifu3.jpg

@@ -3,7 +3,7 @@ layout: post
 title: picoCTF - Hurry up! Wait!
 author: c4rta
 date: 2022-07-29
-categories: [Reversing]
+##categories: [Reversing]
 tags: []
 description: >
     Resolveremos un pequeño ejercicio de reversing de picoCTF

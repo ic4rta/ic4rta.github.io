@@ -3,7 +3,7 @@ layout: post
 title: picoCTF web gauntlet - sql injection y evadiendo filtros
 author: c4rta
 date: 2023-01-04
-categories: [Desafios Web]
+##categories: [Desafios Web]
 tags: [SQL injection]
 description: >
     En este desafio hay que evadir un par de filtros para conseguir la flag
