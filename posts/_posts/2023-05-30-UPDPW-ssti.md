@@ -132,7 +132,7 @@ Usare de ejemplo el desafio [Templated](https://app.hackthebox.com/challenges/te
 
 Antes que nada, te explicare como funcionan los metodos mas comunes que son usados en los payloads de SSTI
 
-![](/assets/img/UPDWP-ssti/metodos_000.png)
+![](/assets/img/UPDWP-ssti/metodos_001.png)
 
 
 #### Class
