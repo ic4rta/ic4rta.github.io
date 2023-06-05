@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Bienvenido a mi blog, waifus y pentesting donde sea
+title: Welcome to my wired
 sitemap: false
 cover: true
 ---

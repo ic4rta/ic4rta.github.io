@@ -81,7 +81,8 @@ hy-drawer {
     // <<< inline
     color: #fff; 
     border-bottom-color: rgba(255, 255, 255, 0.2); 
-    text-decoration-color: rgba(255, 255, 255, 0.2); 
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+    font-weight: bold; 
     // >>>
     // <<< link
     &:hover { 
