@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-07T19:10:08-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-08T10:55:52-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
 </subtitle><author><name>Omar</name></author><entry><title type="html">Un Poco de Pentesting Web - SSTI en Jinja2</title><link href="/blog/posts/2023-05-29-UPDPW-ssti/" rel="alternate" type="text/html" title="Un Poco de Pentesting Web - SSTI en Jinja2" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-05-31T19:55:38-06:00</updated><id>/blog/posts/UPDPW-ssti</id><content type="html" xml:base="/blog/posts/2023-05-29-UPDPW-ssti/">&lt;center style=&quot;font-size: 14px&quot; class=&quot;lead&quot;&gt;(soy ese)&lt;/center&gt;
 
 &lt;h2 id=&quot;flask-y-jinja&quot;&gt;Flask y Jinja&lt;/h2&gt;
@@ -227,7 +227,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection&quot;&gt;https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="SSTI" /><summary type="html">(soy ese)</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/UPDWP-ssti/waifu.jpg" /><media:content medium="image" url="/assets/img/UPDWP-ssti/waifu.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Shellcodes - syscall write() y execve(bin/sh)</title><link href="/blog/posts/2023-05-29-maldev-shellcodes/" rel="alternate" type="text/html" title="Shellcodes - syscall write() y execve(bin/sh)" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-06-07T19:10:08-06:00</updated><id>/blog/posts/maldev-shellcodes</id><content type="html" xml:base="/blog/posts/2023-05-29-maldev-shellcodes/">&lt;p&gt;Que onda, esta vez te voy a enseñar a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh&lt;/p&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="SSTI" /><summary type="html">(soy ese)</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/UPDWP-ssti/waifu.jpg" /><media:content medium="image" url="/assets/img/UPDWP-ssti/waifu.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Shellcodes - syscall write() y execve(bin/sh)</title><link href="/blog/posts/2023-05-29-maldev-shellcodes/" rel="alternate" type="text/html" title="Shellcodes - syscall write() y execve(bin/sh)" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-06-07T19:25:45-06:00</updated><id>/blog/posts/maldev-shellcodes</id><content type="html" xml:base="/blog/posts/2023-05-29-maldev-shellcodes/">&lt;p&gt;Que onda, esta vez te voy a enseñar a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh&lt;/p&gt;
 
 &lt;h2 id=&quot;shellcodes&quot;&gt;Shellcodes&lt;/h2&gt;
 
@@ -362,18 +362,13 @@ _start:
     &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall&lt;/code&gt; se hace el llamado a write&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctante&lt;/p&gt;
+    &lt;p&gt;Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctamente&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;strong&gt;Ojo&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;Te podras dar cuenta que no se usa el registro rdi, que para write, es usado para el descriptor de archivos, y diras: “Como es posible eso, si en la estructura de write se debe de establecer el registro rdi en 1, de hecho y &lt;a href=&quot;https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86_64-64_bit&quot;&gt;aca&lt;/a&gt; lo dice”. Y pues no necesariamente, por que el descriptor de archivos ya tiene establecido por defecto el valor 1 para stdout.&lt;/p&gt;
-
-&lt;p&gt;Haciendo una comparacion con la estructura de write, y las intrucciones en ensamblador, asi se llamaria a write:&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rsi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Ahora procedemos a compilar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nasm -f elf64 shellcode.asm&lt;/code&gt;&lt;/p&gt;
 
