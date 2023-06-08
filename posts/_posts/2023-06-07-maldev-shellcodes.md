@@ -136,17 +136,12 @@ _start:
 
 - ```syscall``` se hace el llamado a write
 
-- Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctante
+- Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctamente
 
 **Ojo**
 
 Te podras dar cuenta que no se usa el registro rdi, que para write, es usado para el descriptor de archivos, y diras: "Como es posible eso, si en la estructura de write se debe de establecer el registro rdi en 1, de hecho y [aca](https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86_64-64_bit) lo dice". Y pues no necesariamente, por que el descriptor de archivos ya tiene establecido por defecto el valor 1 para stdout.
 
-Haciendo una comparacion con la estructura de write, y las intrucciones en ensamblador, asi se llamaria a write:
-
-```c
-ssize_t write(1, rsi, rax);
-```
 
 Ahora procedemos a compilar: ```nasm -f elf64 shellcode.asm```
 
