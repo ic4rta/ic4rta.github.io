@@ -2,7 +2,7 @@
 layout: post
 title: Shellcodes - syscall write() y execve(bin/sh)
 author: c4rta
-date: 2023-05-29
+date: 2023-06-07
 ##categories: [Un Poco De Web Pentest, SSTI]
 tags: [MalDev]
 image: 
@@ -74,7 +74,7 @@ exit_group(4)                           = ?
 
 Todas estas syscalls es lo que hace nuestro simple binario por detras, y nosotros no vemos este funcionamiento, solo vemos que imprime la cadena ola.
 
-A lo que quiero llega es que cada instruccion que hacemos en los lenguajes de programacion, tiene una syscall asociada, ya sea C, Python, Rust, Golang, etc, y es importante conocer las syscalls, por que cuando se desarrollan shellcodes, se llaman directamente a las sycalls tomando en cuenta su estructura.
+A lo que quiero llegar es que muchas de las instrucciones que hacemos en los lenguajes de programacion, tienen una syscall asociada, ya sea C, Python, Rust, Golang, etc, y es importante conocer las syscalls, por que cuando se desarrollan shellcodes, se llaman directamente a las sycalls tomando en cuenta su estructura.
 
 Para llamar a syscalls desde lenguaje ensamblador se toman en cuenta las calling conventions, asi que para llamar a uns syscall se hace de esta forma ```syscall(rdi,rsi,rdx,r10,r8,r9)```, recuerda que los primeros 6 argumentos se pasan por los registos rdi,rsi,rdx,r10,r8,r9, y lo demas se pasa por el stack
 
