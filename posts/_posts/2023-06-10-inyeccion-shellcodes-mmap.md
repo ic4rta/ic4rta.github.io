@@ -73,13 +73,13 @@ void ejecutar_shellcode(){
 }
 ```
 
-La direccion donde se va a asignar la memoria es ```NULL``` para que el kernel la elija, el tamaño de la memoria a asignar es el tamaño de la shellcode, en las flag le decimos que la memoria se asigne con permisos de lectura, escritura, y ejecucion, con el ```-1``` le estamos diciendo que al descriptor de archivos que no se requiere un archivo ya existente y que solo asigne memoria, y te podras dar cuenta de algo, estamos usando la flag ```MAP_ANONYMOUS + MAP_PRIVATE```, con esas flags le estamos indicando que la asignacion sera simplemente un bloque de memoria en ceros (por eso mismo el offset es 0), la cual estara lista de usar, ademas de ser privada, es decir, estara excluida de otras asignaciones de memoria dentro de la misma region de memoria
+La direccion donde se va a asignar la memoria es ```NULL``` para que el kernel la elija, el tamaño de la memoria a asignar es el tamaño de la shellcode, en las flag le decimos que la memoria se asigne con permisos de lectura, escritura, y ejecucion, con el ```-1``` le estamos diciendo al descriptor de archivos que no se requiere un archivo ya existente y que solo asigne memoria, y te podras dar cuenta de algo, estamos usando la flag ```MAP_ANONYMOUS + MAP_PRIVATE```, con esas flags le estamos indicando que la asignacion sera simplemente un bloque de memoria en ceros (por eso mismo el offset es 0), la cual estara lista de usar, ademas de ser privada, es decir, estara excluida de otras asignaciones de memoria dentro de la misma region de memoria
 
 Aqui dibuje un diagrama de la asgnacion de memoria con mmap tomando en cuenta el ejemplo
 
 ![](/assets/img/mmap_injection/mmap.jpeg)
 
-Lo que se ve a la derecha es la memoria virtual de un proceso (sin entrar tanto en detalle), te podras dar cuenta que la memoria de la shellcode se asigno dentro de una seccion que se llama ```Memory Mapping```, en esta seccion se asigna memoria para las librerias compartidas y dinamicas, ademas de las asignaciones de ```mmap```, pero ojo, para que una asignacion de ```mmap``` recida en esta seccion, debe de ir con la flag ```MAP_ANONYMOUS```.
+Lo que se ve a la izquierda es la memoria virtual de un proceso (sin entrar tanto en detalle), te podras dar cuenta que la memoria de la shellcode se asigno dentro de una seccion que se llama ```Memory Mapping```, en esta seccion se asigna memoria para las librerias compartidas y dinamicas, ademas de las asignaciones de ```mmap```, pero ojo, para que una asignacion de ```mmap``` recida en esta seccion, debe de ir con la flag ```MAP_ANONYMOUS```.
 
 Resumidamente el diagrama seria algo asi:
 
