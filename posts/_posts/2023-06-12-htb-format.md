@@ -9,7 +9,7 @@ image:
   path: /assets/img/htb-format/waifu.gif
 ---
 
-Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde una configuracion incorrecta de un proxy mediante una expresion, nos permitira acceder a un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE
+Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde una configuracion incorrecta de un proxy mediante una expresion, nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE
 
 Para la flag de user nos volveremos a conectar por el socket a redis, para filtrar la contraseña de SSH, y para la escalada explotaremos una vulnerabilidad format string en python
 
@@ -227,7 +227,7 @@ Con:
 
 Esta conectandose a Redis para establecer una conexion a travez del archivo ```/var/run/redis/redis.sock```.
 
-Despues basicamente si el usuario tiene la propiedad "pro" establecida como "true", retorna "true", y si no, se retornará la cadena "false", y como tenemos un implementacion incorrecta en el proxy, entonces podemos acceder al archivo ```/var/run/redis/redis.sock``` para modificar los valores de la propiedad "pro", par convertir nuestra cuenta de usuario en pro, y lo podemos hacer de esta manera:
+Despues basicamente si el usuario tiene la propiedad "pro" establecida como "true", retorna "true", y si no, se retornará la cadena "false", y como tenemos un implementacion incorrecta en el proxy, entonces podemos interactuar con el archivo ```/var/run/redis/redis.sock``` para modificar los valores de la propiedad "pro", par convertir nuestra cuenta de usuario en pro, y lo podemos hacer de esta manera:
 
 ```curl -X HSET "http://microblog.htb/static/unix:%2Fvar%2Frun%2Fredis%2Fredis.sock:carta%20pro%20true%20a/b"```
 
