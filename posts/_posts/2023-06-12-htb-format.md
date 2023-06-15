@@ -9,7 +9,7 @@ image:
   path: /assets/img/htb-format/waifu.gif
 ---
 
-Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde una configuracion incorrecta de un proxy mediante una expresion, nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE
+Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE
 
 Para la flag de user nos volveremos a conectar por el socket a redis, para filtrar la contraseña de SSH, y para la escalada explotaremos una vulnerabilidad format string en python
 
