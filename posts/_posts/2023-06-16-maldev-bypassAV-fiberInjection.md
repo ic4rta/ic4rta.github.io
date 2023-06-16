@@ -34,7 +34,7 @@ Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el fluj
 - **ConvertThreadToFiber()**: Para convertir del hilo principal de una fibra
 - **VirtualAlloc()**: Para asignar memoria para la fibra
 - **CreateFiber()**: Para crear una nueva fibra que contendra la shellcode
-- **SwitchToFiber()**: Para cambiar de contexto de la fibra que se creo y ejecutar la shellcode
+- **SwitchToFiber()**: Para cambiar de contexto de la fibra que se creo y ejecutar la fibra que tiene la shellcode
 
 Llamando a las funciones en ese orden podriamos hacer una fiber injection clasica, pero al fin de cuenta esto es programacion, y cada quien la puede implementar como le sale de su cabecita, o dependiendo del contexto donde se vaya a ejecutar, ahora te voy a explicar como la implemente, primero de pondre todo el codigo y te explicare que es lo que hace
 
