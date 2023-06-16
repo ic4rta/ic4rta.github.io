@@ -39,6 +39,7 @@ Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el fluj
 Llamando a las funciones en ese orden podriamos hacer una fiber injection clasica, pero al fin de cuenta esto es programacion, y cada quien la puede implementar como le sale de su cabecita, o dependiendo del contexto donde se vaya a ejecutar, ahora te voy a explicar como la implemente, primero de pondre todo el codigo y te explicare que es lo que hace
 
 #### Codigo completo
+Fue escrito y compilado desde Dev C++
 
 ```cpp
 #include <windows.h>
