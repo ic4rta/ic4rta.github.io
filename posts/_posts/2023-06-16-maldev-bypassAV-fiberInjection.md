@@ -264,6 +264,6 @@ Bypass Windows defender:
 
 #### Mejoras rapidas
 
-Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, para evadir eso, puedes firmar el malware generando un certificado
+Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, es decir, cuando no tiene ninguna firma de un certificado de autenticidad, para evadir eso, puedes firmar el malware generando un certificado tu mismo
 
 Eso ha sido todo, gracias por leer ❤
