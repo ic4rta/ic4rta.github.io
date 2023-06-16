@@ -191,7 +191,7 @@ UINT_PTR timerId = SetTimer(NULL, 0, 20000, [](HWND hwnd, UINT uMsg, UINT_PTR id
 
 Dentro de los parametros de ```SetTimer``` le indicamos en milisegundos el tiempo que va a esperar para ejecutarse lo que se encuentre dentro, y en este caso es la llamada a la funcion ```fiber_injection```, esto es una clasica implementacion de un timming attack que agrega un pequeño delay al inicio de la ejecucion del malware para evadir los antivirus
 
-- Despues tenemos un pequeño buble declarado de esta forma:
+- Despues tenemos un pequeño bucle declarado de esta forma:
 
 ```cpp
 while (GetMessage(&msg, NULL, 0, 0)){	
@@ -250,7 +250,7 @@ Como te daras cuenta, se ejecutan 3 fibras
 
 Ahora te preguntaras "¿Por que 3 fibras, si solo una es la que inyecta la shellcode?", pues ahi te va la explicacion de por que las 3 fibras evaden los antivirus
 
-Las 3 fibras se usan de la siguiente manera, cuando en el main se ejecuta la primera fibra que manda a llamar a ```shellcode_routine```, lo que va a pasar es que entrara a la funcion callback y esperara 20 segundos para ejecutar la ```fibra comodin```, mientras que a su vez en el main se hace un llamado para ejectutar otra fibra, que es la fibra principal (main_fiber), y lo que estaria pasando es que la fibra que mando a llamar a ```shellcode_routine``` y la ```main_fiber``` se estarian ejecutandose en contextos diferentes, permitiendo que la ejecucion de la ```fibra comidin``` pase desapercibida por los antivirus ocultando su actividad e inyectando la shellcode, mientras que el programa sigue fluyendo normalmente ejecutandose en el hilo principal mediante la ```main_fiber```, asi que los antivirus lo unico que estarian detectando es la ```main_fiber``` que no tiene un comportamiendo extraño, Genial, ¿No?.
+Las 3 fibras se usan de la siguiente manera, cuando en el main se ejecuta la primera fibra que manda a llamar a ```shellcode_routine```, lo que va a pasar es que entrara a la funcion callback y esperara 20 segundos para ejecutar la ```fibra comodin```, mientras que a su vez en el main se hace un llamado para ejectutar otra fibra, que es la fibra principal (main_fiber), y lo que estaria pasando es que la fibra que mando a llamar a ```shellcode_routine``` y la ```main_fiber``` se estarian ejecutandose en contextos diferentes, permitiendo que la ejecucion de la ```fibra comidin``` pase desapercibida por los antivirus ocultando su actividad e inyectando la shellcode mientras que el programa sigue fluyendo normalmente ejecutandose en el hilo principal mediante la ```main_fiber```, asi que los antivirus lo unico que estarian detectando es la ```main_fiber``` que no tiene un comportamiendo extraño, Genial, ¿No?.
 
 #### Resultados
 
@@ -261,3 +261,9 @@ Las 3 fibras se usan de la siguiente manera, cuando en el main se ejecuta la pri
 Bypass Windows defender:
 
 <video src="/assets/img/bypassAV_fiber/poc.mp4" controls="controls"></video>
+
+#### Mejoras rapidas
+
+Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, para evadir eso, puedes firmar el malware generando un certificado
+
+Eso ha sido todo, gracias por leer ❤
