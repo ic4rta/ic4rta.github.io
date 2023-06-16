@@ -19,7 +19,7 @@ Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de todos los
 
 Como sabras, cuando se ejecuta una aplicacion, el sistema operativo le asigna un proceso dentro de la memoria, por ejemplo, los procesos que ves al abrir al administrador de tereas, pues bien, esos procesos pueden tener otros subprocesos para ejecutar tareas en paralelo, a esto se le conoce como hilos, y es algo clave en la programacion concurrente, sin embargo, dentro de un hilo se puede estar ejecutando otra tarea, y para esto se usan las fibras.
 
-La definicion que nos da la WinAPI, es: **"Una fibra es una unidad de ejecución que la aplicación debe programar manualmente"**, pero la neta no se le entiende casi nada, asi que pongamos algo mas simple, una fibra tambien es conocida como un ```hilo liviano```, es decir, una unidad de ejeucion que desprende de un hilo, osea que las fibras se ejecutan en el contexto del hilo que las creo, una caracteristica, es que un hilo puede tener varias fibras pero solo una puede ejecutarse una sola a la vez, y nosotros dedicimos cual.
+La definicion que nos da la WinAPI, es: **"Una fibra es una unidad de ejecución que la aplicación debe programar manualmente"**, pero la neta no se le entiende casi nada, asi que pongamos algo mas simple, una fibra tambien es conocida como un ```hilo liviano```, es decir, una unidad de ejeucion que desprende de un hilo, osea que las fibras se ejecutan en el contexto del hilo que las creo, una caracteristica, es que un hilo puede tener varias fibras pero solo una puede ejecutarse una sola a la vez, y nosotros dedicimos cual, amenos que usemos SwitchToFiber
 
 ## Timming attack o ataques basados en temporizadores
 
