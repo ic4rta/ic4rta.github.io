@@ -31,7 +31,7 @@ En el contexto del desarrollo de malware, un timming attack se refiere a suspend
 
 Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el flujo de ejecucion del proceso, para implementar una inyeccion clasica de este tipo, se usan las funciones.
 
-- **ConvertThreadToFiber()**: Para convertir del hilo principal de una fibra
+- **ConvertThreadToFiber()**: Para convertir el hilo principal en una fibra
 - **VirtualAlloc()**: Para asignar memoria para la fibra
 - **CreateFiber()**: Para crear una nueva fibra que contendra la shellcode
 - **SwitchToFiber()**: Para cambiar de contexto de la fibra que se creo y ejecutar la fibra que tiene la shellcode
