@@ -9,7 +9,7 @@ image:
 ---
 {:.lead}
 
-Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de todos los antivirus de antiscan.me, y el windows defender, para esto use  3 cosas
+Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de algunos antivirus de antiscan.me, y como evadir el windows defender, para esto use 3 cosas
 
 - Una shellcode cifrada con XOR
 - La tecnica ```fiber injection```
