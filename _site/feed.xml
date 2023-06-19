@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-16T15:49:27-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
-</subtitle><author><name>Omar</name></author><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-16T15:03:43-06:00</updated><id>/blog/posts/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/">&lt;p&gt;Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de todos los antivirus de antiscan.me, y el windows defender, para esto use  3 cosas&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-18T20:56:50-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+</subtitle><author><name>Omar</name></author><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-18T12:06:54-06:00</updated><id>/blog/posts/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/">&lt;p&gt;Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de algunos antivirus de antiscan.me, y como evadir el windows defender, para esto use 3 cosas&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Una shellcode cifrada con XOR&lt;/li&gt;
@@ -11,7 +11,7 @@
 
 &lt;p&gt;Como sabras, cuando se ejecuta una aplicacion, el sistema operativo le asigna un proceso dentro de la memoria, por ejemplo, los procesos que ves al abrir al administrador de tereas, pues bien, esos procesos pueden tener otros subprocesos para ejecutar tareas en paralelo, a esto se le conoce como hilos, y es algo clave en la programacion concurrente, sin embargo, dentro de un hilo se puede estar ejecutando otra tarea, y para esto se usan las fibras.&lt;/p&gt;
 
-&lt;p&gt;La definicion que nos da la WinAPI, es: &lt;strong&gt;“Una fibra es una unidad de ejecución que la aplicación debe programar manualmente”&lt;/strong&gt;, pero la neta no se le entiende casi nada, asi que pongamos algo mas simple, una fibra tambien es conocida como un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hilo liviano&lt;/code&gt;, es decir, una unidad de ejeucion que desprende de un hilo, osea que las fibras se ejecutan en el contexto del hilo que las creo, una caracteristica, es que un hilo puede tener varias fibras pero solo una puede ejecutarse una sola a la vez, y nosotros dedicimos cual, amenos que usemos SwitchToFiber&lt;/p&gt;
+&lt;p&gt;La definicion que nos da la WinAPI, es: &lt;strong&gt;“Una fibra es una unidad de ejecución que la aplicación debe programar manualmente”&lt;/strong&gt;, pero la neta no se le entiende casi nada, asi que pongamos algo mas simple, una fibra tambien es conocida como un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hilo liviano&lt;/code&gt;, es decir, una unidad de ejeucion que desprende de un hilo, osea que las fibras se ejecutan en el contexto del hilo que las creo, una caracteristica, es que un hilo puede tener varias fibras pero solo una puede ejecutarse una sola a la vez, y nosotros dedicimos cual, amenos que usemos SwitchToFiber para intercalar la ejecución&lt;/p&gt;
 
 &lt;h2 id=&quot;timming-attack-o-ataques-basados-en-temporizadores&quot;&gt;Timming attack o ataques basados en temporizadores&lt;/h2&gt;
 
@@ -24,10 +24,10 @@
 &lt;p&gt;Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el flujo de ejecucion del proceso, para implementar una inyeccion clasica de este tipo, se usan las funciones.&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;ConvertThreadToFiber()&lt;/strong&gt;: Para convertir del hilo principal de una fibra&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;ConvertThreadToFiber()&lt;/strong&gt;: Para convertir el hilo principal en una fibra&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;VirtualAlloc()&lt;/strong&gt;: Para asignar memoria para la fibra&lt;/li&gt;
   &lt;li&gt;&lt;strong&gt;CreateFiber()&lt;/strong&gt;: Para crear una nueva fibra que contendra la shellcode&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;SwitchToFiber()&lt;/strong&gt;: Para cambiar de contexto de la fibra que se creo y ejecutar la shellcode&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;SwitchToFiber()&lt;/strong&gt;: Para cambiar de contexto de la fibra que se creo y ejecutar la fibra que tiene la shellcode&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;Llamando a las funciones en ese orden podriamos hacer una fiber injection clasica, pero al fin de cuenta esto es programacion, y cada quien la puede implementar como le sale de su cabecita, o dependiendo del contexto donde se vaya a ejecutar, ahora te voy a explicar como la implemente, primero de pondre todo el codigo y te explicare que es lo que hace&lt;/p&gt;
@@ -118,7 +118,7 @@
 
 &lt;ul&gt;
   &lt;li&gt;
-    &lt;p&gt;Dentro de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection()&lt;/code&gt; tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmd.exe&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z&lt;/code&gt;.&lt;/p&gt;
+    &lt;p&gt;Dentro de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection()&lt;/code&gt; tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calc.exe&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z&lt;/code&gt;.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;Posteriormente para poder inyectar la shellcode, la debemos de decifrar en tiempo de ejecucion usando la operacion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XOR&lt;/code&gt; con la clave de cifrado, y para eso usamos este for:&lt;/p&gt;
@@ -282,7 +282,7 @@
 
 &lt;h4 id=&quot;mejoras-rapidas&quot;&gt;Mejoras rapidas&lt;/h4&gt;
 
-&lt;p&gt;Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, para evadir eso, puedes firmar el malware generando un certificado&lt;/p&gt;
+&lt;p&gt;Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, es decir, cuando no tiene ninguna firma de un certificado de autenticidad, para evadir eso, puedes firmar el malware generando un certificado tu mismo&lt;/p&gt;
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="MalDev" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/bypassAV_fiber/waifu.gif" /><media:content medium="image" url="/assets/img/bypassAV_fiber/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico</title><link href="/blog/posts/2023-06-15-maldev-createRemoteThread/" rel="alternate" type="text/html" title="Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico" /><published>2023-06-15T00:00:00-06:00</published><updated>2023-06-15T15:30:43-06:00</updated><id>/blog/posts/maldev-createRemoteThread</id><content type="html" xml:base="/blog/posts/2023-06-15-maldev-createRemoteThread/">&lt;p&gt;Que onda, esta vez que voy a enseñar a como puedes inyectar una shellcode en un proceso remoto usando CreateRemoteThread, o como tambien se le conoce “Remote Thread Injection”, ademas veremos una tecnica AntiDBG muy basica para evadir los depuradores&lt;/p&gt;
 
