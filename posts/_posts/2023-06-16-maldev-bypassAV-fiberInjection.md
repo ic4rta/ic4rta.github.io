@@ -125,6 +125,8 @@ int main(){
 
 - Dentro de la funcion ```fiber_injection()``` tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando ```calc.exe```: ```msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z```.
 
+(te recomiendo cambiar la clave del cifrado XOR)
+
 - Posteriormente para poder inyectar la shellcode, la debemos de decifrar en tiempo de ejecucion usando la operacion ```XOR``` con la clave de cifrado, y para eso usamos este for:
 
 ```cpp
