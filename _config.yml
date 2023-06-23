@@ -85,7 +85,7 @@ theme: jekyll-theme-hydejack
 # ----------------------------------------------------------------------------------------
  
 # Sidebar image and theme color of the site.
-accent_image:          /assets/img/fondo3.jpg
+accent_image:          /assets/img/fondo2.png
 accent_color:          rgb(79,177,186)
 
 # This is used for the `theme-color` meta tag,
