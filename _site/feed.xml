@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-18T20:56:50-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
-</subtitle><author><name>Omar</name></author><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-18T12:06:54-06:00</updated><id>/blog/posts/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/">&lt;p&gt;Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de algunos antivirus de antiscan.me, y como evadir el windows defender, para esto use 3 cosas&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-23T12:45:36-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+</subtitle><author><name>Omar</name></author><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-18T21:18:40-06:00</updated><id>/blog/posts/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="/blog/posts/2023-06-16-maldev-bypassAV-fiberInjection/">&lt;p&gt;Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de algunos antivirus de antiscan.me, y como evadir el windows defender, para esto use 3 cosas&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Una shellcode cifrada con XOR&lt;/li&gt;
@@ -117,12 +117,13 @@
 &lt;h2 id=&quot;funcion-fiber_injection&quot;&gt;Funcion fiber_injection()&lt;/h2&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Dentro de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection()&lt;/code&gt; tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calc.exe&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z&lt;/code&gt;.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Posteriormente para poder inyectar la shellcode, la debemos de decifrar en tiempo de ejecucion usando la operacion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XOR&lt;/code&gt; con la clave de cifrado, y para eso usamos este for:&lt;/p&gt;
-  &lt;/li&gt;
+  &lt;li&gt;Dentro de la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fiber_injection()&lt;/code&gt; tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calc.exe&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;(te recomiendo cambiar la clave del cifrado XOR)&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Posteriormente para poder inyectar la shellcode, la debemos de decifrar en tiempo de ejecucion usando la operacion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XOR&lt;/code&gt; con la clave de cifrado, y para eso usamos este for:&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
