@@ -38,6 +38,7 @@ layout: base
     {% include if-non-null try="pro/related-posts.html" fallback="components/related-posts.html" %}
   {% when 'random' %}
     {% include if-non-null try="pro/random-posts.html" %}
+    <!--
     <script src="https://utteranc.es/client.js"
         repo="ic4rta/ic4rta.github.io"
         issue-term="pathname"
@@ -45,6 +46,22 @@ layout: base
         crossorigin="anonymous"
         async>
     </script>
+    -->
+    <script src="https://giscus.app/client.js"
+        data-repo="ic4rta/ic4rta.github.io"
+        data-repo-id="R_kgDOIyhU8A"
+        data-category="Publicaciones"
+        data-category-id="DIC_kwDOIyhU8M4CWjpB"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="noborder_dark"
+        data-lang="es"
+        crossorigin="anonymous"
+        async>
+  </script>
   {% when 'comments' %}
     {% include body/comments.html %}
   {% else %}

