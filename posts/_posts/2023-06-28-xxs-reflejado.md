@@ -19,7 +19,7 @@ De acuerdo a port swigger se trata de:
 
 > Surge cuando una aplicación recibe datos en una solicitud HTTP e incluye esos datos en la respuesta inmediata de forma no segura
 
-Es decir que en un XSS reflejado los datos que mándanos por una petición HTTP se reflejan en la respuesta que da el servidor web hacia el cliente (navegador)
+Es decir que en un XSS reflejado los datos que mándamos por una petición HTTP se reflejan en la respuesta que da el servidor web hacia el cliente (navegador)
 
 Cómo dice OWASP:
 
