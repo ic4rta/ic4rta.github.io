@@ -25,7 +25,7 @@ Cómo dice OWASP:
 
 > El ataque se lleva a cabo a través de un único ciclo de solicitud/respuesta.
 
-En este tipo de XSS el codigo no reside en la aplicacion web como tal y no se encuentra del lado del servidor, y regularmente un atacante puede incrustar su payload malicioso en la URL generada y enviarselo a la victima, obvio se usa ingenieria social y phishing para que sea mas creible
+En este tipo de XSS el codigo no reside en la aplicacion web como tal y no se encuentra del lado del servidor, y regularmente un atacante puede incrustar su payload malicioso en la URL generada y enviarselo a la victima, obvio se usa ingenieria social y phishing para que sea mas creible.
 
 ## Identificando el XSS
 
