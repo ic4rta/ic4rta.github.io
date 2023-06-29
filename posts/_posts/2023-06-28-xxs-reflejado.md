@@ -19,7 +19,11 @@ De acuerdo a port swigger se trata de:
 
 > Surge cuando una aplicación recibe datos en una solicitud HTTP e incluye esos datos en la respuesta inmediata de forma no segura
 
-Este es un tipo de XSS donde el codigo que inyectamos es interpretado por el servidor web para posteriormente mandarnos la respuesta de ese codigo a nuestro navegador web, es decir, que en un XSS reflejado el codigo malicioso se incluye en la respuesta del servidor y se refleja en la pagina web que ve el cliente. 
+Es decir que en un XSS reflejado los datos que mándanos por una petición HTTP se reflejan en la respuesta que da el servidor web hacia el cliente (navegador)
+
+Cómo dice OWASP:
+
+> El ataque se lleva a cabo a través de un único ciclo de solicitud/respuesta
 
 En este tipo de XSS el codigo no reside en la aplicacion web como tal y no se encuentra del lado del servidor, y regularmente un atacante puede incrustar su payload malicioso en la URL generada y enviarselo a la victima, obvio se usa ingenieria social y phishing para que sea mas creible
 
