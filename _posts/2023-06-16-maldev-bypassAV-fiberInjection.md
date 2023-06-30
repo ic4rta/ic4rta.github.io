@@ -261,7 +261,7 @@ Las 3 fibras se usan de la siguiente manera, cuando en el main se ejecuta la pri
 
 Bypass Windows defender:
 
-<video src="/assets/img/bypassAV_fiber/poc.mp4" controls="controls"></video>
+<video src="/assets/img/bypassAV_fiber/poc.mp4" controls="controls" width="720"></video>
 
 #### Mejoras rapidas
 
