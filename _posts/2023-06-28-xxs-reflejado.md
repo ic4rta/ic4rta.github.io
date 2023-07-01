@@ -1,12 +1,12 @@
 ---
 layout: post
-title: Simple XSS reflejado en un entorno real
+title: Simple XSS reflejado en un sitio web real
 author: c4rta
 date: 2023-06-28
 ##categories: [Maquinas, HackTheBox]
 tags: [XSS]
 ---
-Te voy a enseñar como encontre una vulnerabilidad XSS reflejada en un sitio web real
+Te voy a enseñar como encontre una vulnerabilidad XSS reflejado en un sitio web real
 
 {:.lead}
 
