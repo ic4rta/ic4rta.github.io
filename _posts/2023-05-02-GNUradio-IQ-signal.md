@@ -4,7 +4,7 @@ title: GNU Radio - Señal IQ sinusoidal
 author: c4rta
 date: 2023-05-02
 ##categories: [Radiofrecuencias]
-tags: [Explotacion Binaria, GNU radio, Radio Frecuencias]
+tags: [GNU radio, Radio Frecuencias]
 comments: true
 ---
 Esto no tiene nada que ver con pentesting, pero mi otro gran amor son las radio comunicaciones, asi que bueno... Hoy te voy a enseñar a como generar tu primera señal IQ, donde vamos a visualizar su dominio de tiempo, dominio de frecuencia, y por ultimo vamos a identificar la señal real e imaginaria.
