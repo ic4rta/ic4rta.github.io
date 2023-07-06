@@ -82,6 +82,8 @@ Algunas consideraciones son que:
 
 6. El atacante puede usar ese session ID para iniciar sesión en la cuenta de la víctima
 
+(pienso agregar un pequeño lab pero lo ando programando)
+
 Referencias:
 
 - [https://owasp.org/www-community/attacks/Session_fixation](https://owasp.org/www-community/attacks/Session_fixation)
