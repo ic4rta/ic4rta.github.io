@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-05T13:32:56-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un amante de la ciberseguridad y las radiocomunicaciones</subtitle><entry><title type="html">Un Poco de Pentesting - Session Fixation</title><link href="http://localhost:4000/UPDP-session-fixation/" rel="alternate" type="text/html" title="Un Poco de Pentesting - Session Fixation" /><published>2023-07-05T00:00:00-06:00</published><updated>2023-07-05T00:00:00-06:00</updated><id>http://localhost:4000/UPDP-session-fixation</id><content type="html" xml:base="http://localhost:4000/UPDP-session-fixation/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-06T12:17:50-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un amante de la ciberseguridad y las radiocomunicaciones</subtitle><entry><title type="html">Un Poco de Pentesting - Session Fixation</title><link href="http://localhost:4000/UPDP-session-fixation/" rel="alternate" type="text/html" title="Un Poco de Pentesting - Session Fixation" /><published>2023-07-05T00:00:00-06:00</published><updated>2023-07-05T00:00:00-06:00</updated><id>http://localhost:4000/UPDP-session-fixation</id><content type="html" xml:base="http://localhost:4000/UPDP-session-fixation/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona&lt;/p&gt;
 
 &lt;h2 id=&quot;sesiones&quot;&gt;Sesiones&lt;/h2&gt;
 
@@ -97,6 +97,59 @@ Y ya con esto el atacante pudo robar/secuestrar la sesion de la victima&lt;/p&gt
     &lt;p&gt;El atacante puede usar ese session ID para iniciar sesión en la cuenta de la víctima&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;Ejemplo de codigo vulnerable:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Es un ejemplo clasico&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;isset&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;SESSIONID&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]))&lt;/span&gt; 
+  &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    session_id&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$_GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;SESSIONID&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt;;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;$_SESSION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;logged_in&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;;
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Primero con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if (isset($_GET[&apos;SESSIONID&apos;]))&lt;/code&gt; verifica si existe &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SESSIONID&lt;/code&gt; en la URL, asi que esta esperando a que el usuario especifique un session ID por la query string, esa es una parte de la vulnerabilidad por que se le esta permitiendo a un atacante establecer su propio session ID&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Despues con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session_id($_GET[&apos;SESSIONID&apos;])&lt;/code&gt; establece ese session ID de la query string como el ID se sesion actual, y esa es la otra parte de la vulnerabilidad, por que si el atacente le envia una URL como esta a la victima: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:3000/login?SESSIONID=aaaaa&lt;/code&gt;, lo que va a pasar es que la victima al entrar al URL, tomara ese session ID como suyo, permitiendo que el atacante y la victima tengan los mismos session ID&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Al final con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$_SESSION[&apos;logged_in&apos;] = true&lt;/code&gt; simplemente es para decir si el usuario esa autenticado&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;testeando-con-burp-suite&quot;&gt;Testeando con Burp Suite&lt;/h3&gt;
+
+&lt;p&gt;Vamos a establecer esta regla para decir que intercepte cuando la peticion fue interceptada&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/session-fixation/0.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Tendremos que hacer una peticion al sitio web que queremos testear&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/session-fixation/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Date cuenta que el sitio web aun no nos asigna un sessionID, pero al darle &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forward&lt;/code&gt; en el burp obtendremos la respuesta&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/session-fixation/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Obverva como ya el servidor web nos asigno un sessionID, pero ojo, ese sesisionID se asigno antes de que iniciara sesion el usuario, asi que en este momento entraria el atacante que podria establecer un session ID que el haya generado, todo esto antes de que la victima inicie sesion y se autentique, Entonces estableceremos otro sessionID:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/session-fixation/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Una vez que le &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forward&lt;/code&gt; en el burp suite, ese session ID se va a establecer como el session ID de la victima antes de que inicie sesion, de hecho si vemos en el sitio web de ejemplo tenemos que antes de iniciar sesion, en las cookies nos sale ese session ID&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/session-fixation/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y una vez que el usuario haya iniciado sesion, lo estaria haciendo con ese session ID que establecimos, y en las cookies lo comprobamos&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/session-fixation/5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
 &lt;p&gt;Referencias:&lt;/p&gt;
 
