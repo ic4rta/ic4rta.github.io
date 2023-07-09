@@ -9,9 +9,9 @@ Te explicare como use la funcion de callback ```EnumDesktopsW()``` para ejecutar
 {:.lead}
 ## EnumDesktopsW
 
-EnumDesktopsW es una funcion de la WinAPI la cual enumera todos los escritorios del usuario, cabe recalcar que solo enumera los cuales tengan acceso ```DESKTOP_ENUMERATE``` o ```GENERIC_ALL```, lo que hace por detras esta funcion es invocar multiples veces a la funcion callback ```lpEnumFunc``` hasta que termine de enumerar todos los escritorios.
+EnumDesktopsW es una funcion de la WinAPI la cual enumera todos los escritorios del usuario, cabe recalcar que solo enumera los cuales tengan acceso ```DESKTOP_ENUMERATE``` o ```GENERIC_ALL```, lo que hace por detras esta funcion es invocar multiples veces a la funcion callback del parámetro ```lpEnumFunc``` hasta que termine de enumerar todos los escritorios.
 
-```lpEnumFunc``` es uno de los parametros que recibe ```EnumDesktopsW()```, esta callback define a si misma```DESKTOPENUMPROC``` como un puntero a la funcion de callback. su sintaxis es:
+```lpEnumFunc``` es uno de los parametros que recibe ```EnumDesktopsW()```, esta callback se define a si misma ```DESKTOPENUMPROC``` como un puntero a la funcion de callback, su sintaxis es:
 
 ```c++
 BOOL CALLBACK EnumDesktopProc(
@@ -26,7 +26,7 @@ Basicamente hace esto:
 
 - Se asigna un buffer de memoria mediante una función como VirtualAlloc
 - Se copia la shellcode en la memoria recién asignada
-- Se usa EnumDesktopsW para enumerar los escritorios y mediante una funcion callback encontrar la dirección de una función que se puede usar para ejecutar el shellcode (La direccion que regresa VirtualAlloc)
+- Se usa EnumDesktopsW para enumerar los escritorios y mediante una funcion callback encontrar la dirección de una función que se puede usar para ejecutar la shellcode (La direccion que regresa VirtualAlloc)
 
 El codigo "base" para ejecutar una shellcode de esta forma tomando en cuenta la explicacion anterior, es:
 
