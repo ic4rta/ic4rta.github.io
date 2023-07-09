@@ -36,7 +36,7 @@ memcpy(hAlloc, shellcode, sizeof(shellcode));
 EnumDesktopsW(GetProcessWindowStation(),(DESKTOPENUMPROCW) hAlloc, NULL);
 ```
 
-Pero nos vamos a poner tryhards y te voy a explicar como usando ese mismo codigo de base lo converti en algo bien genial
+Pero nos vamos a poner experimentadores y te voy a explicar como usando ese mismo codigo de base lo converti en algo bien genial
 
 ### Explicacion
 
