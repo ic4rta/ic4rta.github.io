@@ -11,5 +11,5 @@ La motivacion que tuve para hacer este blog, es poder usarlo para repasar mis co
 
 Si tienes una duda con lo que escribo, o crees que puse algo incorrecto, te agradeceria que me lo dijeras, puedes comentar al final de cada uno de mis posts 
 
-- [Etiquetas](/tags/)
+- [Etiquetas](/tags)
 {:.read-more}
