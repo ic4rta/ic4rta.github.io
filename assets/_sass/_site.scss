@@ -283,7 +283,7 @@ canvas {
 }
 
 .logo {
-  max-width: 150px;
+  max-width: 200px;
   display: inline-block;
   height: auto;
   background-size: 100%;
@@ -427,7 +427,7 @@ canvas {
     }
   }
   p {
-    color: darken($white, 40);
+    //color: darken($white, 40);
     font-size: 16px;
     margin: 10px 0;
     padding-top: 0;
@@ -492,7 +492,7 @@ canvas {
       margin-bottom: 15px;
     }
     p {
-      color: darken($white, 40);
+      color: #464141;
     }
     .date {
       color: #399f62;
@@ -554,7 +554,7 @@ canvas {
   p {
     font-size: 18px;
     line-height: 1.6;
-    color: #6c6c6c;
+    //color: #6c6c6c;
     margin-bottom: 1.3em;
   }
   small {
@@ -564,7 +564,7 @@ canvas {
     display: block;
   }
   a:not(.btn):not(.pagination_pager) {
-    color: #399f62;
+    color: #404843;
     border-bottom: 1px dotted $green;
   }
   ul,
@@ -573,6 +573,8 @@ canvas {
     > li {
       position: relative;
       margin-bottom: 20px;
+      font-size: 18px;
+      line-height: 1.6;
       &:first-child {
         margin-top: 20px;
       }
