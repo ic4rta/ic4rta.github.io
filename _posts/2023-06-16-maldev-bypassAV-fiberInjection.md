@@ -33,7 +33,7 @@ Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el fluj
 - **ConvertThreadToFiber()**: Para convertir el hilo principal en una fibra
 - **VirtualAlloc()**: Para asignar memoria para la fibra
 - **CreateFiber()**: Para crear una nueva fibra que contendra la shellcode
-- **SwitchToFiber()**: Para cambiar de contexto de la fibra que se creo y ejecutar la fibra que tiene la shellcode
+- **SwitchToFiber()**: Para ejecutar la fibra que tiene la shellcode
 
 Llamando a las funciones en ese orden podriamos hacer una fiber injection clasica, pero al fin de cuenta esto es programacion, y cada quien la puede implementar como le sale de su cabecita, o dependiendo del contexto donde se vaya a ejecutar, ahora te voy a explicar como la implemente, primero de pondre todo el codigo y te explicare que es lo que hace
 
@@ -162,7 +162,7 @@ shellcode_fiber = CreateFiber(0, (LPFIBER_START_ROUTINE)exec_mem, NULL);
 
 Lo que esta haciendo es crear una fibra, donde la ejecucion de la fibra comienza desde la direccion que regresa ```VirtualAlloc```, el primer parametro es el tamaño del stack de la fibra, le puse en 0 para que agarre el tamaño por defecto, el segundo parametro es la direccion inicial de la fibra, y observa que el segundo parametro se agrego de esta forma ```(LPFIBER_START_ROUTINE)exec_mem```, y lo que esta haciendo ```LPFIBER_START_ROUTINE``` es definir un puntero como una rutina, que vendria siendo una funcion de callback a nuestra direccion de inicio de la fibra, la cual se encuentra en ```exec_mem```
 
-- Despues de que creamos la fibra, debemos de cambiar de contexto y ejecutar la fibra, para eso usamos
+- Despues de que creamos la fibra, debemos de restaurar el estado de la fibra de la shellcode para ejecutarla, para eso usamos
 
 ```cpp
 SwitchToFiber(shellcode_fiber);
