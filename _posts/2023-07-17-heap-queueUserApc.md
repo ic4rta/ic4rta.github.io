@@ -114,4 +114,17 @@ Despues encolamos una APC a la cola APC, se le pasa ```(PAPCFUNC)apcRoutine``` p
 QueueUserAPC((PAPCFUNC)apcRoutine, GetCurrentThread(), NULL);
 ```
 
-Y por ultimo mandamos a llamar a ```testAlert()``` para forzar la ejecion de las APC encoladas en el hilo actual, 
+Y por ultimo mandamos a llamar a ```testAlert()``` para forzar la ejecion de las APC encoladas en el hilo actual.
+
+Si compilamos y ejecutamos se ejecutara la shellcode que la cual abrira la calculadora (evidetemente puedes cambiar la shellcode para que haga otra cosa, una reverse shell por ejemplo)
+
+![](/assets/img/heap-queue/ejecucion.gif)
+
+### Referencias
+
+[https://learn.microsoft.com/en-us/windows/win32/sync/asynchronous-procedure-calls](https://learn.microsoft.com/en-us/windows/win32/sync/asynchronous-procedure-calls)
+
+[https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-queueuserapc](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-queueuserapc)
+
+[https://www.g0dmode.biz/remote-process-injection/queueuserapc-+-nttestalert](https://www.g0dmode.biz/remote-process-injection/queueuserapc-+-nttestalert)
+
