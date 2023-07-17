@@ -5,13 +5,13 @@ author: c4rta
 date: 2023-07-07
 tags: [MalDev]
 ---
-Te explicare como use la funcion de callback ```EnumDesktopsW()``` para ejecutar una shellcode en un escritorio creado con ```CreateDesktopW()``` 
+Te explicare como use la funcion ```EnumDesktopsW()``` para ejecutar una shellcode en un escritorio creado con ```CreateDesktopW()``` 
 {:.lead}
 ## EnumDesktopsW
 
 EnumDesktopsW es una funcion de la WinAPI la cual enumera todos los escritorios del usuario, cabe recalcar que solo enumera los cuales tengan acceso ```DESKTOP_ENUMERATE``` o ```GENERIC_ALL```, lo que hace por detras esta funcion es invocar multiples veces a la funcion callback del parámetro ```lpEnumFunc``` hasta que termine de enumerar todos los escritorios.
 
-```lpEnumFunc``` es uno de los parametros que recibe ```EnumDesktopsW()```, esta callback se define a si misma ```DESKTOPENUMPROC``` como un puntero a la funcion de callback, su sintaxis es:
+```lpEnumFunc``` es uno de los parametros que recibe ```EnumDesktopsW()```, este parametro es un puntero a la callback  ```DESKTOPENUMPROC```, su sintaxis es:
 
 ```c++
 BOOL CALLBACK EnumDesktopProc(
