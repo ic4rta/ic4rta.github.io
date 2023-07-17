@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Bypass AV - shellcode via Fiber injection + Timming attack
+title: Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)
 author: c4rta
 date: 2023-06-16
 tags: [MalDev]

@@ -1,12 +1,12 @@
 ---
 layout: post
-title: Inyeccion de procesos/codigo - shellcode via CreateRemoteThread + AntiDBG basico
+title: Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent
 author: c4rta
 date: 2023-06-15
 tags: [MalDev]
 ---
 
-Que onda, esta vez que voy a enseñar a como puedes inyectar una shellcode en un proceso remoto usando CreateRemoteThread, o como tambien se le conoce "Remote Thread Injection", ademas veremos una tecnica AntiDBG muy basica para evadir los depuradores
+Que onda, esta vez que voy a enseñar a como puedes inyectar una shellcode en un proceso remoto usando CreateRemoteThread, o como tambien se le conoce a la tecnica "Remote Thread Injection", ademas veremos una tecnica AntiDBG muy basica para evadir los depuradores
 
 {:.lead}
 ## Remote Thread Injection
@@ -67,7 +67,7 @@ Esta funcion retorna la direccion base de donde se asigno el buffer de memoria
 
 ---
 
-Como tercer paso, y una vez que se asigno un buffer de memoria para nuestra shellcode, necesitamos copiarla a ese lugar, asi que usamos ```WriteProcessMemory()```, los parametros son:
+Como tercer paso, y una vez que se asigno un buffer de memoria para nuestra shellcode, necesitamos escribirla a ese lugar, asi que usamos ```WriteProcessMemory()```, los parametros son:
 
 ```c
 BOOL WriteProcessMemory(
@@ -128,7 +128,7 @@ HANDLE CreateRemoteThread(
 
 Resumidamente seria:
 
-Usamos ```OpenProcess``` con los permisos necesarios para abrir el proceso objetivo, despues con ```VirtualAllocEx``` asignamos un buffer de memoria dentro de VAS el cual va hacer usado para la shellcode, despues usamos ```WriteProcessMemory``` para copiar la shellcode en el buffer de memoria asignada anteriormente, y por ultimo usamos ```CreateRemoteThread``` para ejecutar y crear un hilo que desprendera del proceso objetivo 
+Usamos ```OpenProcess``` con los permisos necesarios para abrir el proceso objetivo, despues con ```VirtualAllocEx``` asignamos un buffer de memoria dentro de VAS el cual va hacer usado para la shellcode, despues usamos ```WriteProcessMemory``` para escribir la shellcode en el buffer de memoria asignada anteriormente, y por ultimo usamos ```CreateRemoteThread``` para ejecutar y crear un hilo que desprendera del proceso objetivo 
 
 Y ese seria todo el proceso y funcionamiento de esta tecnica, como te puedes dar cuenta es muy simple pero efectiva cuando se empieza a combinar con muchas mas cosas
 

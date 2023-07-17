@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Inyeccion de procesos/codigo - Ejecucion de shellcodes via EnumDesktopsW()
+title: Inyeccion de shellcodes via EnumDesktopsW()
 author: c4rta
 date: 2023-07-07
 tags: [MalDev]
