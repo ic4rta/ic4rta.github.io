@@ -133,7 +133,7 @@ Y ahora para incrustarla en el docuemento se puede hacer uso de ```Microsoft Vis
 Y seguramente diras: "Eso no evade ningun antivirus, y el defender lo va a detectar", y en efecto, asi que te dare unos tips
 
 - Usa Invoke-Obfuscation
-- Usa procesos VMI
+- Usa procesos WMI
 - Usa StrRerverse() para agregar un poco mas de ofuscacion
 - Usa WMI Win32_PingStatus para evadir sandboxes
 
