@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Inyeccion de shellcode almacenada en el heap via APC injection y NtTestAlert en un proceso local
+title: Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local
 author: c4rta
 date: 2023-07-17
 tags: [MalDev]
