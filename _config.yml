@@ -7,9 +7,9 @@ locale: en_US
 
 # Left Block Images
 background:
-  homepage: assets/img/fondo3.jpg                           # this image will be shown on homepage's left block
-  post-list: assets/img/placeholder-big.jpg           # this image will be shown on post list page
-  default-post: assets/img/fondo4.png   # this image will be shown when post's front matter doesn't specify any image
+  homepage: assets/img/fondo6.webp                           # this image will be shown on homepage's left block
+  post-list: assets/img/fondo2.gif           # this image will be shown on post list page
+  default-post: assets/img/fondo2.jpg  # this image will be shown when post's front matter doesn't specify any image
 
 # Jekyll
 permalink:          /:title/
