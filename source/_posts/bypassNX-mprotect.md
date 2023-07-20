@@ -13,7 +13,7 @@ En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos
 
 Segun la man page de Linux ```mprotect``` es:
 
-mprotect () cambia las protecciones de acceso para las páginas de memoria del proceso de llamada que contienen cualquier parte del rango de direcciones en el intervalo [addr, addr+len-1]. addr debe estar alineado con el límite de la página... En caso de éxito, mprotect () devuelve cero. En caso de error, esta llamada al sistema devuelve -1 y errno para indicar el error. se establece
+mprotect () cambia las protecciones de acceso para las páginas de memoria del proceso de llamada que contienen cualquier parte del rango de direcciones en el intervalo [addr, addr+len-1]. addr debe estar alineado con el límite de la página... En caso de éxito, mprotect () devuelve cero. En caso de error, esta llamada al sistema devuelve -1 y errno para indicar el error. se establece.
 
 Y aca mas entendible seria que mprotect es la funcion que establece los permisos de lectura y escritura a cierta area de memoria. Esta funcion toma 3 argumentos:
 
