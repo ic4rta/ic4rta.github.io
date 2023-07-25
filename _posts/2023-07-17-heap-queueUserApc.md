@@ -126,3 +126,4 @@ Si compilamos y ejecutamos se ejecutara la shellcode que la cual abrira la calcu
 
 [https://www.g0dmode.biz/remote-process-injection/queueuserapc-+-nttestalert](https://www.g0dmode.biz/remote-process-injection/queueuserapc-+-nttestalert)
 
+Eso ha sido todo, gracias por leer ❤

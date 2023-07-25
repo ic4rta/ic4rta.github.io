@@ -185,3 +185,4 @@ Llega una reverse shell por que eso es lo que hace la shellcode
 
 ![](/assets/img/enumDesktopW/2.png)
 
+Eso ha sido todo, gracias por leer ❤

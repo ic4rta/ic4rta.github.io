@@ -18,7 +18,7 @@ Iniciamos con un escaneo con el comando
 
 Donde le indicamos que con:
 
-- sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, esto con el fin de iniciar la conexion sin que termine
+- sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, y ademas para que vaya mas rapido
 
 - n: para que no haga resolucion DNS y tarde menos el escaneo
 
