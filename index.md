@@ -13,3 +13,5 @@ Si tienes una duda con lo que escribo, o crees que puse algo incorrecto, te agra
 
 - [Tags](/tags)
 {:.read-more}
+
+- [¿Te gustan los retos?](/retos-rin)
