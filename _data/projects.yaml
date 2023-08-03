@@ -3,7 +3,7 @@
   image: https://www.drunkgaming.net/uploads/monthly_2023_07/ucmd1fimkara1.gif.dfdd0c0d3b5e1def01e9bc009ff1d853.gif
   completed: true
 
-- title: Synergy-RAT
+- title: Synergy RAT
   url: https://github.com/ic4rta/Synergy-RAT
   image: https://i.pinimg.com/originals/0c/af/9f/0caf9f7b8ab4917287aaaf8b8b772cd7.gif
   completed: true
@@ -16,4 +16,9 @@
 - title: ISCAN
   url: https://github.com/ic4rta/ISCAN
   image: https://media.tenor.com/c7fsPiG8UwIAAAAC/bocchi-the-rock-anime.gif
+  completed: true
+
+- title: Zima Dropper
+  url: https://github.com/ic4rta/ZimaDropper
+  image: https://cdn.donmai.us/sample/fb/33/__zima_arknights_drawn_by_hi_yuuga__sample-fb330c3380344c3466f6972451d7c8c9.jpg
   completed: true
