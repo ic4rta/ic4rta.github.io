@@ -23,13 +23,13 @@ El credito es para ```ProfessionallyEvil``` ya que es el creador de este desafio
 
 ### Bibliotecas compartidas
 
-Una biblioteca es una colección de funciones compiladas. Podemos hacer uso de estas funciones en nuestros programas sin reescribir la misma funcionalidad. Esto se puede lograr usando el código de la biblioteca en nuestro programa (static library) o vinculando dinámicamente en tiempo de ejecución (shared library)
+Una biblioteca es una colección de funciones compiladas. Podemos hacer uso de estas funciones en nuestros programas sin reescribir la misma funcionalidad. Esto se puede lograr usando el código de la biblioteca en nuestro programa (static library) o vinculando dinámicamente en tiempo de ejecución (shared library).
 
 Usando bibliotecas estáticas, podemos crear programas independientes. Asi que, los programas creados con una biblioteca compartida ocupan compatibilidad con el enlazador en tiempo de ejecución. Por esto mismo, antes de ejecutar un programa, se cargan todos los símbolos requeridos y se prepara el programa para su ejecución
 
 ### Funcionamiento de LD_PRELOAD
 
-LD_PRELOAD trick se aprovecha la funcionalidad proporcionada por el enlazador dinámico en, UNIX permiten decirle al enlazador que vincule los símbolos proporcionados por un cierta biblioteca compartida antes que otras bibliotecas, todo esto se hace en tiempo de ejecucion 
+LD_PRELOAD trick se aprovecha la funcionalidad proporcionada por el enlazador dinámico en UNIX, que permite decirle al enlazador que vincule los símbolos proporcionados por un cierta biblioteca compartida antes que otras bibliotecas, todo esto se hace en tiempo de ejecucion 
 
 ### Inyeccion de codigo usando LD_PRELOAD
 
