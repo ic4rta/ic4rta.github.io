@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Ataque format string | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="Ataque format string">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Aprederas lo basico de como realizar un ataque format string y lekear valores de la memoria">
+<meta property="og:description" content="Aprederas lo basico de como realizar un ataque format string y lekear valores de la memoria">
+<link rel="canonical" href="https://ic4rta.github.io//explotacion%20binaria/2022/07/29/format-string.html">
+<meta property="og:url" content="https://ic4rta.github.io//explotacion%20binaria/2022/07/29/format-string.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2022-07-29T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Ataque format string">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2022-07-29T00:00:00+00:00","datePublished":"2022-07-29T00:00:00+00:00","description":"Aprederas lo basico de como realizar un ataque format string y lekear valores de la memoria","headline":"Ataque format string","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//explotacion%20binaria/2022/07/29/format-string.html"},"url":"https://ic4rta.github.io//explotacion%20binaria/2022/07/29/format-string.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Ataque format string</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2022-07-29T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jul 29, 2022
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 1299 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags"><a class="post-tag" href="/tags.html#format%20string">#format string</a></div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>Aprederas lo basico de como realizar un ataque format string y lekear valores de la memoria</p>
+
+<h2 class="lead" id="que-es-format-string">¿Que es format string?</h2>
+
+<p>Vulnerabilidad la cual ocurre cuando los inputs de los usuarios son ejecutados y procesados como comandos por una funcion vulnerable, esto permite que se puedan lekear valores de la memoria, ejecutar codigo, u ocasionar un segmentation fault</p>
+
+<h3 id="funciones-vulnerables">Funciones vulnerables</h3>
+
+<p>Las funciones que pueden ser vulnerables a format string son las de la familia <code class="language-plaintext highlighter-rouge">printf</code>, aca les dejo un listado de cuales son</p>
+
+<ul>
+  <li>printf()</li>
+  <li>fprintf()</li>
+  <li>sprintf()</li>
+  <li>vprintf()</li>
+  <li>snprintf()</li>
+  <li>vsnprintf()</li>
+  <li>vfprintf()</li>
+  <li>vfprintf()</li>
+</ul>
+
+<p>El format string o cadena de formato en español es al argumento que se le pasa a una de las funciones que pueden ser vulnerables, aca una imagen de cuales son los format string y su tipo</p>
+
+<p><img src="/assets/img/format-string/formatString.png" alt=""></p>
+
+<p>Imagen: <a href="https://www.tutorialspoint.com">https://www.tutorialspoint.com</a></p>
+
+<h2 id="calling-conventions">Calling conventions</h2>
+
+<p>Las calling conventions describen lo siguiente:</p>
+
+<ul>
+  <li>El orden en que se pasan los argumentos a una funcion</li>
+</ul>
+
+<p>Hay que tomar en cuenta que en una arquitectura de 64 bits los primeros 6 argumentos se pasan los los registros <code class="language-plaintext highlighter-rouge">RDI, RSI, RDX, RCX, R8, R9</code>, y los demas se empiezan a pasar por el stack y ese es el orden que describe las calling conventions</p>
+
+<h2 id="lekenado-valores-de-la-memoria">Lekenado valores de la memoria</h2>
+
+<p>Para explicar un poco mas a detalle esto vamos a ir probando con un pequeño programa en C el cual es el siguiente</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+	<span class="kt">char</span> <span class="n">input</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Holi:)"</span><span class="p">;</span>
+	<span class="n">printf</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>El codigo lo pueden compilar como sea aun que yo lo hize de esta manera</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcc ejemplo.c -o ejemplo
+</code></pre></div></div>
+<p>Para esta primera parte el programa simplemente esta usando la funcion <code class="language-plaintext highlighter-rouge">printf</code> para imprimir la variable <code class="language-plaintext highlighter-rouge">input</code> que contiene la cadena <code class="language-plaintext highlighter-rouge">Holi:)</code> y si ejecutamos el programa debe de salir algo como esto:</p>
+
+<p><img src="/assets/img/format-string/pt1.png" alt=""></p>
+
+<p>Pero que pasara si ahora yo en el <code class="language-plaintext highlighter-rouge">printf</code> le indico mas format string y el codigo del programa queda asi</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+        <span class="kt">char</span> <span class="n">input</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Holi:)"</span><span class="p">;</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%s %x %x %x"</span> <span class="p">,</span><span class="n">input</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Lo compilamos de la misma forma y ejecutamos</p>
+
+<p><img src="/assets/img/format-string/pt2.png" alt=""></p>
+
+<p><strong>¿De donde salieron esos caracteres?</strong></p>
+
+<p>Bueno, en la funcion <code class="language-plaintext highlighter-rouge">printf</code> se le estan pasando 4 format string, el primer format string que es <code class="language-plaintext highlighter-rouge">%s</code> que es para imprimir en string, este corresponde a la variable <code class="language-plaintext highlighter-rouge">input</code>, pero los demas format string que son <code class="language-plaintext highlighter-rouge">%x</code> para imprimir un valor en su representacion en hexadecimal no corresponden a nada, entonces como no tienen nada que imprimir empiezan a buscar valores de la memoria del programa y eso es lo que imprime, entonces lo que hacen los 3 <code class="language-plaintext highlighter-rouge">%x</code> es buscar valores de la memoria e imprimirlos</p>
+
+<h2 id="resolviendo-un-pequeño-ejercicio">Resolviendo un pequeño ejercicio</h2>
+
+<p>El codigo es el siguiente y se compila de la misma forma que los anteriores</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">secret_num</span> <span class="o">=</span> <span class="mh">0x8badf00d</span><span class="p">;</span>
+
+    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">64</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="mi">64</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Hello "</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"! You'll never get my secret!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>En el programa se esta declarando una variable llamada <code class="language-plaintext highlighter-rouge">secret_num</code> con el valor <code class="language-plaintext highlighter-rouge">0x8badf00d</code> la cual nunca se muesta en la ejecucion del programa, tambien se esta declarando un buffer llamado <code class="language-plaintext highlighter-rouge">name</code> en el cual se va almacenar nuestro input y posteriormente lo imprime con <code class="language-plaintext highlighter-rouge">printf</code></p>
+
+<p><strong>Objetivo:</strong> Lo que debemos de hacer para resolver este ejercicio es lekear la suficiente memoria para poder vizualizar el valor de <code class="language-plaintext highlighter-rouge">secret_num</code></p>
+
+<p>Para la primera ejecucion del programa le pasaremos varios format string y queda asi:</p>
+
+<p><img src="/assets/img/format-string/format1.png" alt=""></p>
+
+<p>Vemos como nos muesta varios valores de la memoria en su representacion en hexadecimal, sin embargo aun no vemos nuestro valor secreto pero ahi esta</p>
+
+<p><strong>¿Como asi?</strong></p>
+
+<p>Lo que pasa es que ahora debemos de empezar a jugar con los format string, si revisamos la tabla que puse al principio, hay un format string el cual es <code class="language-plaintext highlighter-rouge">%l</code>, este format string es para imprimir un tipo de dato <code class="language-plaintext highlighter-rouge">long</code>, entonces si ahora volvemos a ejecutar el binario pero le pasamos esto como input</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%lx %lx %lx %lx %lx %lx %lx %lx %lx
+</code></pre></div></div>
+<p>Nos mostrara algo como esto</p>
+
+<p><img src="/assets/img/format-string/format2.png" alt=""></p>
+
+<p>Vemos como la posicion numero 7 que se imprimio tiene esto <code class="language-plaintext highlighter-rouge">8badf00d00000000</code>, el cual es nuestro numero secreto, tambien podemos mostrar directamente lo que se encuentre ahi y lo hacemos asi:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%7$lx
+</code></pre></div></div>
+<p>Lo que esta haciendo es imprimir lo que encuentre en la posicion numero 7 y nos muestra esto que es el valor secreto que buscamos</p>
+
+<p><img src="/assets/img/format-string/format3.png" alt=""></p>
+
+<h2 id="visualizandolo-en-radare2">Visualizandolo en radare2</h2>
+
+<p>Ahora pasaremos a verlo por detras con radare2, dejo al URL de su pagina para que puedan descargarlo</p>
+
+<p><a href="https://rada.re/n/radare2.html">https://rada.re/n/radare2.html</a></p>
+
+<p>Ingresamos este comando para ejecutar el binario <code class="language-plaintext highlighter-rouge">radare2 ./vuln</code>, ingresamos <code class="language-plaintext highlighter-rouge">ood</code> para cambiarnos a modo de lectura y escritura, ingresamos <code class="language-plaintext highlighter-rouge">aaa</code> para que redare analice el binario, ingresamos <code class="language-plaintext highlighter-rouge">s main</code> para movernos a la funcion main y por ultimo usamos <code class="language-plaintext highlighter-rouge">pdf</code>para desensamblarla y nos muestra algo como esto</p>
+
+<p><img src="/assets/img/format-string/radare1.png" alt=""></p>
+
+<p>Lo que hare es poner un break point en la direccion donde se hace el <code class="language-plaintext highlighter-rouge">printf</code> de nuestro input que es la linea que esta seleccionada, esto es para que cuando se ejecute el binario se detenga en esa parte, y el comando queda asi <code class="language-plaintext highlighter-rouge">db 0x5555555551fd</code>, ahora pondre <code class="language-plaintext highlighter-rouge">dc</code> para continuar la ejecucion del binario, vemos como se queda esperando un input, en este caso yo lo puse esto:</p>
+
+<p><code class="language-plaintext highlighter-rouge">%lx %lx %lx %lx %lx %lx %lx %lx</code> y vemos como nos arroja un mensaje que dice <code class="language-plaintext highlighter-rouge">hit breakpoint at: 0x5555555551fd</code>, eso es por que llego a ese break point, ahora pondre <code class="language-plaintext highlighter-rouge">dr</code> para mostrar los registros y <code class="language-plaintext highlighter-rouge">dc</code>para continuar con la ejecucion del programa y vemos algo como esto</p>
+
+<p><img src="/assets/img/format-string/radare2.png" alt=""></p>
+
+<p>Esto con el fin de que vean lo que menciono de las calling conventions, vemos como los primeros 6 argumentos se pasan por los registros, y lo que estamos haciendo con los primeros <code class="language-plaintext highlighter-rouge">%lx %lx %lx %lx %lx %lx %lx %lx</code> de nuestro input es mostrar los valores de esos registros empezando por el <code class="language-plaintext highlighter-rouge">RSI</code>, de hecho si vemos que lo que nos imprimio fue</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Hello 20 0 400 400 7ffff7fcbae0 80000000c 8badf00d00000000 20786c2520786c25
+</code></pre></div></div>
+<p>Donde los primeros 5 valores despues del <code class="language-plaintext highlighter-rouge">Hello</code>son los valores de los registros RSI, RDX, RCX, R8, R9 y los podemos comparar con los que nos salieron mostrando los registros con <code class="language-plaintext highlighter-rouge">dr</code>, simplemente en nuestro input los estamos representando en hexadecimal</p>
+
+<p>Tambien para completar podemos mostrar el registro <code class="language-plaintext highlighter-rouge">RSP</code> con el comando <code class="language-plaintext highlighter-rouge">pxr @ rsp</code> y esto tambien nos debe de mostar nuestro input y el valor secreto que buscamos</p>
+
+<p><img src="/assets/img/format-string/radare3.png" alt=""></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/format-string/waifu.png" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<span></span><a class="next" href="/2022/07/29/picoCTF-hurryUp.html" title="picoCTF - Hurry up! Wait!">picoCTF - Hurry up! Wait!</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/explotacion%20binaria/2023/01/06/TAMU-2019-pwn1.html" title="picoCTF - Hurry up! Wait!">TAMU 2019 pwn1 - BufferOverflow</a></li>
+<li><a class="post-link" href="/2023/01/19/down-under-doTheLoop.html" title="picoCTF - Hurry up! Wait!">DownUnderCTF Do The Loop - Analisis del espectrograma</a></li>
+<li><a class="post-link" href="/maldev/2023/06/10/inyeccion-shellcodes-mmap.html" title="picoCTF - Hurry up! Wait!">Inyeccion de shellcodes usando la syscall mmap</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2022/07/30/got-overwrite.html" title="picoCTF - Hurry up! Wait!">GOT overwrite con Format String</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

