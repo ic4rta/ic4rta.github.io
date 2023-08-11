@@ -3,8 +3,16 @@ layout: post
 title: Ataque format string
 author: c4rta
 date: 2022-07-29
-#categories: [Explotacion binaria]
-tags: [Explotacion Binaria, format string]
+categories: [Explotacion binaria]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+tags: [format string]
 comments: true
 ---
 Aprederas lo basico de como realizar un ataque format string y lekear valores de la memoria

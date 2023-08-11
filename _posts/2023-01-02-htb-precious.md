@@ -3,8 +3,16 @@ layout: post
 title: HackTheBox Precious - Command injection y YAML deserialization
 author: c4rta
 date: 2023-01-02
-##categories: [Maquinas, HackTheBox]
-tags: [HTB, Command injection, YAML deserialization]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [HackTheBox]
+tags: [Command injection, YAML deserialization]
 ---
 Para la intrusion tenemos que la web genera PDFs usando pdfkit con una version vulnerable a Command Injection, la cual conduce a un RCE, para la escalada haremos un ataque YAML deserialization
 {:.lead}

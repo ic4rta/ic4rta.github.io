@@ -3,8 +3,16 @@ layout: post
 title: IOF - Integer Overflow/Underflow
 author: c4rta
 date: 2022-08-01
-##categories: [Explotacion binaria]
-tags: [Explotacion Binaria, Integer Overflow]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [Explotacion binaria]
+tags: [Integer Overflow]
 ---
 En este post veremos como funciona y como realizar un Integer Overflow, almacenando un valor mayor del maximo soportado
 {:.lead}

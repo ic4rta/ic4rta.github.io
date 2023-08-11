@@ -3,8 +3,16 @@ layout: post
 title: HackTheBox Format - LFI, Redis y Python format string
 author: c4rta
 date: 2023-06-12
-##categories: [Maquinas, HackTheBox]
-tags: [HTB, LFI, Python Format String]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [HackTheBox]
+tags: [LFI, Python Format String]
 ---
 
 Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE

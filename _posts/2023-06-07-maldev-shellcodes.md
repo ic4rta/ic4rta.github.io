@@ -4,7 +4,16 @@ title: Shellcodes - syscall write() y execve(bin/sh)
 author: c4rta
 date: 2023-06-07
 ##categories: [Un Poco De Web Pentest, SSTI]
-tags: [MalDev]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [MalDev]
+tags: []
 ---
 Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh
 {:.lead}

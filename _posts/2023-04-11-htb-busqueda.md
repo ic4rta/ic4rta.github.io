@@ -3,8 +3,16 @@ layout: post
 title: HackTheBox Busqueda - Arbitrary Code Execution via eval()
 author: c4rta
 date: 2023-04-11
-##categories: [Maquinas, HackTheBox]
-tags: [HTB, eval function, Docker]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [HackTheBox]
+tags: [eval function, Docker]
 ---
 
 Descubriremos que la pagina esta haciendo uso de searchor el cual tiene una vulnerabilidad en eval() la cual nos permitira una ejecucion arbitraria de codigo que conduce a un RCE,

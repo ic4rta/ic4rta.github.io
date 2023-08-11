@@ -3,8 +3,16 @@ layout: post
 title: Hijack de rand() usando LD_PRELOAD trick
 author: c4rta
 date: 2023-01-22
-##categories: [Explotacion binaria]
-tags: [Explotacion Binaria, ld_preload]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [Explotacion binaria]
+tags: [ld_preload]
 ---
 En este caso vamos a hacer hijack de la funcion rand() para controlar la generacion de numeros aletorios con el fin de que sea completamente predecible.
 {:.lead}

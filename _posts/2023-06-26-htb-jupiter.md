@@ -3,8 +3,16 @@ layout: post
 title: HackTheBox Jupiter - SQLi a RCE, Movimiento lateral via Jupyter y YAML
 author: c4rta
 date: 2023-06-26
-##categories: [Maquinas, HackTheBox]
-tags: [HTB, SQL injection, Movimiento Lateral]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [HackTheBox]
+tags: [SQL injection, Movimiento Lateral]
 ---
 Descubriremos un subdomino el cual hace uso de grafana y su API, para la intrusion haremos un SQLi a RCE usando un ruta de la API para realizar consultar, despues haremos movimiento lateral mediante un archivo YAML, despues otro movimiento lateral usando Jupyter el cual nos permitira ejecutar comando y mandarnos una rev shell, y para root abusaremos de un binario donde le indicaremos que descargue el archivo de la flag y lo guarde en un directorio dentro de /tmp
 

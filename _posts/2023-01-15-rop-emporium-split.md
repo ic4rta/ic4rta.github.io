@@ -3,8 +3,16 @@ layout: post
 title: ROPemporium split - Usando ROP para escribir en RDI
 author: c4rta
 date: 2023-01-15
-##categories: [Explotacion binaria]
-tags: [Explotacion Binaria, ROP]
+banner:
+  image: "./assets/images/home/home-t.png"
+  opacity: 0.618
+  background: "#000"
+  height: "50vh"
+  min_height: "50vh"
+  heading_style: "font-size: 2.25em; font-weight: bold; "
+  subheading_style: "color: gold"
+categories: [Explotacion binaria]
+tags: [ROP]
 ---
 Resolucion del desafio split de ROPemporium, donde usaremos el gadget pop rdi; ret para escribir en RDI la direccion de /bin/cat flag
 {:.lead}
