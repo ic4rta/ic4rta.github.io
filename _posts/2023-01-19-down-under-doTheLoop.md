@@ -3,16 +3,8 @@ layout: post
 title: DownUnderCTF Do The Loop - Analisis del espectrograma
 author: c4rta
 date: 2023-01-19
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
 ##categories: [Forense]
-tags: [Radio Frecuencias, Espectrograma]
+tags: [Explotacion Binaria, Radio Frecuencias, Espectrograma]
 ---
 Analizaremos el espectrograma de un archivo wav en el cual descubriremos que tiene codigo morse, asi que lo desifraremos para conseguir la flag
 {:.lead}

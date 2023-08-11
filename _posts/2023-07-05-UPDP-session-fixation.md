@@ -3,15 +3,7 @@ layout: post
 title: Un Poco de Pentesting - Session Fixation
 author: c4rta
 date: 2023-07-05
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Un Poco de Pentesting]
+##categories: [Maquinas, HackTheBox]
 tags: [Session Fixation]
 ---
 Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona

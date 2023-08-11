@@ -3,16 +3,8 @@ layout: post
 title: picoCTF - Hurry up! Wait!
 author: c4rta
 date: 2022-07-29
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-#categories: [Reversing]
-tags: []
+##categories: [Reversing]
+tags: [Reversing]
 ---
 {:.lead}
 

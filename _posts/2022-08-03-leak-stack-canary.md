@@ -3,16 +3,8 @@ layout: post
 title: Leak stack canary - bypass
 author: c4rta
 date: 2022-08-03
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [format string, canary bypass]
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, format string, canary bypass]
 ---
 En este post veras como puedes hacer bypass del stack canary lekeandolo usando format strings
 {:.lead}

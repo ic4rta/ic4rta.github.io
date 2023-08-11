@@ -3,19 +3,10 @@ layout: post
 title: Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local
 author: c4rta
 date: 2023-07-17
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [MalDev]
-tags: []
+tags: [MalDev]
 ---
 
-Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert.
+Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert
 
 ## Asynchronous Procedure Calls (APC) y QueueUserAPC()
 
@@ -125,7 +116,7 @@ Y por ultimo mandamos a llamar a ```testAlert()``` para forzar la ejecucion de l
 
 Si compilamos y ejecutamos se ejecutara la shellcode que la cual abrira la calculadora (evidetemente puedes cambiar la shellcode para que haga otra cosa, una reverse shell por ejemplo)
 
-![](assets/img/heap-queue/ejecucion.gif)
+![](/assets/img/heap-queue/ejecucion.gif)
 
 ### Referencias
 

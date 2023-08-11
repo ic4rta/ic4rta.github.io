@@ -3,14 +3,6 @@ layout: post
 title: GNU Radio - Señal IQ sinusoidal
 author: c4rta
 date: 2023-05-02
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
 ##categories: [Radiofrecuencias]
 tags: [GNU radio, Radio Frecuencias]
 comments: true

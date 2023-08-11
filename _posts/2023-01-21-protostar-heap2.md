@@ -3,16 +3,8 @@ layout: post
 title: protostar heap2 - UAF (Use-After-Free)
 author: c4rta
 date: 2023-01-21
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [Heap, UAF]
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, Heap, UAF]
 ---
 Este desafio es una introduccion una tecnica llamada Use-After-Free la cual basicamente ocurre cuando se hace referencia a la memoria despues de que haya sido liberada
 {:.lead}

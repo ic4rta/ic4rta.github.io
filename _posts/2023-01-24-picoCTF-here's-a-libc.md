@@ -3,16 +3,8 @@ layout: post
 title: picoCTF Here's a libc - ret2libc y bypass ASLR
 author: c4rta
 date: 2023-01-24
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [ret2libc, ROP, ASLR bypass]
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, ret2libc, ROP, ASLR bypass]
 ---
 Realizaremos un ataque ret2libc para hacer bypass de NX, ademas usaremos puts en GOT y PLT para lekear valores y evadir el ASLR
 

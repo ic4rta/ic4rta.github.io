@@ -3,16 +3,8 @@ layout: post
 title: ImaginaryCTF date2 - GOT overwrite
 author: c4rta
 date: 2022-07-30
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [GOT overwrite, format string]
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, GOT overwrite, format string]
 ---
 En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir la direccion de GOT de printf
 {:.lead}

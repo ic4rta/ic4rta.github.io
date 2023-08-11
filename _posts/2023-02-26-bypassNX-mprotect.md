@@ -3,16 +3,8 @@ layout: post
 title: Bypass NX usando mprotect() en x64
 author: c4rta
 date: 2023-02-26
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [ROP]
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, ROP]
 ---
 En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como ```ret2libc```, ```ret2reg```, mas que nada tecnicas que usen ```ROP```. Asi que ahora te voy a mostrar como usar ```mprotect()``` para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.
 {:.lead}

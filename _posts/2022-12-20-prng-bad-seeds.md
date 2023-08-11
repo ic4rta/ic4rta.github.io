@@ -3,16 +3,8 @@ layout: post
 title: Explotanto un PRNG bad seed
 author: c4rta
 date: 2022-12-20
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [bad seed]
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, bad seed]
 ---
 Te mostrare como puedes abusar de la generacion de numeros aleatorios generados por la funcion rand() con el fin de predecir un numero
 {:.lead}

@@ -3,16 +3,8 @@ layout: post
 title: HackTheBoo Entity - Type Confusion via Union
 author: c4rta
 date: 2023-04-15
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-categories: [Explotacion binaria]
-tags: [Type Confusion] 
+##categories: [Explotacion binaria]
+tags: [Explotacion Binaria, Type Confusion] 
 ---
 Tenemos un binario donde explotaremos la vulnerabilidad Type Confusion para utilizar incorrectamente un valor de un tipo como si fuera otro tipo.
 {:.lead}

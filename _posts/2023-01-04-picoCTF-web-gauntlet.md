@@ -3,15 +3,7 @@ layout: post
 title: picoCTF web gauntlet - sql injection y evadiendo filtros
 author: c4rta
 date: 2023-01-04
-banner:
-  image: "./assets/images/home/home-t.png"
-  opacity: 0.618
-  background: "#000"
-  height: "50vh"
-  min_height: "50vh"
-  heading_style: "font-size: 2.25em; font-weight: bold; "
-  subheading_style: "color: gold"
-#categories: [Desafios Web]
+##categories: [Desafios Web]
 tags: [SQL injection]
 ---
 En este desafio explotaremos un SQLi donde hay que evadir un par de filtros para conseguir la flag
