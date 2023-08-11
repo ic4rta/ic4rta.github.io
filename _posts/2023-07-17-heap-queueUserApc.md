@@ -15,7 +15,7 @@ categories: [MalDev]
 tags: []
 ---
 
-Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert
+Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert.
 
 ## Asynchronous Procedure Calls (APC) y QueueUserAPC()
 
