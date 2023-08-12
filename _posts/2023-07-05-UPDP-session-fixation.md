@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-07-05
 ##categories: [Maquinas, HackTheBox]
 tags: [Session Fixation]
+image: /assets/img/session-fixation/waifu.gif
 ---
 Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona
 {:.lead}

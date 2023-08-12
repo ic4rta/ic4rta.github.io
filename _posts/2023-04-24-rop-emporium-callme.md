@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-04-24
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, ROP]
+image: /assets/img/callme/SUSwaifu.gif
 ---
 Para resolver este desafio usaremos ROP para llamar multiples funciones con multiples argumentos en el orden correcto
 {:.lead}
@@ -198,5 +199,3 @@ ROPE{a_placeholder_32byte_flag!}
 ```
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/callme/SUSwaifu.gif)

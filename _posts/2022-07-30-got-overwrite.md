@@ -5,6 +5,7 @@ author: c4rta
 date: 2022-07-30
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, GOT overwrite, format string]
+image: /assets/img/formatString-got/waifu.jpg
 ---
 En este articulo veremos un ejemplo muy simple de como sobreescribir GOT aprovechandonos de una vulnerabilidad format string, sobresrcibiremos la direccion de GOT de printf
 
@@ -181,5 +182,3 @@ Y ahora si ejecutamos el exploit debimos de obtener una shell
 ![](/assets/img/formatString-got/format4.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/formatString-got/waifu.jpg)

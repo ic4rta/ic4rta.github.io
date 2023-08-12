@@ -5,6 +5,7 @@ author: c4rta
 date: 2022-12-20
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, bad seed]
+image: /assets/img/prng/waifu.webp
 ---
 Te mostrare como puedes abusar de la generacion de numeros aleatorios generados por la funcion rand() con el fin de predecir un numero
 {:.lead}
@@ -110,5 +111,3 @@ Mommy, I thought libc random is unpredictable...
 Y listo, hemos resuelto el ejercicio y la flag es: ```Mommy, I thought libc random is unpredictable... (Mami, pensé que libc random era impredecible...)``` 
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/prng/waifu.webp)

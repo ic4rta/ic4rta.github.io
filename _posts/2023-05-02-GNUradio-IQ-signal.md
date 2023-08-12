@@ -6,6 +6,7 @@ date: 2023-05-02
 ##categories: [Radiofrecuencias]
 tags: [GNU radio, Radio Frecuencias]
 comments: true
+image: /assets/img/GNUradio-IQ/waifu.gif
 ---
 Esto no tiene nada que ver con pentesting, pero mi otro gran amor son las radio comunicaciones, asi que bueno... Hoy te voy a enseñar a como generar tu primera señal IQ, donde vamos a visualizar su dominio de tiempo, dominio de frecuencia, y por ultimo vamos a identificar la señal real e imaginaria.
 {:.lead}
@@ -86,5 +87,3 @@ Y por ultimo, nuestro flowgraph quedo asi:
 ![](/assets/img/GNUradio-IQ/12.png)
 
 Eso ha sido todo, gracias por leer, espero que te haya gustado este tema, por que seguire subiendo cosillas interesantes que se pueden hacer con GNU radio ❤
-
-![](/assets/img/GNUradio-IQ/waifu.gif)

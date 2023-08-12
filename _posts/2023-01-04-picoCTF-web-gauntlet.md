@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-01-04
 ##categories: [Desafios Web]
 tags: [SQL injection]
+image: /assets/img/web-gaunlet/waifu.jpg
 ---
 En este desafio explotaremos un SQLi donde hay que evadir un par de filtros para conseguir la flag
 
@@ -96,5 +97,3 @@ usuario: ```adm'||'in'/*```
 Y la flag es: ```picoCTF{y0u_m4d3_1t_275cea1159781d5b3ef3f57e70be664a}```
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/web-gaunlet/waifu.jpg)

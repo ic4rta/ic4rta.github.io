@@ -5,6 +5,7 @@ author: c4rta
 date: 2022-07-29
 #categories: [Explotacion binaria]
 tags: [Explotacion Binaria, format string]
+image: /assets/img/format-string/waifu.png
 comments: true
 ---
 Aprederas lo basico de como realizar un ataque format string y lekear valores de la memoria
@@ -159,5 +160,3 @@ Tambien para completar podemos mostrar el registro ```RSP``` con el comando ```p
 ![](/assets/img/format-string/radare3.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/format-string/waifu.png)

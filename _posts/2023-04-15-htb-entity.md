@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-04-15
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, Type Confusion] 
+image: /assets/img/HTB-entity/waifu.gif
 ---
 Tenemos un binario donde explotaremos la vulnerabilidad Type Confusion para utilizar incorrectamente un valor de un tipo como si fuera otro tipo.
 {:.lead}
@@ -192,5 +193,3 @@ Y ya tenemos la flag:
 ![](/assets/img/HTB-entity/tc3.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/HTB-entity/waifu.gif)

@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-01-15
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, ROP]
+image: /assets/img/spilt/waifu.gif
 ---
 Resolucion del desafio split de ROPemporium, donde usaremos el gadget pop rdi; ret para escribir en RDI la direccion de /bin/cat flag
 {:.lead}
@@ -146,5 +147,3 @@ Y al ejecutarlo nos da la flag:
 ![](/assets/img/spilt/exploit.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/spilt/waifu.gif)

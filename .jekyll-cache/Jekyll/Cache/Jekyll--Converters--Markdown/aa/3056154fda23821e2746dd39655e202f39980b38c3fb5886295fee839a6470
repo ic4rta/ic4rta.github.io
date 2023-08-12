@@ -1,0 +1,29 @@
+I"ÿ<h2 id="los-desafios-de-rin">Los desafios de Rin</h2>
+
+<p>Que onda, aqui ire subiendo desafios o acertijos donde para resolverlos necesitaras conocimientos varios</p>
+
+<ul>
+  <li>La flag esta en el siguiente formato: <code class="language-plaintext highlighter-rouge">rin{...}</code></li>
+</ul>
+
+<h3 id="tabla-de-desafios">Tabla de desafios</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Categoria</th>
+      <th>Enlace (Anonfiles)</th>
+      <th>Descripcion</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Cuadricula de los 5</td>
+      <td>crypto, forensics</td>
+      <td><a href="https://anonfiles.com/r1Ra864fz7/La_cuadricula_jpg">click</a></td>
+      <td>Hay veces que las cosas estan dentro de otras</td>
+    </tr>
+  </tbody>
+</table>
+:ET

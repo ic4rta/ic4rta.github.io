@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-02-26
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, ROP]
+image: /assets/img/heap2/waifu3.jpg
 ---
 En ocasiones se nos presenta la situacion donde tenemos el NX activado y tenemos que recurrir a tecnicas como ```ret2libc```, ```ret2reg```, mas que nada tecnicas que usen ```ROP```. Asi que ahora te voy a mostrar como usar ```mprotect()``` para volver a marcar el stack como ejecutable y puedas inyectar una shellcode.
 {:.lead}
@@ -206,5 +207,3 @@ root
 ```
 
 Y asi conseguimos ser root, muchas gracias por leer ❤
-
-![](/assets/img/heap2/waifu3.jpg)

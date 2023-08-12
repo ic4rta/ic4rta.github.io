@@ -1,65 +1,89 @@
-# Site
+#-------------------------------
+# General Site Settings
 title: c4rta
+logo: # You can add own logo. For example '/images/logo.png'.
 description: Un chico que le gusta la informatica
-url: https://ic4rta.github.io
-logo: avatar.jpg                                      # Site logo
-locale: en_US
+baseurl: "" # The subpath of your site, e.g. /blog
+url: "https://linuxmobile.netlify.app/" # The base hostname & protocol for your site, e.g. http://example.com
 
-# Left Block Images
-background:
-  homepage: assets/img/fondo3.jpg                           # this image will be shown on homepage's left block
-  post-list: assets/img/fondo2.gif           # this image will be shown on post list page
-  default-post: assets/img/fondo6.jpg  # this image will be shown when post's front matter doesn't specify any image
 
-# Jekyll
-permalink:          /:title/
-markdown:           kramdown
-highlighter:        rouge
-kramdown:
-  auto_ids:         true
-  footnote_nr:      1
-  entity_output:    as_char
-  toc_levels:       1..6
-  enable_coderay:   false
-sass:
-  sass_dir:         assets/_sass
-  style:            compressed
+#-------------------------------
+# Author Settings
+author:
+  name: c4rta
+  avatar: 'https://secure.gravatar.com/avatar/713f0634508cc8fd29f98ff6d84d86af?s=150'
 
+
+#-------------------------------
+# Hero Settings
+hero:
+  title: c4rta
+  description: Un chico que le gusta la informatica
+  image: 'assets/img/fondo1.png'
+
+
+#-------------------------------
+# Contact Settings
+contact:
+  email: bdiez19@gmail.com # Add your email for contact form
+  description: ¡Me encantaría recibir un mensaje de parte tuya/o! Qué te parece si me escribes y me das tus comentarios, o me haces las preguntas que quieras! EStoy a tu disposición. # Add a description of your form
+
+# NOTE
+# Norlin theme comes with a contact form built-in. You can use this form with Formspree (https://formspree.io/) service and get up to 50 submissions for free. Also, you can easily switch to another service if you want.
+
+
+#-------------------------------
+# Footer section
+# Example of adding a new link to the footer - {icon: "ion-logo-github", link: "https://github.com"}
+# Other icons can be found at https://ionicons.com/v4/
+social:
+- {icon: "ion-logo-twitter", link: "https://twitter.com/_c4rta_"}
+- {icon: "ion-logo-github", link: "https://github.com/ic4rta"}
+
+
+#-------------------------------
+# Comment Section (Disqus)
+#disqus-identifier: n00b2h4ck3r # Add your shortname for Disqus Comment. For example anvodstudio-demo
+
+
+#-------------------------------
 # Google Analytics
-#google-analytics: UA-XXXXX-Y
+#google-analytics: UA-176116253-1 # Add your identifier. For example UA-99631805-1.
 
-# Social Links
-#email:             email
-#google.plus:        username
-twitter:            _c4rta_
-#facebook:           username
-github:             ic4rta
-#stackoverflow:     123456/username   from a "http://stackoverflow.com/users/123456/username" link
-#linkedin:          username
-#xing:              username
-#instagram:          username
-#lastfm:            username
-#tumblr:            username
-#pinterest:         username
-#foursquare:        username
-#steam:              username
-#dribbble:          username
-#youtube:           username
-#soundcloud:        username
-#weibo:             username
-#flickr:            username
-#codepen:           username
-#keybase:           username
-#xmpp:              username@server.com
-#hackernews:        username
-#behance:           username
 
-# Gems
-gems:
-  - jekyll-feed
+#-------------------------------
+# Newsletter
+#mailchimp: enable # To enable the mailchimp form, use the value 'enable'. To disable the form, leave the field blank.
+#mailchimp-identifier: https://app.us20.list-manage.com/subscribe/post?u65e25d0a60609c8cbde82c607;id=4eaddf4109 # Add your MailChimp form identifier. For example - blogenjoyfreedom.us16.list-manage.com/subscribe/post?u=cd56155d76ddeeb4c0bc4d080&amp;id=7a526cd13e
+
+
+#-------------------------------
+# Build settings
+markdown: kramdown
+permalink: pretty
+plugins:
+  - jekyll-paginate
   - jekyll-sitemap
-  - jekyll-gist
+  - jekyll/tagging
 
-# Exclude list
-include: [_pages]
-exclude: [README.md, Gemfile, Gemfile.lock, _site, src, vendor, CNAME, LICENSE, Rakefile, .sass-cache, .DS_Store]
+paginate: 8
+paginate_path: "/page/:num"
+
+# Pages Path
+defaults:
+  - scope:
+      path: '_pages'
+    values:
+      permalink: /:basename:output_ext
+
+include:
+  - _pages
+
+# Tags
+tag_page_dir:         tag
+tag_page_layout:      tag_page
+tag_permalink_style:  pretty
+
+sass:
+  sass_dir: _sass
+  style: compressed

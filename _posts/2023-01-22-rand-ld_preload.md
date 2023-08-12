@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-01-22
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, ld_preload]
+image: /assets/img/heap2/waifu.jpg
 ---
 En este caso vamos a hacer hijack de la funcion rand() para controlar la generacion de numeros aletorios con el fin de que sea completamente predecible.
 {:.lead}
@@ -117,5 +118,3 @@ LD_PRELOAD=./rand_hijack.so ./guessing_game                                     
 Y como vendo mencionando, esto sucede por que se crea una nueva declaracion de ```rand()``` antes de la declaracion del binario original, esto se debe a que con ```LD_PRELOAD``` podemos cargar una biblioteca antes que las del binario original. Ese es el ejemplo basico de como usar ```LD_PRELOAD``` para modificar el comportamiento de un programa
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/heap2/waifu.jpg)

@@ -5,6 +5,7 @@ author: c4rta
 date: 2022-07-29
 ##categories: [Reversing]
 tags: [Reversing]
+image: /assets/img/picoCTF-hurry/waifu.jpg
 ---
 {:.lead}
 
@@ -128,5 +129,3 @@ Es guardar el primer caracter de la flag en la funcion ```sym.imp.ada__text_io__
 ```picoCTF{d15a5m_ftw_afebc2e}```
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/picoCTF-hurry/waifu.jpg)

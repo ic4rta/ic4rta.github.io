@@ -5,6 +5,7 @@ author: c4rta
 date: 2022-08-01
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, Integer Overflow]
+image: /assets/img/integer-overflow/waifu.png
 ---
 En este post veremos como funciona y como realizar un Integer Overflow, almacenando un valor mayor del maximo soportado
 {:.lead}
@@ -96,5 +97,3 @@ Lo que tenemos que hacer es almacenar un valor en nuestro primer input que sea e
 Entonces la resolucion del ejercicio queda asi:
 
 ![](/assets/img/integer-overflow/radare9.png)
-
-![](/assets/img/integer-overflow/waifu.png)

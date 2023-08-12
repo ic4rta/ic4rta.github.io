@@ -4,6 +4,7 @@ title: Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)
 author: c4rta
 date: 2023-06-16
 tags: [MalDev]
+image: /assets/img/bypassAV_fiber/waifu.gif
 ---
 Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack
 {:.lead}
@@ -268,5 +269,3 @@ Bypass Windows defender:
 Aun que el defender no lo haya detectado, es evidente que se puede mejorar para evitar la deteccion cuando se descarga e intenta ejecutar un software desconocido, es decir, cuando no tiene ninguna firma de un certificado de autenticidad, para evadir eso, puedes firmar el malware generando un certificado tu mismo
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/bypassAV_fiber/waifu.gif)

@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-06-26
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, SQL injection, Movimiento Lateral]
+image: /assets/img/jupiter/waifu.gif
 ---
 Descubriremos un subdomino el cual hace uso de grafana y su API, para la intrusion haremos un SQLi a RCE usando un ruta de la API para realizar consultar, despues haremos movimiento lateral mediante un archivo YAML, despues otro movimiento lateral usando Jupyter el cual nos permitira ejecutar comando y mandarnos una rev shell, y para root abusaremos de un binario donde le indicaremos que descargue el archivo de la flag y lo guarde en un directorio dentro de /tmp
 
@@ -653,5 +654,3 @@ Solo lo ejecutamos y ya tendriamos la flag de root
 ![](/assets/img/jupiter/8.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/jupiter/waifu.gif)

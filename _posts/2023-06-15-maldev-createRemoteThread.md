@@ -4,6 +4,7 @@ title: Inyeccion de shellcode via CreateRemoteThread + IsDebuggerPresent
 author: c4rta
 date: 2023-06-15
 tags: [MalDev]
+image: /assets/img/remote_thread_injection/waifu.gif
 ---
 
 Que onda, esta vez que voy a enseñar a como puedes inyectar una shellcode en un proceso remoto usando CreateRemoteThread, o como tambien se le conoce a la tecnica "Remote Thread Injection", ademas veremos una tecnica AntiDBG muy basica para evadir los depuradores
@@ -250,5 +251,3 @@ Y si lo corremos en un debugger, muestra la ventanita de que esta en un debugger
 ![](/assets/img/remote_thread_injection/6.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/remote_thread_injection/waifu.gif)

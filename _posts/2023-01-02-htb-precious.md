@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-01-02
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, Command injection, YAML deserialization]
+image: /assets/img/precious/waifu.gif
 ---
 Para la intrusion tenemos que la web genera PDFs usando pdfkit con una version vulnerable a Command Injection, la cual conduce a un RCE, para la escalada haremos un ataque YAML deserialization
 {:.lead}
@@ -233,5 +234,3 @@ bash-5.1# cat /root/root.txt
 ```
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/precious/waifu.gif)

@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-06-07
 ##categories: [Un Poco De Web Pentest, SSTI]
 tags: [MalDev]
+image: /assets/img/shellcode/waifu.gif
 ---
 Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh
 {:.lead}
@@ -226,5 +227,3 @@ Y listo, tenemos otra shellcode:
 Y como ultimo, estos dos codigos que te explique, no es la unica forma de llamar a write o execve, ya depende del creador y del contexto donde se usa, y supongo que te ha pasado que cuando haces un BoF, una shellcode te sirve y otra no, aun que tengas todo tu exploit bien.
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/shellcode/waifu.gif)

@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-05-08
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, Command Injection, Docker]
+image: /assets/img/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif
 comments: true
 ---
 Descubriremos que el sitio web hace uso de Cacti el cual tiene una version vulnerable a Command Injection que conduce a un Unauthenticated RCE, conseguiremos una rev shell en un contenedor en el cual descubriremos un archivo el cual usaremos para lekear las credenciales de un usuario, y para le escalada a root explotaremos el CVE-2021-41091
@@ -293,5 +294,3 @@ bash-5.1#
 ```
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/monitorsTwo/a8a7cc9d62f8e320913656e081d082bf_3845136843934746822.gif)

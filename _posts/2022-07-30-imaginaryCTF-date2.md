@@ -5,6 +5,7 @@ author: c4rta
 date: 2022-07-30
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, GOT overwrite, format string]
+image: /assets/img/imaginaryCTF-date2/waifu.jpg
 ---
 En este articulo resolveremos un ejercicio de explotacion binaria de la pagina ImaginaryCTF donde tenemos de sobreescribir la direccion de GOT de printf
 {:.lead}
@@ -136,5 +137,3 @@ $ ls
 flag.txt
 ```
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/imaginaryCTF-date2/waifu.jpg)

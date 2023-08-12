@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-01-19
 ##categories: [Forense]
 tags: [Explotacion Binaria, Radio Frecuencias, Espectrograma]
+image: /assets/img/dooTheLoop/waifu.gif
 ---
 Analizaremos el espectrograma de un archivo wav en el cual descubriremos que tiene codigo morse, asi que lo desifraremos para conseguir la flag
 {:.lead}
@@ -71,5 +72,3 @@ Aqui lo podemos ver mas claramente, asi que con un chingo de paciencia pude saca
 Y traduciendo esto seria algo como: ```ICOULDLISTENTOTHISONLOOPALLDAY``` la cual esa es la flag
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/dooTheLoop/waifu.gif)

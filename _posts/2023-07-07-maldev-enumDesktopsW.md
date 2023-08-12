@@ -4,6 +4,7 @@ title: Inyeccion de shellcodes via EnumDesktopsW()
 author: c4rta
 date: 2023-07-07
 tags: [MalDev]
+image: /assets/img/enumDesktopW/waifu.gif
 ---
 Te explicare como use la funcion ```EnumDesktopsW()``` para ejecutar una shellcode en un escritorio creado con ```CreateDesktopW()``` 
 {:.lead}

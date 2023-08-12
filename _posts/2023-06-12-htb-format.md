@@ -5,6 +5,7 @@ author: c4rta
 date: 2023-06-12
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, LFI, Python Format String]
+image: /assets/img/htb-format/waifu.gif
 ---
 
 Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE
@@ -470,5 +471,3 @@ Y ya esta: la contraseña de root es ```unCR4ckaBL3Pa$$w0rd```
 ![](/assets/img/htb-format/21.png)
 
 Eso ha sido todo, gracias por leer ❤
-
-![](/assets/img/htb-format/waifu.gif)
