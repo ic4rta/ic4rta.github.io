@@ -26,11 +26,11 @@ Para este ejercicio voy a tomar de ejemplo una variable ```signed int``` de 32 b
 
 ![](/assets/img/integer-overflow/signed1.png)
 
-Vemos como tenemos 32 bits (aparece el maximo 31 por que se empieza desde 0), de los cuales 31 estan prendidos, osea que su valor es ```1```, y el bit mas significativo que es el 32 se establece en ```0```, ya que ese es el que indica el signo, ahora ingresare ```2147483647``` + ```1```, osea ```2147483648```
+Vemos como tenemos 31 bits (son 32 pero se empieza a contar desde el 0), de los cuales 30 estan prendidos, osea que su valor es ```1```, y el bit mas significativo que es el 31 se establece en ```0```, ya que ese es el que indica el signo, ahora ingresare ```2147483647``` + ```1```, osea ```2147483648```
 
 ![](/assets/img/integer-overflow/signed2.png)
 
-Podemos ver como 31 bits estan apagados, osea en 0, y el bit mas significativo esta en ```1``` osea que el signo ahora es negativo, y si vemos la descripcion que nos pone la pagina dice que la conversion ocasiono un overflow, o un integer overflow
+Podemos ver como 30 bits estan apagados, osea en 0, y el bit mas significativo esta en ```1``` osea que el signo ahora es negativo, y si vemos la descripcion que nos pone la pagina dice que la conversion ocasiono un overflow, o un integer overflow
 
 Entonces podemos decir que un Integer Overflow es cuando se intenta almacenar un valor mayor del maximo soportado ocasionado un Integer Overflow
 
