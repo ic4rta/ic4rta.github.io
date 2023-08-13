@@ -42,9 +42,9 @@ Ahora escanearemos para obtener mas informacion sobre la version y el servicio q
 ```
 sudo nmap -sCV -p22,80 10.10.11.216
 ```
-Vemos que por el puerto 80 nos dice que nos redirecciona a ```jupiter.htb```, asi que debemos de agregar ese dominio al /etc/hosts
+Vemos que por el puerto 80 nos dice que nos redirecciona a **jupiter.htb**, asi que debemos de agregar ese dominio al /etc/hosts
 
-```
+```ruby
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 (Ubuntu Linux; protocol 2.0)
 | ssh-hostkey: 
@@ -61,17 +61,17 @@ Al explorar la web principal no encontraremos nada que nos interese, asi que toc
 
 Si hacemos fuzzing de directorios para ver descubrir rutas:
 
-```
+```ruby
 wfuzz -u 'http://jupiter.htb/FUZZ' -w /usr/share/wordlists/directory-list-2.3-medium.txt -t 100 --hc=404
 ```
 
 Nos mostrara que existen varias rutas, pero ninguna es de interes, asi que probaremos con subdominios:
 
-```bash
+```ruby
 wfuzz -u 'http://jupiter.htb' -H 'Host: FUZZ.jupiter.htb' -t 100 -w /usr/share/wordlists/directory-list-2.3-medium.txt --hh=178 --hc=404
 ```
 
-```bash
+```ruby
 ********************************************************
 * Wfuzz 3.1.0 - The Web Fuzzer                         *
 ********************************************************
@@ -89,7 +89,7 @@ ID           Response   Lines    Word       Chars       Payload
 000162619:   200        211 L    798 W      34390 Ch    "Kiosk" 
 ```
 
-Y logramos encontrar el de ```kiosk```, asi que tambien lo agregamos al /etc/hosts
+Y logramos encontrar el de **kiosk**, asi que tambien lo agregamos al /etc/hosts
 
 ### Investigando kiosk.jupiter.htb
 
@@ -196,7 +196,7 @@ Si le damos en inspeccionar y en panel JSON, podemos ver esto todo esto:
 }
 ```
 
-Podemos ver que como base de datos se esta usando ```postgreSQL``` y eso nos los dice en:
+Podemos ver que como base de datos se esta usando **postgreSQL** y eso nos los dice en:
 
 ```json
 "datasource": {
@@ -213,7 +213,7 @@ Y abajo podemos ver la consulta que se esta realizando:
 ```
 Hasta ahora tenemos que usa grafana, postgreSQL, y que se hacen consultas a una base de datos para obtener la informacion de las lunas de los planetas.
 
-Hace un momento habia mencionado que grafana tiene una API, pues esta es la [Data source API](https://grafana.com/docs/grafana/latest/developers/http_api/data_source/), vi vemos un poco la documentacion nos dice que si hacemos una peticion a ```GET /api/datasources``` obtendremos informacion de todas las fuentes de datos:
+Hace un momento habia mencionado que grafana tiene una API, pues esta es la [Data source API](https://grafana.com/docs/grafana/latest/developers/http_api/data_source/), vi vemos un poco la documentacion nos dice que si hacemos una peticion a **GET /api/datasources** obtendremos informacion de todas las fuentes de datos:
 
 ```json
 [
@@ -240,15 +240,15 @@ Hace un momento habia mencionado que grafana tiene una API, pues esta es la [Dat
 ]
 ```
 
-Y ahora confirmamos que la base de datos es una PostgreSQL como lo dice en ```"name": "PostgreSQL",```, ademas de que la base de datos es ```moon_namesdb``` como lo dice en ```database": "moon_namesdb"```, ahora debemos de encontrar la forma de realizar consultar a la base de datos para ver si existen un posible SQLi, si seguimos viendo la documentacion de la API, encontraremos que a tra vez de la ruta ```/api/ds/query``` podemos realizar peticiones por POST y realizar consultas a la base da datos.
+Y ahora confirmamos que la base de datos es una PostgreSQL como lo dice en **"name": "PostgreSQL"**, ademas de que la base de datos es **moon_namesdb** como lo dice en **database": "moon_namesdb"**, ahora debemos de encontrar la forma de realizar consultar a la base de datos para ver si existen un posible SQLi, si seguimos viendo la documentacion de la API, encontraremos que a tra vez de la ruta **/api/ds/query** podemos realizar peticiones por POST y realizar consultas a la base da datos.
 
-Si intentamos acceder mediante la URL: ```http://kiosk.jupiter.htb/api/ds/query```, no vamos a poder, afortunadamente BurpSuite en el apartado de proxy tiene una opcion la cual permite ver todo el historial HTTP, vean que si nos regresamos al dashboard y le damos en inspeccionar en panel JSON, tenemos que en el historial HTTP se esta accediendo a ```/api/ds/query```:
+Si intentamos acceder mediante la URL: **http://kiosk.jupiter.htb/api/ds/query**, no vamos a poder, afortunadamente BurpSuite en el apartado de proxy tiene una opcion la cual permite ver todo el historial HTTP, vean que si nos regresamos al dashboard y le damos en inspeccionar en panel JSON, tenemos que en el historial HTTP se esta accediendo a **/api/ds/query**:
 
 ![](/assets/img/jupiter/3.png)
 
 Si mandamos esto al repeater, podemos ver la consulta que se esta haciendo
 
-```
+```sql
 "rawSql":"select \n  count(parent) \nfrom \n  moons \nwhere \n  parent = 'Jupiter';",
 ```
 
@@ -272,11 +272,11 @@ Podemos ver que nos reporta la base de datos que esta en uso:
     ]
 }
 ```
-**Ojo:** Ahora empezare a enumerar la base de datos haciedo uso de ```pg_catalog``` la cual es similar a ```information_schema```, ya que esta contiene informacion de las bases de datos, esto no es necesario ya que no encontraremos nada que nos sirva, solo lo hago por que se me hace interesante.
+**Ojo:** Ahora empezare a enumerar la base de datos haciedo uso de **pg_catalog** la cual es similar a **information_schema**, ya que esta contiene informacion de las bases de datos, esto no es necesario ya que no encontraremos nada que nos sirva, solo lo hago por que se me hace interesante.
 
 ### Enumeracion de la DB
 
-Como sabemos que se esta haciendo uso de ```postgreSQL``` podemos usar ```pg_catalog``` para enumerar la base de datos, usando ```SELECT * FROM pg_catalog.pg_database;``` mostraremos todas las base de datos existentes, con ```pg_catalog.pg_database``` le estamos diciendo que de ```pg_catalog``` muestre las bases de datos, y eso lo indicamos con ```pg_database```, el resultado son todas las bases de datos existentes
+Como sabemos que se esta haciendo uso de **postgreSQL** podemos usar **pg_catalog** para enumerar la base de datos, usando **SELECT * FROM pg_catalog.pg_database;** mostraremos todas las base de datos existentes, con **pg_catalog.pg_database** le estamos diciendo que de **pg_catalog** muestre las bases de datos, y eso lo indicamos con **pg_database**, el resultado son todas las bases de datos existentes
 
 ```json
 [
@@ -286,7 +286,7 @@ Como sabemos que se esta haciendo uso de ```postgreSQL``` podemos usar ```pg_cat
     "template0"
 ],
 ```
-Vemos que la base de datos que nos interesa es la ```moon_namesdb```, asi que ahora empezaremos a enumerar las tablas de esta base da datos, ten en cuenta que no es necesario usar un ```WHERE``` para indicarle la base datos que queremos enumerar por que ```moon_namesdb``` ya esta en uso, asi que las consultas se harian usando esa base de datos, usando de 
+Vemos que la base de datos que nos interesa es la **moon_namesdb**, asi que ahora empezaremos a enumerar las tablas de esta base da datos, ten en cuenta que no es necesario usar un **WHERE** para indicarle la base datos que queremos enumerar por que **moon_namesdb** ya esta en uso, asi que las consultas se harian usando esa base de datos, usando de 
 ```
 SELECT tablename FROM pg_catalog.pg_tables;
 ``` 

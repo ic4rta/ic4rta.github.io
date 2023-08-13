@@ -15,9 +15,9 @@ De acuerdo a la MSDN, una APC es:
 
 > Es una función que se ejecuta de forma asíncrona en el contexto de un subproceso en particular
 
-Cada subproceso tiene un propia cola APC, y un subproceso debe estar en un estado de alerta para ejecutar un APC en modo de usuario, algunas formas de indicarle a un subproceso que este en modo de alerta es con las funciones ```SleepEx``` , ```SignalObjectAndWait```, ```MsgWaitForMultipleObjectsEx```, etc.
+Cada subproceso tiene un propia cola APC, y un subproceso debe estar en un estado de alerta para ejecutar un APC en modo de usuario, algunas formas de indicarle a un subproceso que este en modo de alerta es con las funciones **SleepEx** , **SignalObjectAndWait**, **MsgWaitForMultipleObjectsEx**, etc.
 
-La forma en la que podemos agregar una APC a la cola APC es usando ```QueueUserAPC```, la estructura de QueueUserAPC es:
+La forma en la que podemos agregar una APC a la cola APC es usando **QueueUserAPC**, la estructura de QueueUserAPC es:
 
 ```c++
 DWORD QueueUserAPC(
@@ -27,17 +27,17 @@ DWORD QueueUserAPC(
 );
 ```
 
-- ```pfnAPC``` es un puntero a la APC que se llamara cuando el subproceso realiza una operacion de alerta
-- ```hThread``` es el identificador del hilo 
-- ```dwData``` es un valor que funciona como un parametro a ```pfnAPC```
+- **pfnAPC** es un puntero a la APC que se llamara cuando el subproceso realiza una operacion de alerta
+- **hThread** es el identificador del hilo 
+- **dwData** es un valor que funciona como un parametro a **pfnAPC**
 
 ## Flujo de ejecucion
 
-- Crear un heap usando ```HeapCreate```
-- Se asigna un bloque de memoria con ```HeapAlloc``` del tamaño de la shellcode en el heap creado con ```HeapCreate```
-- Se escribe la shellcode en el bloque de memoria del heap usando ```WriteProcessMemory```
-- Se encola una APC en el subproceso actual usando ```QueueUserAPC```
-- Se llama ```NtTestAlert``` para forzar la ejecucion de la APC
+- Crear un heap usando **HeapCreate**
+- Se asigna un bloque de memoria con **HeapAlloc** del tamaño de la shellcode en el heap creado con **HeapCreate**
+- Se escribe la shellcode en el bloque de memoria del heap usando **WriteProcessMemory**
+- Se encola una APC en el subproceso actual usando **QueueUserAPC**
+- Se llama **NtTestAlert** para forzar la ejecucion de la APC
 
 ### Codigo
 
@@ -83,37 +83,37 @@ int main(){
 }
 ```
 
-Pimero creamos un heap en donde le indicamos que en las opciones de asignacion tenga ```HEAP_CREATE_ENABLE_EXECUTE``` para que los bloques de memoria que se asignen permitan ejecutar codigo
+Pimero creamos un heap en donde le indicamos que en las opciones de asignacion tenga **HEAP_CREATE_ENABLE_EXECUTE** para que los bloques de memoria que se asignen permitan ejecutar codigo
 
 ```c++
 HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
 ```
 
-Despues asignamos un bloque de memoria donde le indicamos con ```HEAP_ZERO_MEMORY``` que la asignacion inicie con cero, y el tamaño de la asignacion sea el tamaño de la shellcode, por eso se usa ```sizeof(shellcode)```
+Despues asignamos un bloque de memoria donde le indicamos con **HEAP_ZERO_MEMORY** que la asignacion inicie con cero, y el tamaño de la asignacion sea el tamaño de la shellcode, por eso se usa **sizeof(shellcode)**
 
 ```c++
 HeapAlloc(hHeap, HEAP_ZERO_MEMORY, sizeof(shellcode));
 ```
 
-Despues escribimos la shellcode en el bloque de memoria del heap, se usa ```GetCurrentProcess()``` para que el identificador del proceso sea el identificador del proceso actual, el tamaño en bytes que se van a escribir es igual al tamaño de la shellcode, por eso se vuelve a usar ```sizeof(shellcode)```
+Despues escribimos la shellcode en el bloque de memoria del heap, se usa **GetCurrentProcess()** para que el identificador del proceso sea el identificador del proceso actual, el tamaño en bytes que se van a escribir es igual al tamaño de la shellcode, por eso se vuelve a usar **sizeof(shellcode)**
 
 ```c++
 WriteProcessMemory(GetCurrentProcess(), shellcodeHeap, shellcode, sizeof(shellcode), NULL);
 ```
 
-Despues declaramos ```apcRoutine``` como un puntero de tipo ```PTHREAD_START_ROUTINE``` el cual se le asignara la direccion de memoria que tiene ```shellcodeHeap```, con esto le indicariamos que la APC apunte a ```shellcodeHeap``` que es el bloque del heap que contiene la shellcode
+Despues declaramos **apcRoutine** como un puntero de tipo **PTHREAD_START_ROUTINE** el cual se le asignara la direccion de memoria que tiene **shellcodeHeap**, con esto le indicariamos que la APC apunte a **shellcodeHeap** que es el bloque del heap que contiene la shellcode
 
 ```c++
 PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellcodeHeap;
 ```
 
-Despues encolamos una APC a la cola APC, se le pasa ```(PAPCFUNC)apcRoutine``` para que ```apcRoutine``` sea interpretado como un puntero de tipo ```PAPCFUNC``` y sea una APC valida, tambien usamos ```GetCurrentThread()``` para que se use el identificador del hilo actual
+Despues encolamos una APC a la cola APC, se le pasa **(PAPCFUNC)apcRoutine** para que **apcRoutine** sea interpretado como un puntero de tipo **PAPCFUNC** y sea una APC valida, tambien usamos **GetCurrentThread()** para que se use el identificador del hilo actual
 
 ```c++
 QueueUserAPC((PAPCFUNC)apcRoutine, GetCurrentThread(), NULL);
 ```
 
-Y por ultimo mandamos a llamar a ```testAlert()``` para forzar la ejecucion de las APC encoladas en el hilo actual.
+Y por ultimo mandamos a llamar a **testAlert()** para forzar la ejecucion de las APC encoladas en el hilo actual.
 
 Si compilamos y ejecutamos se ejecutara la shellcode que la cual abrira la calculadora (evidetemente puedes cambiar la shellcode para que haga otra cosa, una reverse shell por ejemplo)
 
