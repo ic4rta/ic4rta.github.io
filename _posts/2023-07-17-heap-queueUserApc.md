@@ -101,7 +101,7 @@ Despues escribimos la shellcode en el bloque de memoria del heap, se usa **GetCu
 WriteProcessMemory(GetCurrentProcess(), shellcodeHeap, shellcode, sizeof(shellcode), NULL);
 ```
 
-Despues declaramos **apcRoutine** como un puntero de tipo **PTHREAD_START_ROUTINE** el cual se le asignara la direccion de memoria que tiene **shellcodeHeap**, con esto le indicariamos que la APC apunte a **shellcodeHeap** que es el bloque del heap que contiene la shellcode
+Despues declaramos **apcRoutine** como un puntero **PTHREAD_START_ROUTINE** el cual se le asignara la direccion de memoria que tiene **shellcodeHeap**, con esto le indicariamos que la APC apunte a **shellcodeHeap** que es el bloque del heap que contiene la shellcode
 
 ```c++
 PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellcodeHeap;

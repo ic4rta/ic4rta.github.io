@@ -19,14 +19,14 @@ author:
 hero:
   title: c4rta
   description: Un chico que le gusta la informatica
-  image: 'assets/img/fondo1.png'
+  image: 'assets/img/fondo.gif'
 
 
 #-------------------------------
 # Contact Settings
 contact:
-  email: bdiez19@gmail.com # Add your email for contact form
-  description: ¡Me encantaría recibir un mensaje de parte tuya/o! Qué te parece si me escribes y me das tus comentarios, o me haces las preguntas que quieras! EStoy a tu disposición. # Add a description of your form
+  email:  # Add your email for contact form
+  description: no se que poner. # Add a description of your form
 
 # NOTE
 # Norlin theme comes with a contact form built-in. You can use this form with Formspree (https://formspree.io/) service and get up to 50 submissions for free. Also, you can easily switch to another service if you want.

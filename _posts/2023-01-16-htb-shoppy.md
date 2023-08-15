@@ -4,7 +4,7 @@ title: HackTheBox Shoppy - NoSQL injection y Docker
 author: c4rta
 date: 2023-01-16
 ##categories: [Maquinas, HackTheBox]
-tags: [Explotacion Binaria, NoSQLi, Docker, hash cracking]
+tags: [HTB, NoSQLi, Docker, hash cracking]
 image: /assets/img/shoppy/waifu.gif
 ---
 Resolucion del ejercicio Shoppy de HTB donde nos aprovecharemos de una vulnerabilidad NoSQL, haremos reversing y desplegaremos un contenedor para conseguir la shell como root 
