@@ -7,7 +7,7 @@ tags: [HTB, GPP, Kerberoasting]
 image: /assets/img/active/waifu.gif
 ---
 
-Tenemos el puerto del SMB abierto donde descubriremos el archivo **Groups.xml** con una contraseña referente a **Group Policy Preferences(GPP)** que nos permitira conectarnos por SMB con las credenciales y leer la flag de user, para la escalada de privilegios haremos un **Kerberoasting**
+Tenemos el puerto del SMB abierto donde descubriremos el archivo **Groups.xml** con una contraseña referente a **Group Policy Preferences(GPP)** que nos permitira conectarnos por SMB con las credenciales y leer la flag de user, para la escalada de privilegios haremos un **Kerberoasting**.
 
 {:.lead}
 
