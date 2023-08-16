@@ -209,13 +209,14 @@ crackmapexec smb active.htb -u Administrator -p Ticketmaster1968
 
 ![](/assets/img/active/6.png)
 
-Y por ultimo podemos usar **psexec** para 
+Y por ultimo podemos usar **psexec** para acceder a la maquina con las credenciales de **Administrator**
 
 ```ruby
-psexec.py active.htb/Administrator:Ticketmaster1968@active.htb para acceder a la maquina con las credenciales de **Administrator**
+psexec.py active.htb/Administrator:Ticketmaster1968@active.htb 
 ```
 
 ![](/assets/img/active/7.png)
 
-Solo ingresamos **C:\Users\Administrator\Desktop\root.txt** y ya tenemos la flag
+Solo leemos la flag de root en **C:\Users\Administrator\Desktop\root.txt** y ya estufas
 
+Eso ha sido todo, gracias por leer ❤
