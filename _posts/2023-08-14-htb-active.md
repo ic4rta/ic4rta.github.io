@@ -179,7 +179,7 @@ Como estamos en un Active Directory se esta usando Kerberos podemos probar una t
 
 Kerberoasting es una tecnica que se aprovecha de Kerberos con la cual podemos extraer hashes validos de cuentas de servicio, este ataque funciona solicitando tickets TGS para todos los usuarios que esten disponibles en el dominio, para despues intentar cracker estos tickets de manera offline y obtener las contraseñas.
 
-Kerberoasting se aprovecha de la obtencion de **TGS**, es decir, cuando un usuario intenta acceder a un servicio, se entrega su **TGS** al **KDC** con una solicitud de un ticket para ese servicio, entonces el **KDC** verifica si el **TGS** es valido, y si lo es, le entrega un ticket para ese servicio que el usuario intento acceder, entonces si nosotros comprometemos un usuario con un **TGS** valido, podemos solicitar los demas **TGS** de los usuario que tengan un **SPN** en un Domain Controller
+Kerberoasting se aprovecha de la obtencion de **TGS**, es decir, cuando un usuario intenta acceder a un servicio, se entrega su **TGT** al **KDC** con una solicitud de un ticket para ese servicio, entonces el **KDC** verifica si el **TGT** es valido, y si lo es, le entrega un ticket para ese servicio que el usuario intento acceder, entonces si nosotros comprometemos un usuario con un **TGS** valido, podemos solicitar los demas **TGS** de los usuario que tengan un **SPN** en un Domain Controller
 
 En este caso como ya comprometimos el usuario **SVC_TGS** y evidetemente tenemos unas credenciales validas y nos dan una entrada al dominio, entonces podemos empezar por ahi, ahora usaremos **GetUserSPNs.py** para solicitar los **TGS** de los usuarios con un **SPN**:
 
