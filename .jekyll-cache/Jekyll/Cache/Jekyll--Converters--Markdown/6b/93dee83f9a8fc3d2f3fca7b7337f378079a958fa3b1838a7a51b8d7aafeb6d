@@ -1,4 +1,4 @@
-I"NM<p>Tenemos el puerto del SMB abierto donde descubriremos el archivo <strong>Groups.xml</strong> con una contraseña referente a <strong>Group Policy Preferences(GPP)</strong> que nos permitira conectarnos por SMB con las credenciales y leer la flag de user, para la escalada de privilegios haremos un <strong>Kerberoasting</strong>.</p>
+I"�L<p>Tenemos el puerto del SMB abierto donde descubriremos el archivo <strong>Groups.xml</strong> con una contraseña referente a <strong>Group Policy Preferences(GPP)</strong> que nos permitira conectarnos por SMB con las credenciales y leer la flag de user, para la escalada de privilegios haremos un <strong>Kerberoasting</strong>.</p>
 
 <h2 class="lead" id="enumeracion">Enumeracion</h2>
 
@@ -168,7 +168,7 @@
 
 <p>Kerberoasting es una tecnica que se aprovecha de Kerberos con la cual podemos extraer hashes validos de cuentas de servicio, este ataque funciona solicitando tickets TGS para todos los usuarios que esten disponibles en el dominio, para despues intentar cracker estos tickets de manera offline y obtener las contraseñas.</p>
 
-<p>Kerberoasting se aprovecha de la obtencion de <strong>TGS</strong>, es decir, cuando un usuario intenta acceder a un servicio, se entrega su <strong>TGS</strong> al <strong>KDC</strong> con una solicitud de un ticket para ese servicio, entonces el <strong>KDC</strong> verifica si el <strong>TGS</strong> es valido, y si lo es, le entrega un ticket para ese servicio que el usuario intento acceder, entonces si nosotros comprometemos un usuario con un <strong>TGS</strong> valido, podemos solicitar los demas <strong>TGS</strong> de los usuario que tengan un <strong>SPN</strong> en un Domain Controller</p>
+<p>Kerberoasting se aprovecha de la obtencion de <strong>TGS</strong>, es decir, cuando un usuario intenta acceder a un servicio, se entrega su <strong>TGT</strong> al <strong>KDC</strong> con una solicitud de un ticket para ese servicio, entonces el <strong>KDC</strong> verifica si el <strong>TGT</strong> es valido, y si lo es, le entrega un ticket de servicio, los <strong>TGS</strong> están cifrados con la contraseña del servicio que fue solicitado, entonces si nosotros comprometemos a un usuario valido, podemos solicitar los demas <strong>TGS</strong> de los usuarios que tengan un <strong>SPN</strong> en un Domain Controller, y si la contraseña de los <strong>TGS</strong> es débil, la podemos crackear de forma offline</p>
 
 <p>En este caso como ya comprometimos el usuario <strong>SVC_TGS</strong> y evidetemente tenemos unas credenciales validas y nos dan una entrada al dominio, entonces podemos empezar por ahi, ahora usaremos <strong>GetUserSPNs.py</strong> para solicitar los <strong>TGS</strong> de los usuarios con un <strong>SPN</strong>:</p>
 
@@ -197,14 +197,14 @@
 
 <p><img src="/assets/img/active/6.png" alt="" /></p>
 
-<p>Y por ultimo podemos usar <strong>psexec</strong> para</p>
+<p>Y por ultimo podemos usar <strong>psexec</strong> para acceder a la maquina con las credenciales de <strong>Administrator</strong></p>
 
-<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psexec</span><span class="p">.</span><span class="nf">py</span> <span class="n">active</span><span class="p">.</span><span class="nf">htb</span><span class="o">/</span><span class="no">Administrator</span><span class="ss">:Ticketmaster1968</span><span class="vi">@active</span><span class="p">.</span><span class="nf">htb</span> <span class="n">para</span> <span class="n">acceder</span> <span class="n">a</span> <span class="n">la</span> <span class="n">maquina</span> <span class="n">con</span> <span class="n">las</span> <span class="n">credenciales</span> <span class="n">de</span> <span class="o">**</span><span class="no">Administrator</span><span class="o">**</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">psexec</span><span class="p">.</span><span class="nf">py</span> <span class="n">active</span><span class="p">.</span><span class="nf">htb</span><span class="o">/</span><span class="no">Administrator</span><span class="ss">:Ticketmaster1968</span><span class="vi">@active</span><span class="p">.</span><span class="nf">htb</span> 
 </code></pre></div></div>
 
 <p><img src="/assets/img/active/7.png" alt="" /></p>
 
-<p>Solo ingresamos <strong>C:\Users\Administrator\Desktop\root.txt</strong> y ya tenemos la flag</p>
+<p>Solo leemos la flag de root en <strong>C:\Users\Administrator\Desktop\root.txt</strong> y ya estufas</p>
 
 <p>Eso ha sido todo, gracias por leer ❤</p>
 :ET
