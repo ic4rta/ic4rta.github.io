@@ -263,7 +263,7 @@ Ahora solo nos queda conectarnos por **EvilWinRM** como el usuario **Administrat
 evil-winrm -S -i timelapse.htb -u Administrator -p '3s:apT2HA9i(M2Q@8Jh8r0c@w1'
 ```
 
-Para no poner mas capturas, la flag no esta en directorio Desktop de Administrator, si recuerdas, cuando enumeramos usuarios, existia uno llamado **TRX** que tambien pertenece a Domain Admins, asi que le flag esta en el directorio desktop ese usuario, y solo hace falta leerla con:
+Para no poner mas capturas, la flag no esta en directorio Desktop de Administrator, si recuerdas, cuando enumeramos usuarios, existia uno llamado **TRX** que tambien pertenece a Domain Admins, asi que la flag esta en el directorio desktop de ese usuario, y solo hace falta leerla con:
 
 ```ruby
 type C:\Users\TRX\Desktop\root.tx
