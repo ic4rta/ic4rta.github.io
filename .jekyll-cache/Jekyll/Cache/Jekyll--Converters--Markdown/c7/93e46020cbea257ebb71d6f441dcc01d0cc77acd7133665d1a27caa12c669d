@@ -1,4 +1,4 @@
-I"�B<p class="lead">Te explicare como funciona la vulnerabilidad SSTI, sus payloads y como explotarla</p>
+I"�B<p class="lead">Te explicare como funciona la vulnerabilidad SSTI, sus payloads y como explotarla</p>
 
 <h2 id="flask-y-jinja">Flask y Jinja</h2>
 
@@ -73,7 +73,7 @@
 
 <h2 id="server-side-template-injection">Server Side Template Injection</h2>
 
-<p>Significa inyeccion de plantillas del lado del servidor, y es cuando los atacantes inyectan payloads maliciosos en una plantilla, la cual sera renderizada por el servidor, esto con el fin de ejecutar comandos del lado del servidor, de ahi su nombre “Server Side”. (los payload se deben de crear de acuerdo a la sintaxis de la plantilla que esta en uso)</p>
+<p>Significa “inyeccion de plantillas del lado del servidor”, y <strong>es una vulnerabilidad que permite a los atacantes inyectar plantillas maliciosas en un motor de plantillas</strong>, la cual sera renderizada por el servidor, esto con el fin de ejecutar comandos del lado del servidor, de ahi su nombre “Server Side”. (los payload se deben de crear de acuerdo a la sintaxis de la plantilla que esta en uso)</p>
 
 <h3 id="como-funciona">¿Como funciona?</h3>
 

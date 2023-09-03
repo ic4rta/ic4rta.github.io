@@ -1,5 +1,6 @@
-I"kq
-<h2 id="enumeracion">Enumeracion</h2>
+I"�v<p>Tenemos el puerto del SMB abierto donde descubriremos el archivo <strong>winrm_backup.zip</strong> que tiene contraseña pero la crackearemos y el descomprimir nos dejara el archivo <strong>legacyy_dev_auth.pfx</strong> que tambien tiene contraseña, asi que la volvemos a crackear y usando <strong>openssl</strong> extraeremos el certificado y una clave privada con la cual nos podemos conectar como el usuario <strong>legacyy</strong> por <strong>EvilWinRM</strong>, despues enumeraremos un poco y encontraremos el historial de powershell que contiene credenciales para el usuario <strong>svc_deploy</strong>, veremos que ese usuario pertece el grupo <strong>LAPS_Readers</strong> asi que dumpearemos <strong>LAPS</strong> usando <strong>crackmapexec</strong> para obtener las credenciales de <strong>Administrator</strong> y leer la flag en el directorio Desktop del usuario <strong>TRX</strong></p>
+
+<h2 class="lead" id="enumeracion">Enumeracion</h2>
 
 <p>Iniciamos con un escaneo de nmap con:</p>
 
@@ -241,9 +242,14 @@
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">evil</span><span class="o">-</span><span class="n">winrm</span> <span class="o">-</span><span class="no">S</span> <span class="o">-</span><span class="n">i</span> <span class="n">timelapse</span><span class="p">.</span><span class="nf">htb</span> <span class="o">-</span><span class="n">u</span> <span class="no">Administrator</span> <span class="o">-</span><span class="nb">p</span> <span class="s1">'3s:apT2HA9i(M2Q@8Jh8r0c@w1'</span>
 </code></pre></div></div>
 
-<p>Para no poner mas capturas, la flag no esta en directorio Desktop de Administrator, si recuerdas, cuando enumeramos usuario, existia uno llamado <strong>TRX</strong> que tambien pertenece de Domain Admins, asi que le flag esta en el directorio desktop ese usuario, y solo hace falta leerla con:</p>
+<p>Para no poner mas capturas, la flag no esta en directorio Desktop de Administrator, si recuerdas, cuando enumeramos usuarios, existia uno llamado <strong>TRX</strong> que tambien pertenece a Domain Admins, asi que la flag esta en el directorio desktop de ese usuario, y solo hace falta leerla con:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">type</span> <span class="no">C</span><span class="p">:\</span><span class="no">Users</span><span class="p">\</span><span class="no">TRX</span><span class="p">\</span><span class="no">Desktop</span><span class="p">\</span><span class="n">root</span><span class="p">.</span><span class="nf">tx</span>
+</code></pre></div></div>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">*</span><span class="no">Evil</span><span class="o">-</span><span class="no">WinRM</span><span class="o">*</span> <span class="no">PS</span> <span class="no">C</span><span class="p">:\</span><span class="no">Users</span><span class="p">\</span><span class="no">Administrator</span><span class="p">\</span><span class="no">Documents</span><span class="o">&gt;</span> <span class="n">type</span> <span class="no">C</span><span class="p">:\</span><span class="no">Users</span><span class="p">\</span><span class="no">TRX</span><span class="p">\</span><span class="no">Desktop</span><span class="p">\</span><span class="n">root</span><span class="p">.</span><span class="nf">txt</span>
-<span class="mi">17</span><span class="n">f573da830f9bc884f3afcec7a23cdc7</span>
+<span class="mi">7</span><span class="n">f573da830f9bc884f3afcec7a23cdc7</span>
 </code></pre></div></div>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
 :ET

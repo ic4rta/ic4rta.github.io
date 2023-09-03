@@ -4,7 +4,7 @@ title: HackTheBox Timelapse - LAPS dump y cracking PFX
 author: c4rta
 date: 2023-08-17
 tags: [HTB, LAPS]
-image: /assets/img/timelapse/fondo.jpg
+image: /assets/img/timelapse/waifu.gif
 ---
 
 Tenemos el puerto del SMB abierto donde descubriremos el archivo **winrm_backup.zip** que tiene contraseña pero la crackearemos y el descomprimir nos dejara el archivo **legacyy_dev_auth.pfx** que tambien tiene contraseña, asi que la volvemos a crackear y usando **openssl** extraeremos el certificado y una clave privada con la cual nos podemos conectar como el usuario **legacyy** por **EvilWinRM**, despues enumeraremos un poco y encontraremos el historial de powershell que contiene credenciales para el usuario **svc_deploy**, veremos que ese usuario pertece el grupo **LAPS_Readers** asi que dumpearemos **LAPS** usando **crackmapexec** para obtener las credenciales de **Administrator** y leer la flag en el directorio Desktop del usuario **TRX**
