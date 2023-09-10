@@ -185,6 +185,10 @@
 <lastmod>2023-09-03T00:00:00-06:00</lastmod>
 </url>
 <url>
+<loc>http://localhost:4000/2023/09/10/htb-sandworm/</loc>
+<lastmod>2023-09-10T00:00:00-06:00</lastmod>
+</url>
+<url>
 <loc>http://localhost:4000/about/</loc>
 </url>
 <url>
@@ -348,6 +352,9 @@
 </url>
 <url>
 <loc>http://localhost:4000/tag/python-library-hijacking/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/tag/firejail/</loc>
 </url>
 <url>
 <loc>http://localhost:4000/page/2/</loc>
