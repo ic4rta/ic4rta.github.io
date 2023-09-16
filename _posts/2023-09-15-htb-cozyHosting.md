@@ -7,7 +7,7 @@ tags: [HTB, Command Injection]
 image: /assets/img/htb-cozyHosting/waifu.gif
 ---
 
-
+Tenemos un sitio web donde descubriremos que usa **Spring**, haciendo fuzzing de directorios, descubriremos un archivo que tiene informacion de unas cookies de sesion que usaremos para iniciar como **kanderson**, una vez dentro veremos que el sitio web intenta conectarse usando ssh, conforme a eso, descubriremos que interpreta **bash** y es vulnerable a **Command Injection**, haciendo bypass de los espacios en blanco nos mandaremos una reverse shell, despues haremos un movimiento lateral de **app** a **josh** mediante la decompilacion de un **.jar**, y descubriremos credenciales para postresql, enumerando un poco, encontraremos las credenciales de ssh para el usuario **josh**, y para la escalada abusaremos de ssh a nivel de sudoers
 
 {:.lead}
 
