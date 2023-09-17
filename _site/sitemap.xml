@@ -189,8 +189,12 @@
 <lastmod>2023-09-10T00:00:00-06:00</lastmod>
 </url>
 <url>
-<loc>http://localhost:4000/2023/09/15/htb-cozyHosting/</loc>
-<lastmod>2023-09-15T00:00:00-06:00</lastmod>
+<loc>http://localhost:4000/2023/09/14/htb-cozyHosting/</loc>
+<lastmod>2023-09-14T00:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://localhost:4000/2023/09/16/htb-gofer/</loc>
+<lastmod>2023-09-16T00:00:00-06:00</lastmod>
 </url>
 <url>
 <loc>http://localhost:4000/about/</loc>
@@ -238,7 +242,7 @@
 <loc>http://localhost:4000/tag/sql-injection/</loc>
 </url>
 <url>
-<loc>http://localhost:4000/tag/bof-stack-based/</loc>
+<loc>http://localhost:4000/tag/bof/</loc>
 </url>
 <url>
 <loc>http://localhost:4000/tag/srop/</loc>
@@ -361,6 +365,12 @@
 <loc>http://localhost:4000/tag/firejail/</loc>
 </url>
 <url>
+<loc>http://localhost:4000/tag/ssrf/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/tag/path-hijacking/</loc>
+</url>
+<url>
 <loc>http://localhost:4000/page/2/</loc>
 </url>
 <url>
@@ -374,5 +384,8 @@
 </url>
 <url>
 <loc>http://localhost:4000/page/6/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/page/7/</loc>
 </url>
 </urlset>
