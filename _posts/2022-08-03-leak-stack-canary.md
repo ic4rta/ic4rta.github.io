@@ -5,7 +5,7 @@ author: c4rta
 date: 2022-08-03
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, format string, canary bypass]
-image: /assets/img/leak-stack-canary/waifu.gif
+image: /assets/img/leak-stack-canary/waifu.jpg
 ---
 En este post veras como puedes hacer bypass del stack canary lekeandolo usando format strings
 {:.lead}

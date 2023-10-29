@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-01-21
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, Heap, UAF]
-image: /assets/img/heap2/waifu.gif
+image: /assets/img/heap2/waifu4.jpg
 ---
 Este desafio es una introduccion una tecnica llamada Use-After-Free la cual basicamente ocurre cuando se hace referencia a la memoria despues de que haya sido liberada
 {:.lead}

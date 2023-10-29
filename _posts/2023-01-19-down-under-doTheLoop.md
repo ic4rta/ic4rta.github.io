@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-01-19
 ##categories: [Forense]
 tags: [Explotacion Binaria, Radio Frecuencias, Espectrograma]
-image: /assets/img/dooTheLoop/waifu.gif
+image: /assets/img/dooTheLoop/waifu.jpg
 ---
 Analizaremos el espectrograma de un archivo wav en el cual descubriremos que tiene codigo morse, asi que lo desifraremos para conseguir la flag
 {:.lead}

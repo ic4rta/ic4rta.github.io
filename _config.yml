@@ -19,7 +19,7 @@ author:
 hero:
   title: c4rta
   description: Average nerd who loves cybersecurity
-  image: 'assets/img/fondo8.png'
+  image: 'assets/img/fondo6.jpg'
 
 
 #-------------------------------
@@ -66,7 +66,7 @@ plugins:
   - jekyll-sitemap
   - jekyll/tagging
 
-paginate: 8
+paginate: 10
 paginate_path: "/page/:num"
 
 # Pages Path

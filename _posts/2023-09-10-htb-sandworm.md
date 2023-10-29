@@ -4,7 +4,7 @@ title: HackTheBox Sandworm - SSTI via PGP keys y Firejail scape
 author: c4rta
 date: 2023-09-10
 tags: [HTB, SSTI, firejail]
-image: /assets/img/sandworm/waifu.gif
+image: /assets/img/sandworm/waifu.jpg
 ---
 
 Tenemos un sitio web el cual nos permite realizar varias operaciones con claves PGP, donde descubriremos que el campo UID es vulnerable a **SSTI** con el que conseguiremos RCE, despues haremos movimiento lateral de atlas --> silentobserver via **firejail scape**, despues otro movimiento laterial de silentobserver --> atlas, modificando una libreria de Rust para ejecutar comandos y mandarnos una rev shell, y para la escalada de privilegios explotaremos una vulnerabilidad de firejail donde necesitaremos dos conexiones como Atlas para explotarla.

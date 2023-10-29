@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-06-07
 ##categories: [Un Poco De Web Pentest, SSTI]
 tags: [MalDev]
-image: /assets/img/shellcode/waifu.gif
+image: /assets/img/shellcode/waifu.png
 ---
 Veremos a como puedes crear shellcodes, te enseñare como crear una usando la syscall write() y otra usando execve() para ejecutar bin/sh
 {:.lead}

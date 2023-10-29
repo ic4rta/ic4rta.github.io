@@ -4,7 +4,7 @@ title: Simple XSS reflejado en un sitio web real
 author: c4rta
 date: 2023-06-28
 ##categories: [Maquinas, HackTheBox]
-image: /assets/img/simple_xss/waifu.gif
+image: /assets/img/simple_xss/waifu.jpg
 tags: [XSS]
 ---
 Te voy a enseñar como encontre una vulnerabilidad XSS reflejado en un sitio web real

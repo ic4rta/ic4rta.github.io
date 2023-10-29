@@ -4,7 +4,7 @@ title: Shellcode almacenada en el heap e inyección vía APC injection y NtTestA
 author: c4rta
 date: 2023-07-17
 tags: [MalDev]
-image: /assets/img/heap-queue/waifu.gif
+image: /assets/img/heap-queue/waifu.jpg
 ---
 
 Esta vez vamos a almacenar la shellcode en el heap de un proceso local usando HeapCrate y HeapAlloc y la ejecutaremos con QueueUserAPC y la NTAPI indocumentada NtTestAlert

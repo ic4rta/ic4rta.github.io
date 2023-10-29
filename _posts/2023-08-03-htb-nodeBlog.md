@@ -4,7 +4,7 @@ title: HackTheBox NodeBlog - NoSQLi, XXE, y Deserialization Attack (IIFE)
 author: c4rta
 date: 2023-08-03
 tags: [HTB, NoSQLi, XXE, Insecure Deserialization]
-image: /assets/img/nodeBlog/waifu.gif
+image: /assets/img/nodeBlog/waifu.png
 ---
 
 Tenemos un sitio web a travez del puerto 5000 con NodeJS y ExpressJS con un panel de login el cual es vulnerable a NoSQLi con el que podemos hacer Authentication Bypass, despues descubriremos un apartado para subir archivos XML el cual es vulnetable a XXE con el cual podemos leer archivos internos de la maquina, sin embargo, ocasionando un error se va a filtrar el directorio de la aplicacion, asi que usando XXE vamos leer el archivo server.js en donde descubriremos una Insecure Deserialization en node-serialize, asi que haremos un Deserialization Attack usando IIFE para conseguir RCE, para la escalada encontraremos un puerto que corresponde a MongoDB y encontraremos las credenciales de admin donde a nivel de sudoers podemos ejecutar lo que sea

@@ -4,7 +4,7 @@ title: Inyeccion de shellcodes usando la syscall mmap
 author: c4rta
 date: 2023-06-10
 tags: [MalDev]
-image: /assets/img/mmap_injection/waifu.gif
+image: /assets/img/mmap_injection/waifu.jpg
 ---
 Desarrollaremos un programa en C el cual inyectara una shellcode usando la syscall mmap()
 {:.lead}

@@ -4,7 +4,7 @@ title: Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)
 author: c4rta
 date: 2023-06-16
 tags: [MalDev]
-image: /assets/img/bypassAV_fiber/waifu.gif
+image: /assets/img/bypassAV_fiber/waifu.png
 ---
 Desarrollaremos un programa en C++ para inyectar una shellcode cifrada con XOR, ademas evadiremos los antivirus usando la tecnica Fiber Injection y un Timming Attack
 {:.lead}

@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-01-16
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, NoSQLi, Docker, hash cracking]
-image: /assets/img/shoppy/waifu.gif
+image: /assets/img/shoppy/waifu.jpg
 ---
 Resolucion del ejercicio Shoppy de HTB donde nos aprovecharemos de una vulnerabilidad NoSQL, haremos reversing y desplegaremos un contenedor para conseguir la shell como root 
 {:.lead}

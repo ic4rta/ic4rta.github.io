@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-01-24
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, ret2libc, ROP, ASLR bypass]
-image: /assets/img/hereLibc/waifu.gif
+image: /assets/img/hereLibc/waifu.jpg
 ---
 Realizaremos un ataque ret2libc para hacer bypass de NX, ademas usaremos puts en GOT y PLT para lekear valores y evadir el ASLR
 

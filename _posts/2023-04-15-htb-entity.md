@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-04-15
 ##categories: [Explotacion binaria]
 tags: [Explotacion Binaria, Type Confusion] 
-image: /assets/img/HTB-entity/waifu.gif
+image: /assets/img/HTB-entity/waifu.jpg
 ---
 Tenemos un binario donde explotaremos la vulnerabilidad Type Confusion para utilizar incorrectamente un valor de un tipo como si fuera otro tipo.
 {:.lead}
