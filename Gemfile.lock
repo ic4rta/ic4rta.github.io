@@ -40,6 +40,7 @@ GEM
       nuggets
     jekyll-watch (2.2.1)
       listen (~> 3.0)
+    json (2.7.1)
     kramdown (2.3.1)
       rexml
     kramdown-parser-gfm (1.1.0)
@@ -56,6 +57,7 @@ GEM
     rb-fsevent (0.11.0)
     rb-inotify (0.10.1)
       ffi (~> 1.0)
+    require (0.2.7)
     rexml (3.2.5)
     rouge (3.26.1)
     safe_yaml (1.0.5)
@@ -78,6 +80,8 @@ DEPENDENCIES
   jekyll-paginate
   jekyll-sitemap
   jekyll-tagging
+  json
+  require (~> 0.2.7)
   webrick (~> 1.8)
 
 BUNDLED WITH
