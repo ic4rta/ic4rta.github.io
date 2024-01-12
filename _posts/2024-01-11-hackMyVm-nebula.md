@@ -97,7 +97,7 @@ Podemos ver la base de datos **nebuladb**
 
     table_name: Contiene informacion de las tablas de la base de datos que se indique en table_schema (nombre de la DB)
 
-Para enumerar tablas usaremos el siguiente payload que selecionara las tablas de  **table_name** de la base de datos que se indique en **table_schema**
+Para enumerar tablas usaremos el siguiente payload que selecionara la columna  **table_name** de la base de datos que se indique en **table_schema**
 
 ```ruby
 search_central.php?id=1'  UNION SELECT table_name, 2, 3 FROM information_schema.tables WHERE table_schema="nebuladb"-- -
@@ -105,7 +105,7 @@ search_central.php?id=1'  UNION SELECT table_name, 2, 3 FROM information_schema.
 
 Podemos ver las tablas
 
-![](/assets/img/nebula/7.png)
+![](/assets/img/nebula/tablas.png)
 
 #### Enumerar columnas
 

