@@ -3,7 +3,7 @@ layout: post
 title: HackMyWM Nebula - Union-Based SQLi, awk abuse y PATH hijacking
 author: c4rta
 date: 2024-01-11
-tags: [HackMyWM, Union-Based SQL injection]
+tags: [HackMyWM, Union-Based SQL injection, PATH Hijacking]
 image: /assets/img/nebula/waifu.jpg
 ---
 
