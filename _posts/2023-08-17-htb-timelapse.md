@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox Timelapse - LAPS dump y cracking PFX 
+title: HackTheBox - Timelapse 
 author: c4rta
 date: 2023-08-17
 tags: [HTB, LAPS]

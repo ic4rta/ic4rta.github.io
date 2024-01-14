@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox MonitorsTwo - Unauthenticated RCE & Docker Weak Permissions
+title: HackTheBox  - MonitorsTwo
 author: c4rta
 date: 2023-05-08
 ##categories: [Maquinas, HackTheBox]

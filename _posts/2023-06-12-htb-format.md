@@ -1,10 +1,10 @@
 ---
 layout: post
-title: HackTheBox Format - LFI, Redis y Python format string
+title: HackTheBox - Format
 author: c4rta
 date: 2023-06-12
 ##categories: [Maquinas, HackTheBox]
-tags: [HTB, LFI, Python Format String]
+tags: [HTB, LFI, Python Format String, Redis]
 image: /assets/img/htb-format/waifu.jpg
 ---
 

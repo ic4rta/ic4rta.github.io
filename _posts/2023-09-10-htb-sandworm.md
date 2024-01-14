@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox Sandworm - SSTI via PGP keys y Firejail scape
+title: HackTheBox - Sandworm
 author: c4rta
 date: 2023-09-10
 tags: [HTB, SSTI, firejail]

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox NodeBlog - NoSQLi, XXE, y Deserialization Attack (IIFE)
+title: HackTheBox - NodeBlog
 author: c4rta
 date: 2023-08-03
 tags: [HTB, NoSQLi, XXE, Insecure Deserialization]

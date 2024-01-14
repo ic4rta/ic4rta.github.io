@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox Precious - Command injection y YAML deserialization
+title: HackTheBox - Precious
 author: c4rta
 date: 2023-01-02
 ##categories: [Maquinas, HackTheBox]

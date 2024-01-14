@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox Squashed - NFS y X11
+title: HackTheBox - Squashed
 author: c4rta
 date: 2023-04-05
 ##categories: [Maquinas, HackTheBox]

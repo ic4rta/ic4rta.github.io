@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBoo Entity - Type Confusion via Union
+title: HackTheBoo - Entity
 author: c4rta
 date: 2023-04-15
 ##categories: [Explotacion binaria]

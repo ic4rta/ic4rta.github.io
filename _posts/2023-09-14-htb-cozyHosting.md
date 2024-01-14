@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackTheBox Cozy Hosting - OS Command Injection y SSH abuse
+title: HackTheBox  - Cozy Hosting
 author: c4rta
 date: 2023-09-14
 tags: [HTB, Command Injection]

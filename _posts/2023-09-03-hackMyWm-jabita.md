@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HackMyWM Jabita - LFI, awk abuse, Python Library Hijacking
+title: HackMyWM - Jabita
 author: c4rta
 date: 2023-09-03
 tags: [HackMyWM, LFI, Python Library Hijacking]
