@@ -2,7 +2,7 @@
 # General Site Settings
 title: c4rta
 logo: # You can add own logo. For example '/images/logo.png'.
-description: hola
+description: I love computers
 baseurl: "" # The subpath of your site, e.g. /blog
 url: "https://ic4rta.github.io" # The base hostname & protocol for your site, e.g. http://example.com
 
@@ -18,7 +18,7 @@ author:
 # Hero Settings
 hero:
   title: c4rta
-  description: Average nerd who loves cybersecurity
+  description: I love computers
   image: 'assets/img/waifu.png'
 
 
