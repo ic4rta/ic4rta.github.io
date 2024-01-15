@@ -1,0 +1,83 @@
+I"ž<h2 id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo de nmap donde encontraremos el puerto 22 y 80</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">-</span><span class="no">T4</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.81</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, y ademas para que vaya mas rapido</p>
+  </li>
+  <li>
+    <p>n: para que no haga resolucion DNS y tarde menos el escaneo</p>
+  </li>
+  <li>
+    <p>Pn: para evitar el descubrimiento de hosts</p>
+  </li>
+  <li>
+    <p>open: para que solo muestre los puertos abiertos</p>
+  </li>
+  <li>
+    <p>-p-: para que escanee todo el rango de puertos</p>
+  </li>
+</ul>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">PORT</span>   <span class="no">STATE</span> <span class="no">SERVICE</span>
+<span class="mi">22</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">ssh</span>
+<span class="mi">80</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">http</span>
+</code></pre></div></div>
+
+<h3 id="directory-fuzzing">Directory Fuzzing</h3>
+
+<p>Haciendo uso de gobuster para enumerar directorios mediante fuerza bruta, nos encontramos con <strong>shop</strong></p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gobuster</span> <span class="n">dir</span> <span class="o">-</span><span class="n">u</span> <span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.84</span><span class="o">/</span> <span class="o">-</span><span class="n">w</span> <span class="sr">/usr/s</span><span class="n">hare</span><span class="o">/</span><span class="n">seclists</span><span class="o">/</span><span class="no">Discovery</span><span class="o">/</span><span class="no">Web</span><span class="o">-</span><span class="no">Content</span><span class="o">/</span><span class="n">directory</span><span class="o">-</span><span class="n">list</span><span class="o">-</span><span class="mf">2.3</span><span class="o">-</span><span class="n">medium</span><span class="p">.</span><span class="nf">txt</span> <span class="o">-</span><span class="n">t</span> <span class="mi">100</span>
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sr">/shop                 (Status: 301) [Size: 311] [--&gt; http:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.84</span><span class="o">/</span><span class="n">shop</span><span class="o">/</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h3 id="explorando-el-sitio-web">Explorando el sitio web</h3>
+
+<p>En el sitio web principal nos encontramos el nombre de un dominio <strong>midnight.coffee</strong>, es posible que se este aplicando virtual hosting y lo tengamos que agregar al <strong>/etc/host</strong> para que resuelva</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"&lt;IP&gt;     midnight.coffee"</span> | <span class="nb">tee</span> <span class="nt">-a</span> /etc/hosts
+</code></pre></div></div>
+
+<p>Si regresamos el sitio web y entramos el recurso <strong>/shop</strong>, nos mostrara un encabezado con varias opciones, donde tendremos un login</p>
+
+<p><img src="/assets/img/coffeshop/2.png" alt="" /></p>
+
+<p>En este punto intente probar con SQLi, NoSQLi, Type Juggling pero nada de eso me funciono, asi que recurri a enumerar subdominios, recordemos que agregamos un dominio al /etc/hosts, por lo cual debemos de hacer el fuzzing con ese dominio, usaremos wfuzz en modo vhost y descubriremos <strong>dev</strong></p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">wfuzz</span> <span class="o">-</span><span class="n">u</span> <span class="s1">'http://midnight.coffee'</span> <span class="o">-</span><span class="no">H</span> <span class="s1">'Host: FUZZ.midnight.coffee'</span> <span class="o">-</span><span class="n">t</span> <span class="mi">100</span> <span class="o">-</span><span class="n">w</span> <span class="sr">/usr/s</span><span class="n">hare</span><span class="o">/</span><span class="n">seclists</span><span class="o">/</span><span class="no">Discovery</span><span class="o">/</span><span class="no">DNS</span><span class="o">/</span><span class="n">subdomains</span><span class="o">-</span><span class="n">top1million</span><span class="o">-</span><span class="mi">110000</span><span class="p">.</span><span class="nf">txt</span> <span class="o">--</span><span class="n">hh</span> <span class="mi">1690</span>
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">200</span>        <span class="mi">71</span> <span class="no">L</span>     <span class="mi">152</span> <span class="no">W</span>      <span class="mi">1738</span> <span class="no">Ch</span>     <span class="s2">"dev"</span>
+</code></pre></div></div>
+
+<p>Tambien hay que agregarlo el /etc/hosts</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"&lt;IP&gt;     dev.midnight.coffee"</span> | <span class="nb">tee</span> <span class="nt">-a</span> /etc/hosts
+</code></pre></div></div>
+
+<p>Al entrar al sitio, podremos ver las credenciales del login</p>
+
+<p><img src="/assets/img/coffeshop/3.png" alt="" /></p>
+
+<p><img src="/assets/img/coffeshop/4.png" alt="" /></p>
+
+<h2 id="movimiento-lateral-tuna---shopadmin">Movimiento lateral: tuna -&gt; shopadmin</h2>
+
+<p>Durante la enumeracion, pude encontrar que en el directorio /opt existe un archivo de ruby que ocuparemos mas adelante</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span>  <span class="mi">1</span> <span class="n">root</span> <span class="n">root</span>   <span class="mi">27</span> <span class="no">Jan</span>  <span class="mi">3</span> <span class="mi">14</span><span class="p">:</span><span class="mo">00</span> <span class="n">shop</span><span class="p">.</span><span class="nf">rb</span>
+</code></pre></div></div>
+<p>Tambien intente enumerar binarios SUID, permisos a nivel de sudoers y nada, explore un poco mas y encontre en el directorio home de shopadmin tiene permisos de ejecucion, por lo que podemos entrar en el pero no listar contenido</p>
+
+<p><img src="/assets/img/coffeshop/5.png" alt="" /></p>
+
+<p>Asi que se me ocurrio leer el archivo <strong>user.txt</strong> y si tengo suerte y existe tener la flag, y si funciono</p>
+
+:ET

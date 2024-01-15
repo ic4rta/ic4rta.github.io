@@ -201,6 +201,10 @@
 <lastmod>2024-01-11T00:00:00-06:00</lastmod>
 </url>
 <url>
+<loc>http://localhost:4000/2024/01/15/hackMyWm-coffeshop/</loc>
+<lastmod>2024-01-15T00:00:00-06:00</lastmod>
+</url>
+<url>
 <loc>http://localhost:4000/about/</loc>
 </url>
 <url>
@@ -385,5 +389,8 @@
 </url>
 <url>
 <loc>http://localhost:4000/page/5/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/page/6/</loc>
 </url>
 </urlset>
