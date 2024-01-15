@@ -4,7 +4,7 @@ title: HackMyWM - CoffeShop
 author: c4rta
 date: 2024-01-15
 tags: [HackMyWM]
-image: /assets/img/coffeshop/waifu.png
+image: /assets/img/coffeshop/wallhaven-x6wgmo.jpg
 ---
 
 ## Enumeracion
