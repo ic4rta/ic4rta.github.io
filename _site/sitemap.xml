@@ -205,6 +205,10 @@
 <lastmod>2024-01-15T00:00:00-06:00</lastmod>
 </url>
 <url>
+<loc>http://localhost:4000/2024/01/19/htb-clicker/</loc>
+<lastmod>2024-01-19T00:00:00-06:00</lastmod>
+</url>
+<url>
 <loc>http://localhost:4000/about/</loc>
 </url>
 <url>
@@ -377,6 +381,9 @@
 </url>
 <url>
 <loc>http://localhost:4000/tag/path-hijacking/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/tag/crlf-injection/</loc>
 </url>
 <url>
 <loc>http://localhost:4000/page/2/</loc>
