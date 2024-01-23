@@ -40,7 +40,7 @@ Iniciamos con un escaneo de nmap con:
 nmap -sS -n -Pn -T4 --open -p- 192.168.1.86 
 ```
 
-- sS: haga un TCP SYN Scan el cual hace que el destino responda con un RST si el puerto esta cerrado, o con un SYN/ACK si esta abierto, y ademas para que vaya mas rapido
+- sS: haga un TCP SYN Scan el cual hace un escaneo sigiloso sin completar las conexiones TCP, responde con un SYN/ACK si el puerto esta abierto
 
 - n: para que no haga resolucion DNS y tarde menos el escaneo
 

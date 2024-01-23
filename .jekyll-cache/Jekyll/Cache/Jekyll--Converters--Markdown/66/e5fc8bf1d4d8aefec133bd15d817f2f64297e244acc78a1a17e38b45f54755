@@ -1,4 +1,4 @@
-I"“Ò
+I"[Ò
 <h2 id="enumeracion">Enumeracion</h2>
 
 <p>Iniciamos con un escaneo de nmap con:</p>
@@ -209,7 +209,7 @@ Authorization: Basic YWRtaW46YWRtaW4=
 
 <h2 id="ssrf-access-smtp-y-flag-de-user">SSRF access SMTP y flag de user</h2>
 
-<p><strong>SSRF</strong>: Server-side request forgery es una vulnerabilidad que permite a los atancantes realizar peticiones arbitrarias con el fin de acceder a servicios internos de la maquina, o hacer peticiones a servidores externos de la maquina.</p>
+<p><strong>SSRF</strong>: Server-side request forgery es una vulnerabilidad que permite a los atancantes realizar peticiones arbitrarias con el fin de acceder a servicios internos de la maquina.</p>
 
 <p>Entonces, recapitulando desde el inicio, tenemos que <strong>Jocelyn</strong> hace click a los enlaces, un servicio <strong>SMTP</strong> interno, correos en formato <strong>.odt</strong>, el protocolo <strong>Gopher</strong>, un <strong>SSRF</strong>, y que en otras maquina se puede explotar el protocolo <strong>Gopher</strong> via  <strong>SSRF</strong>. Siâ€¦ Todo se esta uniendo jijiji</p>
 
