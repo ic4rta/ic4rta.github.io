@@ -1,10 +1,10 @@
 ---
 layout: post
-title: Un Poco de Pentesting - Session Fixation
+title: Session Fixation
 author: c4rta
 date: 2023-07-05
 ##categories: [Maquinas, HackTheBox]
-tags: [Session Fixation]
+tags: [Session Fixation, Tecnicas]
 image: /assets/img/session-fixation/waifu.png
 ---
 Te explicare como funciona el ataque Session Fixation con el que podremos robar/secuestrar la sesion de otra persona
