@@ -2,7 +2,7 @@
 layout: page
 title: Sobre Mi
 permalink: /about/
-image: 'https://w.wallhaven.cc/full/rr/wallhaven-rrdgp1.jpg'
+image: '/assets/img/placeholder-big.jpg'
 ---
 
 Que ondas, me llamo Aldair, soy entusiasta y estudiante autodidacta en la ciberseguridad del area de Red Team. Aspiro a ser pentester o analista de malware.

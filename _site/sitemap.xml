@@ -213,6 +213,15 @@
 <lastmod>2024-01-26T00:00:00-06:00</lastmod>
 </url>
 <url>
+<loc>http://localhost:4000/tag/explotacion-binaria/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/tag/hackmyvm/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/tag/htb/</loc>
+</url>
+<url>
 <loc>http://localhost:4000/about/</loc>
 </url>
 <url>
@@ -375,7 +384,7 @@
 <loc>http://localhost:4000/tag/ssrf/</loc>
 </url>
 <url>
-<loc>http://localhost:4000/tag/hackmywm/</loc>
+<loc>http://localhost:4000/tag/hackmyvm/</loc>
 </url>
 <url>
 <loc>http://localhost:4000/tag/python-library-hijacking/</loc>

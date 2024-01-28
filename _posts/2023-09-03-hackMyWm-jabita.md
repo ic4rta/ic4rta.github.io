@@ -1,9 +1,9 @@
 ---
 layout: post
-title: HackMyWM - Jabita
+title: HackMyVM - Jabita
 author: c4rta
 date: 2023-09-03
-tags: [HackMyWM, LFI, Python Library Hijacking]
+tags: [HackMyVM, LFI, Python Library Hijacking]
 image: /assets/img/jabita/waifu.jpg
 ---
 

@@ -1,9 +1,9 @@
 ---
 layout: post
-title: HackMyWM - Nebula
+title: HackMyVM - Nebula
 author: c4rta
 date: 2024-01-11
-tags: [HackMyWM, Union-Based SQL injection, PATH Hijacking]
+tags: [HackMyVM, Union-Based SQL injection, PATH Hijacking]
 image: /assets/img/nebula/waifu.jpg
 ---
 
