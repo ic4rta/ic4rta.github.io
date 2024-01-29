@@ -1,0 +1,16 @@
+I"�<h2 id="commandos">Commandos</h2>
+
+<p>wfuzz -c -u http://192.168.1.103/shehatesme/FUZZ.txt -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 100 –hc=404 -f /home/c4rta/Desktop/Suidy/fuzzing,raw</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>cat fuzzing</td>
+      <td>grep -Po “"\K[a-z0-9]+”</td>
+      <td>sponge fuzzing</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>sed -i ‘s/$/.txt/’ fuzzing_filtrado</p>
+:ET
