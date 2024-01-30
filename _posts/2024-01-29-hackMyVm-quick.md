@@ -53,8 +53,6 @@ Igual si vemos el codigo fuente podemos ver lo mismo:
 
 Cuando tenemos casos asi de que se incluyen paginas y que ademas se pueda ver en la URL, como nuestro caso (index.php?page=cars), es un indicio para probar LFI (Local File Inclusion) o RFI (Remote File Inclusion)
 
-(En este caso no es vulnerable a LFI, al menos hasta donde probe)
-
 ## Explotacion (RFI - Remote File Inclusion)
 
 **RFI**: Remote File Inclusion es una vulnerabilidad que permite incluir archivos externos y/o remotos al servidor web
