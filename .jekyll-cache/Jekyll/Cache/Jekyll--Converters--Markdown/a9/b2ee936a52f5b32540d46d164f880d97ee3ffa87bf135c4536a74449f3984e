@@ -1,0 +1,51 @@
+I"�<h2 id="enumeracion">Enumeracion</h2>
+
+<p>Iniciamos con un escaneo de nmap donde encontraremos el puerto 22(SSH) y 80(HTTP)</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">nmap</span> <span class="o">-</span><span class="n">sS</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="no">Pn</span> <span class="o">--</span><span class="nb">open</span> <span class="o">-</span><span class="nb">p</span><span class="o">-</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.90</span>
+</code></pre></div></div>
+<ul>
+  <li>
+    <p>sS: haga un TCP SYN Scan el cual hace un escaneo sigiloso sin completar las conexiones TCP, responde con un SYN/ACK si el puerto esta abierto</p>
+  </li>
+  <li>
+    <p>n: para que no haga resolucion DNS y tarde menos el escaneo</p>
+  </li>
+  <li>
+    <p>Pn: para evitar el descubrimiento de hosts</p>
+  </li>
+  <li>
+    <p>open: para que solo muestre los puertos abiertos</p>
+  </li>
+  <li>
+    <p>-p-: para que escanee todo el rango de puertos</p>
+  </li>
+</ul>
+
+<h3 id="puerto-80-http">Puerto 80 (HTTP)</h3>
+
+<p>(si hacemos fuzzing de directorios y archivos no encontraremos nada interesante)</p>
+
+<p>Una de las cosas que nos llaman la atencion es un panel de login, donde al ingresar cualquier usuario, nos dara el mensaje “User not found”</p>
+
+<p><img src="/assets/img/vinylizer/1.png" alt="" /></p>
+
+<p>Si interceptamos la peticion con burpsuite nos podemos dar cuenta que existe el parametro “login”</p>
+
+<p><img src="/assets/img/vinylizer/2.png" alt="" /></p>
+
+<p>Podriamos pensar que al darle “login=true” vamos a iniciar sesion pero no es posible, asi que podemos empezar a probar con los parametros, si agremos una comilla simple despues de <strong>username</strong> vemos como nos arroja un HTTP 500</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">username</span><span class="o">=</span>hola<span class="s1">'&amp;password=holi&amp;login=
+</span></code></pre></div></div>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">500</span> <span class="no">Internal</span> <span class="no">Server</span> <span class="no">Error</span>
+<span class="no">Date</span><span class="p">:</span> <span class="no">Fri</span><span class="p">,</span> <span class="mo">02</span> <span class="no">Feb</span> <span class="mi">2024</span> <span class="mi">22</span><span class="p">:</span><span class="mi">40</span><span class="p">:</span><span class="mo">00</span> <span class="no">GMT</span>
+<span class="no">Server</span><span class="p">:</span> <span class="no">Apache</span><span class="o">/</span><span class="mf">2.4</span><span class="o">.</span><span class="mi">52</span> <span class="p">(</span><span class="no">Ubuntu</span><span class="p">)</span>
+<span class="no">Expires</span><span class="p">:</span> <span class="no">Thu</span><span class="p">,</span> <span class="mi">19</span> <span class="no">Nov</span> <span class="mi">1981</span> <span class="mi">08</span><span class="p">:</span><span class="mi">52</span><span class="p">:</span><span class="mo">00</span> <span class="no">GMT</span>
+<span class="no">Cache</span><span class="o">-</span><span class="no">Control</span><span class="p">:</span> <span class="n">no</span><span class="o">-</span><span class="n">store</span><span class="p">,</span> <span class="n">no</span><span class="o">-</span><span class="n">cache</span><span class="p">,</span> <span class="n">must</span><span class="o">-</span><span class="n">revalidate</span>
+<span class="no">Pragma</span><span class="p">:</span> <span class="n">no</span><span class="o">-</span><span class="n">cache</span>
+<span class="no">Content</span><span class="o">-</span><span class="no">Length</span><span class="p">:</span> <span class="mi">2</span>
+<span class="no">Connection</span><span class="p">:</span> <span class="n">close</span>
+<span class="no">Content</span><span class="o">-</span><span class="no">Type</span><span class="p">:</span> <span class="n">text</span><span class="o">/</span><span class="n">html</span><span class="p">;</span> <span class="n">charset</span><span class="o">=</span><span class="no">UTF</span><span class="o">-</span><span class="mi">8</span>
+</code></pre></div></div>
+:ET

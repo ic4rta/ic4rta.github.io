@@ -221,6 +221,10 @@
 <lastmod>2024-01-29T00:00:00-06:00</lastmod>
 </url>
 <url>
+<loc>http://localhost:4000/2024/02/02/hackMyVm-vinylizer/</loc>
+<lastmod>2024-02-02T00:00:00-06:00</lastmod>
+</url>
+<url>
 <loc>http://localhost:4000/tag/explotacion-binaria/</loc>
 </url>
 <url>
@@ -423,6 +427,9 @@
 </url>
 <url>
 <loc>http://localhost:4000/tag/rfi/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/tag/sqli/</loc>
 </url>
 <url>
 <loc>http://localhost:4000/page/2/</loc>
