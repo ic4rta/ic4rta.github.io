@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-06-12
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, LFI, Python Format String, Redis]
-image: /assets/img/htb-format/waifu.jpg
+image: /assets/img/htb-format/Format.png
 ---
 
 Tenemos un LFI en el parametro ID, que nos permitira leer archivos de configuracion de un reverse proxy, donde aprovecharemos una configuracion incorrecta de un proxy mediante una expresion, que nos permitira modificar una propiedad mediante la interacción de un socket de redis para convertirnos en "Pro", posteriormente nos aprovecharemos otra vez de LFI donde usaremos el parametro ID para incluir un archivo PHP, y el parametro TXT para RCE

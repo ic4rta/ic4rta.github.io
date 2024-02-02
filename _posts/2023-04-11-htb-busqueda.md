@@ -5,7 +5,7 @@ author: c4rta
 date: 2023-04-11
 ##categories: [Maquinas, HackTheBox]
 tags: [HTB, Eval function, Docker]
-image: /assets/img/busqueda/waifu.jpg
+image: /assets/img/busqueda/Busqueda.png
 ---
 
 Descubriremos que la pagina esta haciendo uso de searchor el cual tiene una vulnerabilidad en eval() la cual nos permitira una ejecucion arbitraria de codigo que conduce a un RCE,

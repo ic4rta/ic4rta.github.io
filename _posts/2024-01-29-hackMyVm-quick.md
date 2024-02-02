@@ -4,7 +4,7 @@ title: HackMyVM - Quick
 author: c4rta
 date: 2024-01-29
 tags: [HackMyVM, RFI]
-image: /assets/img/quick/wall.jpg
+image: /assets/img/quick/quick.png
 ---
 
 ## Enumeracion

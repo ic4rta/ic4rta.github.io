@@ -4,7 +4,7 @@ title: HackMyVM - Zon
 author: c4rta
 date: 2024-01-24
 tags: [HackMyVM, Arbitrary File Upload]
-image: /assets/img/zon/waifu.jpg
+image: /assets/img/zon/zon.png
 ---
 
 ## Enumeracion

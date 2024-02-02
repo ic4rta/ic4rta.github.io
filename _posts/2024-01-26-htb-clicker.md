@@ -4,7 +4,7 @@ title: HackTheBox - Clicker
 author: c4rta
 date: 2024-01-26
 tags: [HTB, CRLF Injection, perl_startup, Reversing]
-image: /assets/img/clicker/waifu.png
+image: /assets/img/clicker/Clicker.png
 ---
 
 ## Enumeracion

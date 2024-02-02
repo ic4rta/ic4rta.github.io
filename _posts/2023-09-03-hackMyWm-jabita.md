@@ -4,7 +4,7 @@ title: HackMyVM - Jabita
 author: c4rta
 date: 2023-09-03
 tags: [HackMyVM, LFI, Python Library Hijacking]
-image: /assets/img/jabita/waifu.jpg
+image: /assets/img/jabita/ez.png
 ---
 
 Tenemos un sitio web el cual es vulnerable a LFI, aprovechandonos de eso incluiremos el archivo **/etc/shadow** el cual tiene un hash con SHA-512 para el usuario jack, lo crackearemos y accederemos por SSH, despues mostraremos los permisos de nivel de sudoers donde veremos que podemos abusar de **awk** para hacer **user pivoting** hacia **jaba**, para la escalada de privilegios haremos un **Python Library Hijacking**

@@ -4,7 +4,7 @@ title: HackMyVM - Nebula
 author: c4rta
 date: 2024-01-11
 tags: [HackMyVM, Union-Based SQL injection, PATH Hijacking]
-image: /assets/img/nebula/waifu.jpg
+image: /assets/img/nebula/nebula.png
 ---
 
 ## Enumeracion

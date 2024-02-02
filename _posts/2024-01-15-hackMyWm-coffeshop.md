@@ -4,7 +4,7 @@ title: HackMyVM - CoffeShop
 author: c4rta
 date: 2024-01-15
 tags: [HackMyVM]
-image: /assets/img/coffeshop/wallhaven-x6wgmo.jpg
+image: /assets/img/coffeshop/coffeeshop.png
 ---
 
 ## Enumeracion
