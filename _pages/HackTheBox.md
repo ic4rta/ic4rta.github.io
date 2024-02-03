@@ -1,5 +1,5 @@
 ---
 layout: page
-title: HackTheBox
+title: HTB
 permalink: /tag/htb/
 ---
