@@ -138,7 +138,7 @@ Las siglas CRLF son de retorno de carro (CR) y salto de linea (LF). Estos caract
 
 CRLF injection es una vulnerabilidad que permite inyectar estos caracteres para manipular los encabezados, asi engañando a la aplicacion web e indicarle que un encabezado o valor de estos, ha terminado o comenzado.
 
-Sabiendo esto, en la peticion web podemos agregar el caracter **%0d** (retorno de carro) para indicarle el comienzo de un nuevo parametro en esa peticion, por lo que quedaria asi:
+Sabiendo esto, en la peticion web podemos agregar el caracter **%0A** (line feed) para indicarle el comienzo de un nuevo parametro en esa peticion, por lo que quedaria asi:
 
 ```ruby
 GET /save_game.php?clicks=29&level=0&role%0a=Admin HTTP/1.1
