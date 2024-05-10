@@ -1,9 +1,6 @@
-source 'https://rubygems.org'
-gem "bundler"
-gem "jekyll"
-gem "jekyll-paginate"
-gem 'jekyll-tagging'
-gem "jekyll-sitemap"
-gem "webrick", "~> 1.8"
-gem 'json'
-gem "require", "~> 0.2.7"
+source "https://rubygems.org"
+gemspec
+gem "jekyll-github-metadata", ">= 2.15"
+gem "jekyll-include-cache", group: :jekyll_plugins
+gem "html-proofer"
+gem "json"

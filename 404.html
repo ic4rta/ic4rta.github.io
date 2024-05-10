@@ -1,17 +1,11 @@
 ---
-layout: page
-title: No encontramos lo que buscabas!
-image: https://images.unsplash.com/photo-1584824486509-112e4181ff6b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80
-permalink: "/404.html"
-
+layout: default
+title: 404
+permalink: /404
+nav_exclude: true
+search_exclude: true
 ---
-<div class="container">
-  <div class="row">
-    <div class="col col-12" style="text-align: center">
-      <h2 style="font-size: 48px">404</h2>
-      <p>Lo siento, no pude encontrar lo que estabas buscando!</p>
-      <p><a href="{{site.baseurl}}/" class="button button--middle" style="text-decoration: none; border: none">Volver al blog</a></p>
-      <hr>
-    </div>
-  </div>
-</div>
+
+<h1>Page not found</h1>
+
+<p>The page you requested could not be found. Try using the navigation {% if site.search_enabled != false %}or search {% endif %}to find what you're looking for or go to this <a href="{{ '/' | relative_url }}">site's home page</a>.</p>
