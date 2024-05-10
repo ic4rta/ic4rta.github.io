@@ -4,7 +4,7 @@ title: Precious
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Precious
 {: .no_toc }
 
 ## Table of contents

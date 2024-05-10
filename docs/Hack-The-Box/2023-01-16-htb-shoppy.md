@@ -4,7 +4,7 @@ title: Shoppy
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Shoppy
 {: .no_toc }
 
 ## Table of contents

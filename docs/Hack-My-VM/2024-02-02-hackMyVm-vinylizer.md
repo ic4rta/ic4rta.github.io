@@ -4,7 +4,7 @@ title: Vinylizer
 parent: HackMyVM
 ---
 
-# Color Utilities
+# Vinylizer
 {: .no_toc }
 
 ## Table of contents

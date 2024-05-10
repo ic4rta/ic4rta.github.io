@@ -4,7 +4,7 @@ title: Bypass stack canary via format string leak
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# Bypass stack canary via format string leak
 {: .no_toc }
 
 ## Table of contents

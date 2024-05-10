@@ -4,7 +4,7 @@ title: Creacion de shellcodes en linux
 parent: Desarrollo de malware
 ---
 
-# Color Utilities
+# Creacion de shellcodes en linux
 {: .no_toc }
 
 ## Table of contents

@@ -4,7 +4,7 @@ title: Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)
 parent: Desarrollo de malware
 ---
 
-# Color Utilities
+# Inyeccion de shellcode via Fiber injection + Timming attack (SetTimer)
 {: .no_toc }
 
 ## Table of contents

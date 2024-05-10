@@ -4,7 +4,7 @@ title: CozyHosting
 parent: HackTheBox
 ---
 
-# Color Utilities
+# CozyHosting
 {: .no_toc }
 
 ## Table of contents

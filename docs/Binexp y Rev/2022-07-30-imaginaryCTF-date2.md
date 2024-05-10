@@ -4,7 +4,7 @@ title: ImaginaryCTF date2
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# ImaginaryCTF date2
 {: .no_toc }
 
 ## Table of contents

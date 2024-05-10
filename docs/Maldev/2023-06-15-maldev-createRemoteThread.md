@@ -4,7 +4,7 @@ title: RemoteThreadInjection + CreateRemoteThread() + IsDebuggerPresent
 parent: Desarrollo de malware
 ---
 
-# Color Utilities
+# RemoteThreadInjection + CreateRemoteThread() + IsDebuggerPresent
 {: .no_toc }
 
 ## Table of contents

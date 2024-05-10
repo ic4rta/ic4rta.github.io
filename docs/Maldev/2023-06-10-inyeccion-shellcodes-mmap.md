@@ -4,7 +4,7 @@ title: Inyeccion de shellcodes usando mmap()
 parent: Desarrollo de malware
 ---
 
-# Color Utilities
+# Inyeccion de shellcodes usando mmap()
 {: .no_toc }
 
 ## Table of contents

@@ -4,7 +4,7 @@ title: Timelapse
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Timelapse
 {: .no_toc }
 
 ## Table of contents

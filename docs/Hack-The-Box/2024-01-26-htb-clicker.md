@@ -4,7 +4,7 @@ title: Clicker
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Clicker
 {: .no_toc }
 
 ## Table of contents

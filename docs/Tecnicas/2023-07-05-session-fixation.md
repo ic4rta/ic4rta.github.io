@@ -4,7 +4,7 @@ title: Sesion Fixation
 parent: Tecnicas
 ---
 
-# Color Utilities
+# Sesion Fixation
 {: .no_toc }
 
 ## Table of contents

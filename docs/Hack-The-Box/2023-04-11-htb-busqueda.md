@@ -4,7 +4,7 @@ title: Busqueda
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Busqueda
 {: .no_toc }
 
 ## Table of contents

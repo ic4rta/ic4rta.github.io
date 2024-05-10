@@ -4,7 +4,7 @@ title: Format String
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# Format String
 {: .no_toc }
 
 ## Table of contents

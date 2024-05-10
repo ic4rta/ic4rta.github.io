@@ -4,7 +4,7 @@ title: Jupiter
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Jupiter
 {: .no_toc }
 
 ## Table of contents

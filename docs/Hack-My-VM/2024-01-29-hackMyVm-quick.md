@@ -4,7 +4,7 @@ title: Quick
 parent: HackMyVM
 ---
 
-# Color Utilities
+# Quick
 {: .no_toc }
 
 ## Table of contents

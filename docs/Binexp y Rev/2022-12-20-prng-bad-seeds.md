@@ -4,7 +4,7 @@ title: PRNG bad seed
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# PRNG bad seed
 {: .no_toc }
 
 ## Table of contents

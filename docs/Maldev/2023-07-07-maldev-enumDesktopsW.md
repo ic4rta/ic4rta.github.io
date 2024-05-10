@@ -4,7 +4,7 @@ title: Inyeccion de shellcode via EnumDesktopsW()
 parent: Desarrollo de malware
 ---
 
-# Color Utilities
+# Inyeccion de shellcode via EnumDesktopsW()
 {: .no_toc }
 
 ## Table of contents

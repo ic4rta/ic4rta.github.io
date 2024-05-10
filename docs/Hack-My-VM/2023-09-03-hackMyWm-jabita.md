@@ -4,7 +4,7 @@ title: Jabita
 parent: HackMyVM
 ---
 
-# Color Utilities
+# Jabita
 {: .no_toc }
 
 ## Table of contents

@@ -4,7 +4,7 @@ title: GOT Overwrite via format string
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# GOT Overwrite via format string
 {: .no_toc }
 
 ## Table of contents

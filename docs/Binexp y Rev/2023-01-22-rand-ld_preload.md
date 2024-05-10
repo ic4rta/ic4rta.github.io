@@ -4,7 +4,7 @@ title: Hijack de rand() usando LD_PRELOAD trick
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# Hijack de rand() usando LD_PRELOAD trick
 {: .no_toc }
 
 ## Table of contents

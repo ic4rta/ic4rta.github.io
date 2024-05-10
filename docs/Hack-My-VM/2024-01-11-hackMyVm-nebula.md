@@ -4,7 +4,7 @@ title: Nebula
 parent: HackMyVM
 ---
 
-# Color Utilities
+# Nebula
 {: .no_toc }
 
 ## Table of contents

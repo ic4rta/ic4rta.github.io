@@ -4,7 +4,7 @@ title: picoCTF - here's a libc
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# picoCTF - here's a libc
 {: .no_toc }
 
 ## Table of contents

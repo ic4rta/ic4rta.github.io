@@ -4,7 +4,7 @@ title: Squashed
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Squashed
 {: .no_toc }
 
 ## Table of contents

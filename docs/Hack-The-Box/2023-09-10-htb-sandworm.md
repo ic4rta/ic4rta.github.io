@@ -4,7 +4,7 @@ title: Sandworm
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Sandworm
 {: .no_toc }
 
 ## Table of contents

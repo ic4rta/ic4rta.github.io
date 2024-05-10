@@ -4,7 +4,7 @@ title: NodeBlog
 parent: HackTheBox
 ---
 
-# Color Utilities
+# NodeBlog
 {: .no_toc }
 
 ## Table of contents

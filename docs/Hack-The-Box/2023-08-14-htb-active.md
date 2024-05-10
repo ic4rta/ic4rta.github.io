@@ -4,7 +4,7 @@ title: Active
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Active
 {: .no_toc }
 
 ## Table of contents

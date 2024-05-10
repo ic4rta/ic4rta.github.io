@@ -3,8 +3,7 @@ layout: default
 title: picoCTF HurryUp wait
 parent: Pwn y Reversing
 ---
-
-# Color Utilities
+# picoCTF HurryUp wait
 {: .no_toc }
 
 ## Table of contents

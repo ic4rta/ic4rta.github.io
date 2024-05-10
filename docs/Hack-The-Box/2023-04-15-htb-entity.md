@@ -4,7 +4,7 @@ title: Entity
 parent: HackTheBox
 ---
 
-# Color Utilities
+# Entity
 {: .no_toc }
 
 ## Table of contents

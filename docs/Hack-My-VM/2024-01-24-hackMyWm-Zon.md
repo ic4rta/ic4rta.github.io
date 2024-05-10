@@ -4,7 +4,7 @@ title: Zon
 parent: HackMyVM
 ---
 
-# Color Utilities
+# Zon
 {: .no_toc }
 
 ## Table of contents

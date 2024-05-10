@@ -4,7 +4,7 @@ title: Coffeshop
 parent: HackMyVM
 ---
 
-# Color Utilities
+# Coffeshop
 {: .no_toc }
 
 ## Table of contents

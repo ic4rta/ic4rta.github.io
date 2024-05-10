@@ -4,7 +4,7 @@ title: Shellcode almacenada en el heap e inyección vía APC injection y NtTestA
 parent: Desarrollo de malware
 ---
 
-# Color Utilities
+# Shellcode almacenada en el heap e inyección vía APC injection y NtTestAlert en un proceso local
 {: .no_toc }
 
 ## Table of contents

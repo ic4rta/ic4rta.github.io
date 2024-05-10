@@ -4,7 +4,7 @@ title: MonitorsTwo
 parent: HackTheBox
 ---
 
-# Color Utilities
+# MonitorsTwo
 {: .no_toc }
 
 ## Table of contents

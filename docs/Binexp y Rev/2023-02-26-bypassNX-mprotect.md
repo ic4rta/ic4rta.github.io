@@ -4,7 +4,7 @@ title: Bypass NX via via mprotect()
 parent: Pwn y Reversing
 ---
 
-# Color Utilities
+# Bypass NX via via mprotect()
 {: .no_toc }
 
 ## Table of contents
