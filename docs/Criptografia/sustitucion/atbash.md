@@ -27,43 +27,48 @@ Como leyeron al principio, puse la palabra cifrado entre comillas, ya que Atbash
 
 ## Implementacion
 
-```ruby
-sub atbash {
-    my ($texto) = @_;
-    my $texto_cifrado = "";
-    my @alfabeto = ('A'..'Z');
-    my @alfabeto_invertido = reverse @alfabeto;
+```c
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 
-    foreach my $letra (split //, uc($texto)) {
-        if ($letra =~ /[A-Z]/) {
-            my $posicion = ord($letra) - ord('A');
-            $texto_cifrado .= $alfabeto_invertido[$posicion];
-        } else {
-            $texto_cifrado .= $letra;
+void atbash(char *texto) {
+    char alfabeto_invertido[] = "ZYXWVUTSRQPONMLKJIHGFEDCBA";
+    
+    for (int i = 0; i < strlen(texto); i++) {
+        if (isalpha(texto[i])) {
+            texto[i] = isupper(texto[i]) ? alfabeto_invertido[texto[i] - 'A'] : alfabeto_invertido[toupper(texto[i]) - 'A'];
         }
     }
-    return $texto_cifrado;
 }
 
-my $texto = atbash("c4rta");
-print $texto;
+int main() {
+    char texto[] = "c4rta";
+    
+    atbash(texto);
+    printf("Cifrado: %s\n", texto);
 
-my $texto_decifrado = atbash($texto);
-print "\n$texto_decifrado";
+    atbash(texto);
+    printf("Decifrado: %s\n", texto);
+
+    return 0;
+}
 ```
 
-En el codigo, se define el parametro ```$texto``` que sera el texto a cifrar, ```$texto_cifrado``` contiene el texto cifrado, ```@alfabeto``` y ```@alfabeto_invertido``` son dos arreglos que tienen el alfabeto.
+En el codigo, se define el parametro ```*texto``` que sera el texto a cifrar y ```alfabeto_invertido``` que es un arreglo de caracteres
 
-En el foreach: ```$letra (split //, uc($texto))```, ```$letra``` contiene cada valor (letra) de ```$txeto```, ademas se hace uso de ```split``` y ```uc``` para dividir el texto en caracteres individuales y pasarlos a mayuscula
+En el for: ```($int i = 0; i < strlen(texto); i++)```, se recorre de acuerdo al total de elementos que contiene ```texto```
 
-Posteriormente se calcula la posicion numerica de cada letra: ```my $posicion = ord($letra) - ord('A');```, la funcion ```ord()``` devuelve el valor numerico de cada letra de acuerdo a ASCII, por lo que ```A -> 65```, despues se resta al valor de ```ord('A')``` (65), por lo que si es la letra A, la posicion numerica es 0, si es B, es 1, C es 2.
+Posteriormente con  ```(isalpha(texto[i]))``` se verifica si el caracter actual es una letra, si no lo es, simplemente se omite, se debe de verificar que es una letra, por que atbash solo cifra letras
 
-Por ultimo se cifra el texto: ```$texto_cifrado .= $alfabeto_invertido[$posicion];```, recordemos de ```$alfabeto_invertido``` es un arreglo, por lo que al indicarle ```[$posicion]```, estamos representando un indice dentro de la lista para seleccionar la nueva letra cifrada correspondiente a la letra original, asi mismo se usa ```.=``` para ir concatenando las letras.
+Despues se verifica si el caracter actual (```isupper(texto[i])```) es mayuscula, si lo es, se ejecuta la primera parte de la condicion: ```alfabeto_invertido[texto[i] - 'A']```,  lo que hace es que al caracter actual lo convierte en su correspondiente al alfabeto invertido,  restando el valor ASCII de A con el valor ASCII del caracter actual, por lo que si es la letra A, la posicion numerica es 0, si es B, es 1, C es 2, y ese valor se selecciona de ```alfabeto_invertido```, por ejemplo, 'A' - 'A' es 0, que corresponde a Z.
 
-Para decifrar el texto simplemente se llama a la funcion pero con el texto cifrado. Si ejecutamos el script podremos ver la salida cifrada y decifrada.
+Si no se cumple esta condificion, se ejecuta esta otra parte: ```alfabeto_invertido[toupper(texto[i]) - 'A']```, que hace lo mismo pero convierte el resultado en mayuscula, por que como les habia mencionado, por convecion se convierte a mayuscula.
+
 
 ```bash
-❯❯❯ perl Atbash.pl
-X4IGZ
-C4RTA⏎ 
+❯❯❯ ./Atbash
+Cifrado: X4IGZ
+Decifrado: C4RTA
 ```
