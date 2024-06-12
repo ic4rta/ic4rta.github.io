@@ -97,20 +97,21 @@ Despues con la funcion ```isalpha()``` se verifica si cada caracter del texto (`
 
 Despues con la funcion ```islower()``` se verifica si cada caracter es minuscula, si lo es, se hacen las operacione tomando letras minusculas, si no, letras mayusculas, es necesario esto para respetar las minusculas y mayusculas del texto original.
 
-Por ultimo llega a la parte de cifrado: ```texto[i] = (((texto[i] - 'a' + 26) - desplazamiento) % 26) + 'a'```
+Por ultimo llega a la parte de cifrado: ```texto[i] = (((texto[i] - 'a') + desplazamiento) % 26) + 'a'```
 
-- ```texto[i] - 'a'```: Aqui se convierte la letra de la posicion ```i``` en un numero del rango de 0 a 25 restandole ```a```, esto con el fin de encontrar su posicion de acuerdo al alfabeto, es decir, a -> 0, b -> 1, c -> 2, y asi sucesivamente, y se le suma 26 para asegurarse que ninguna letra sea menor a ```a```, osea que sea negativo
+- ```texto[i] - 'a'```: Aqui se convierte la letra de la posicion ```i``` en un numero del rango de 0 a 25 restandole ```a```, esto con el fin de encontrar su posicion de acuerdo al alfabeto, es decir, a -> 0, b -> 1, c -> 2, y asi sucesivamente, en esta operacion, se resta los valores ASCII de ```texto[i]``` y ```a```
 
 - ```+ desplazamiento) % 26) + 'a'```: Al numero obtenido anteriormente se le suma el desplazamiento y se le aplica *mod 26* para que el resultado este en el rango del abecedario, y se le suma ```a``` para convertirla nuevamente a letra 
 
 
 Haciendo las operaciones manualmente serian asi para cifrar la letra ```h```
 
-1. Obtenemos el valor numero a h: **'h' - 'a' = 8**
-2. Sumamos 26: **8 + 26 = 34**
-3. Se aplica el desplazamiento: **34 + 3 = 37**
-4. Se aplica el modulo: **37 *mod 26* = 11**
-5. Se convierte a letra: **11 + 'a' = k**
+1. Obtenemos el valor numerico a h: **'h' - 'a' = 104 - 97 = 7**
+2. Se aplica el desplazamiento: **7 + 3 = 10**
+3. Se aplica el modulo: **10 *mod 26* = 10**
+4. Se convierte a letra: **10 + 'a' = 10 + 97 = 107 = k**
+
+La letra cifrada es ```k```
 
 Eso es por si la letra es minuscula, para mayusculas es lo mismo pero ahora es 'A', y en la parte del cifrado funciona igual pero ahora restamos el desplazamiento.
 
