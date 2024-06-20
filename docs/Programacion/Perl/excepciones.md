@@ -240,3 +240,92 @@ En este caso es necesario usar ```if (blessed $_ && $_->can('isa'))``` para veri
 Se usar ```$_->can("isa")``` para verificar si ```$_``` tiene tiene el método ```isa```, normalmente isa se usa para verificar si un objeto es instancia de una clase especifica
 
 Pos otra parte se usa ```blessed``` o bendecir, donde basicamente se dice que esta "bendecido" si una variable es una referencia a un objeto. Este metodo devuelve el nombre de la clase a la que pertenece al objeto "bendecido"
+
+## Throwable y Try::Tiny
+
+Personalmente esta es una de las maneras que que mas me gusta crear excepciones
+
+Para hacerlo se definen dos archivos, uno con extension .pm y el .pl, en el .pm debemos de ingresar nuestras excepciones, como por ejemplo:
+
+```perl
+package FileNotFound;
+use base 'Throwable::Error';
+
+sub error {
+    my $self = shift;
+    return "Archivo inexistente: " . $self->message;
+}
+
+package FileAccess;
+use base 'Throwable::Error';
+
+sub error {
+    my $self = shift;
+    return "Permisos insuficientes: " . $self->message;
+}
+
+1;
+```
+En package debemos de indicar el nombre de nuestra excepción, no importa si es español o ingles, etc, posteriormente definimos el método ```error``` el en el cual yo siempre suelo definir un mensaje mas generalizado, pero es a decisión personal. Algo tambien importante es que se le debe de incluir el atributo ```message``` para llamar a la excepcion
+
+El archivo principal que llamaria a las excepciones quedaria asi:
+
+```perl
+use Try::Tiny;
+use FindBin;
+use lib "$FindBin::Bin";
+use Excepciones;
+use Scalar::Util 'blessed';
+
+sub abrir_archivo {
+    my $archivo = shift;
+
+    try {
+        open(ARCHIVO, '<', $archivo)
+            or do {
+                if (!-e $archivo) {
+                    FileNotFound->throw(
+                    	message => "El archivo '$archivo' no existe"
+                    );
+                } elsif (!-r $archivo) {
+                    FileAccess->throw(
+                    	message => "No tienes permisos de lectura sobre '$archivo'"
+                    );
+                }
+            };
+
+        while (<ARCHIVO>) {
+            print $_;
+        }
+
+        close(ARCHIVO);
+    } catch {
+        if (blessed($_) && $_->isa('Throwable::Error')) {
+            warn "Excepción I/O --> " . $_->error . "\n";
+        }
+    };
+}
+
+sub main{
+	abrir_archivo("prueba.txt");
+	abrir_archivo("/etc/shadow");	
+}
+
+main()
+```
+
+Es importante que incluir nuestro modulo de las excepciones ```use Excepciones```, ese modulo lo debemos de incluir respetando el nombre del archivo .pm.
+
+Y para llamar a la excepcion usamos el nombre de la excepcion junto con la palabra throw
+
+```perl
+NombreExcepcion->throw(
+	message => "Mensaje mas especifico de la excepcion"
+);
+```
+
+En este ejemplo cuando ocurra una excepción se vera asi:
+
+```
+Excepción I/O --> Permisos insuficientes: No tienes permisos de lectura sobre '/etc/shadow'
+```
