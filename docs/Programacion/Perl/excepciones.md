@@ -104,7 +104,6 @@ Math Excepcion --> [No se puede dividir entre 0 at error-math.pl line 8.
 ```
 
 ## Exception::Class
-
 Es un modulo que permite crear excepciones de una manera mas robusta y segura, ademas tiene la ventaja de que nosotros creamos nuestras propias excepciones para cualquier caso. La sintaxis basica puede ser
 
 ```perl
@@ -133,25 +132,25 @@ use Exception::Class (
 sub abrir_archivo {
 	my ($archivo) = @_;
 	my $contenido;
-
-	if (!-e $archivo) {
-		Error::ArchivoNoEncontrado->throw(
-			error => "El $archivo no existe",
-			nombre => $archivo,
-		);
-	}
-
-    if (!-r $archivo) {
-        Error::PermisoDenegado->throw(
-            error => "No tienes permisos de lectura para $archivo",
-            nombre => $archivo,
-        );
-    }
-
-	open(ARCHIVO, "<", $archivo) or return undef;
+	
+	open(ARCHIVO, "<", $archivo) or do {
+		if (!-e $archivo) {
+			Error::ArchivoNoEncontrado->throw(
+				error => "El $archivo no existe",
+				nombre => $archivo,
+			);
+		} elsif (!-r $archivo) {
+	        Error::PermisoDenegado->throw(
+	            error => "No tienes permisos de lectura para $archivo",
+	            nombre => $archivo,
+	        );
+		}
+	};
+	
 	while(<ARCHIVO>){
 		$contenido .= $_;
 	}
+	
 	close(ARCHIVO);
 	return $contenido;
 }
@@ -173,12 +172,11 @@ main()
 ```
 
 Ahora la salida de cuando ocurran una de estas excepciones era algo asi:
-
 ```
 Error:PermisoDenegado --> No tienes permisos de lectura para /tmp/archivo-2.txt at custom-error.pl line 47.
 ```
 
-En este caso se usa ```eval``` en el main, pero la propia documentación nos recomienda usar ```Try::Tiny```
+En este caso se usa ```eval```en el main, pero la propia documentación nos recomienda usar ```Try::Tiny```
 
 ```perl
 use Exception::Class (
@@ -196,28 +194,29 @@ use Try::Tiny;
 sub abrir_archivo {
 	my ($archivo) = @_;
 	my $contenido;
-
-	if (!-e $archivo) {
-		Error::ArchivoNoEncontrado->throw(
-			error => "El $archivo no existe",
-			nombre => $archivo,
-		);
-	}
-
-    if (!-r $archivo) {
-        Error::PermisoDenegado->throw(
-            error => "No tienes permisos de lectura para $archivo",
-            nombre => $archivo,
-        );
-    }
-
-	open(ARCHIVO, "<", $archivo) or return undef;
+	
+	open(ARCHIVO, "<", $archivo) or do {
+		if (!-e $archivo) {
+			Error::ArchivoNoEncontrado->throw(
+				error => "El $archivo no existe",
+				nombre => $archivo,
+			);
+		} elsif (!-r $archivo) {
+	        Error::PermisoDenegado->throw(
+	            error => "No tienes permisos de lectura para $archivo",
+	            nombre => $archivo,
+	        );
+		}
+	};
+	
 	while(<ARCHIVO>){
 		$contenido .= $_;
 	}
+	
 	close(ARCHIVO);
 	return $contenido;
 }
+
 
 sub main {
     try {
@@ -236,79 +235,8 @@ sub main {
 
 main()
 ```
-
 En este caso es necesario usar ```if (blessed $_ && $_->can('isa'))``` para verificar si ```$_``` es una instancia de una excepción definida con ```Exception::Class```
 
 Se usar ```$_->can("isa")``` para verificar si ```$_``` tiene tiene el método ```isa```, normalmente isa se usa para verificar si un objeto es instancia de una clase especifica
 
 Pos otra parte se usa ```blessed``` o bendecir, donde basicamente se dice que esta "bendecido" si una variable es una referencia a un objeto. Este metodo devuelve el nombre de la clase a la que pertenece al objeto "bendecido"
-
-Una recomendacion personal es que las excepciones que se llaman en los if de la funcion ```abrir_archivo```, las encapsulen en subrutinas para que solo sea necesario llamarlas para ocasiones posteriores
-
-```perl
-use Exception::Class (
-	"Error::ArchivoNoEncontrado" => {
-		description => "El archivo no existe",
-		fields => ["nombre"]
-	},
-    "Error::PermisoDenegado" => {
-        description => "Permiso denegado para abrir el archivo",
-        fields => ["nombre"]
-    }	
-);
-use Try::Tiny;
-
-sub existe {
-    my ($archivo) = @_;
-
-    if (!-e $archivo) {
-        Error::ArchivoNoEncontrado->throw(
-            error  => "El $archivo no existe",
-            nombre => $archivo,
-        );
-    }
-}
-
-sub permisos{
-    my ($archivo) = @_;
-
-    if (!-r $archivo) {
-        Error::PermisoDenegado->throw(
-            error  => "No tienes permisos de lectura para $archivo",
-            nombre => $archivo,
-        );
-    }
-}
-
-sub abrir_archivo {
-	my ($archivo) = @_;
-	my $contenido;
-
-	existe($archivo);
-	permisos($archivo);
-
-	open(ARCHIVO, "<", $archivo) or return undef;
-	while(<ARCHIVO>){
-		$contenido .= $_;
-	}
-	close(ARCHIVO);
-	return $contenido;
-}
-
-sub main {
-    try {
-        print abrir_archivo("/tmp/archivo-2.txt");
-    } catch {
-        if (blessed $_ && $_->can("isa")) {
-            if ($_->isa('Error::ArchivoNoEncontrado')) {
-                warn "Error::ArchivoNoEncontrado --> " . $_->error;
-            }
-            elsif ($_->isa('Error::PermisoDenegado')) {
-                warn "Error::PermisoDenegado --> " . $_->error;
-            }
-        }
-    };
-}
-
-main()
-```
